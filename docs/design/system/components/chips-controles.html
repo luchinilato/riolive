@@ -1,0 +1,46 @@
+<!-- @dsCard group="Componentes" name="Chips e controles" subtitle="Seletor territorial global · chips de recorte do mapa · filtro · copiar link" -->
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0b0e13;color:#e8eaed;font:14px/1.5 Inter,system-ui,sans-serif;padding:24px}
+  h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9aa4ad;margin:20px 0 10px}
+  h2:first-child{margin-top:0}
+  .linha{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:6px;font:500 13px/1 Inter;padding:7px 12px;border-radius:999px;border:1px solid #242c38;background:#14181f;color:#9aa4ad;cursor:pointer}
+  .chip:hover{border-color:#5b6570;color:#e8eaed}
+  .chip.ativo{border-color:#00C0F3;color:#00C0F3;background:#00c0f30f}
+  .chip.ativo .x{color:#00C0F3}
+  .x{color:#5b6570;font-size:12px;margin-left:2px}
+  .territorio{display:inline-flex;align-items:center;gap:8px;font:600 14px/1 Inter;padding:9px 14px;border-radius:10px;border:1px solid #242c38;background:#14181f;cursor:pointer}
+  .territorio i{font-style:normal;color:#5b6570;font-size:11px}
+  .copiar{display:inline-flex;align-items:center;gap:7px;font:500 12px/1 "JetBrains Mono",monospace;padding:8px 12px;border-radius:8px;border:1px solid #00C0F3;background:transparent;color:#00C0F3;cursor:pointer}
+  .copiar:hover{background:#00c0f314}
+</style></head><body>
+
+<h2>Seletor territorial global (cabeçalho da home — re-escopa todos os cartões, ?zona=norte)</h2>
+<div class="linha">
+  <span class="territorio">Cidade inteira <i>▾</i></span>
+  <span class="territorio" style="border-color:#00C0F3;color:#00C0F3">Zona Norte <i style="color:#00C0F3">✕</i></span>
+</div>
+
+<h2>Chips de recorte pronto (mapa)</h2>
+<div class="linha">
+  <span class="chip ativo">Chuva agora</span>
+  <span class="chip">Transporte</span>
+  <span class="chip">Segurança × transporte</span>
+  <span class="chip">Meu bairro</span>
+  <span class="chip" style="border-style:dashed">Personalizar</span>
+</div>
+
+<h2>Chips de filtro (período · severidade)</h2>
+<div class="linha">
+  <span class="chip">3 h</span><span class="chip ativo">24 h</span><span class="chip">7 d</span>
+  <span class="chip ativo">só o anormal <span class="x">✕</span></span>
+</div>
+
+<h2>Copiar link do recorte (todo estado de filtro vive na URL)</h2>
+<div class="linha"><button class="copiar">⧉ copiar link deste recorte</button></div>
+
+</body></html>

@@ -1,0 +1,50 @@
+<!-- @dsCard group="Dataviz" name="Gráficos" subtitle="Série temporal com anotação de evento · barras horárias · sparkline · regras de marca" -->
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0b0e13;color:#e8eaed;font:14px/1.5 Inter,system-ui,sans-serif;padding:24px;display:flex;flex-direction:column;gap:20px;max-width:680px}
+  h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9aa4ad;margin:0 0 8px}
+  .painel{background:#14181f;border:1px solid #242c38;border-radius:14px;padding:18px}
+  .legenda{display:flex;gap:16px;font-size:12px;color:#9aa4ad;margin-bottom:8px}
+  .legenda i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+  svg{display:block;width:100%}
+  .eixo{font:400 10px/1 "JetBrains Mono",monospace;fill:#5b6570}
+  .anot{font:500 10px/1 "JetBrains Mono",monospace;fill:#c2662a}
+  .nota{font-size:11px;color:#5b6570}
+</style></head><body>
+
+<div class="painel">
+<h2>Série temporal (linha 2px, grid recessivo, anotação de evento como faixa)</h2>
+<div class="legenda"><span><i style="background:#149cc6"></i>chuva média (33 estações)</span><span><i style="background:#c08428"></i>média histórica 1997–2025</span><span><i style="background:#c2662a33;border:1px solid #c2662a"></i>Estágio 3+</span></div>
+<svg viewBox="0 0 640 150">
+  <line x1="0" y1="120" x2="640" y2="120" stroke="#242c38"/>
+  <line x1="0" y1="70" x2="640" y2="70" stroke="#1a212b"/>
+  <line x1="0" y1="20" x2="640" y2="20" stroke="#1a212b"/>
+  <rect x="210" y="10" width="34" height="110" fill="#c2662a1f" stroke="#c2662a55"/>
+  <text class="anot" x="212" y="8">22/07 · Estágio 3</text>
+  <path d="M0,112 60,108 120,110 180,84 227,28 260,96 320,110 380,108 440,112 500,110 560,113 640,112" fill="none" stroke="#149cc6" stroke-width="2"/>
+  <path d="M0,104 640,101" stroke="#c08428" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>
+  <text class="eixo" x="0" y="136">08 jul</text><text class="eixo" x="300" y="136">22 jul</text><text class="eixo" x="600" y="136">hoje</text>
+</svg>
+</div>
+
+<div style="display:flex;gap:20px">
+<div class="painel" style="flex:1">
+<h2>Barras horárias (fim arredondado 3px, gap 2px)</h2>
+<svg viewBox="0 0 280 90">
+  <g fill="#c08428"><rect x="6" y="52" width="16" height="30" rx="3"/><rect x="28" y="44" width="16" height="38" rx="3"/><rect x="50" y="36" width="16" height="46" rx="3"/><rect x="72" y="30" width="16" height="52" rx="3"/><rect x="94" y="26" width="16" height="56" rx="3"/><rect x="116" y="30" width="16" height="52" rx="3"/><rect x="138" y="38" width="16" height="44" rx="3"/><rect x="160" y="48" width="16" height="34" rx="3"/><rect x="182" y="56" width="16" height="26" rx="3"/><rect x="204" y="60" width="16" height="22" rx="3"/><rect x="226" y="64" width="16" height="18" rx="3"/><rect x="248" y="66" width="16" height="16" rx="3"/></g>
+  <text class="eixo" x="6" y="89">15h</text><text class="eixo" x="130" y="89">21h</text><text class="eixo" x="248" y="89">03h</text>
+</svg>
+</div>
+<div class="painel" style="flex:1">
+<h2>Sparkline (dentro de cartões)</h2>
+<svg viewBox="0 0 280 60"><polyline fill="none" stroke="#149cc6" stroke-width="2" points="0,40 30,38 60,42 90,30 120,26 150,32 180,20 210,24 240,16 280,18"/><circle cx="280" cy="18" r="3.5" fill="#00C0F3"/></svg>
+<p class="nota">ponto final em ciano = leitura ao vivo</p>
+</div>
+</div>
+
+<p class="nota">Regras: nunca dois eixos y · legenda sempre presente com 2+ séries · tooltip em toda série · texto usa tokens de texto, nunca a cor da série · status (severidade) nunca vira cor de série.</p>
+
+</body></html>

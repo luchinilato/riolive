@@ -1,0 +1,41 @@
+<!-- @dsCard group="Componentes" name="Ticker e feed" subtitle="Faixa de leituras ao vivo + feed 'agora na cidade' com toggle 'só o anormal'" -->
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0b0e13;color:#e8eaed;font:14px/1.5 Inter,system-ui,sans-serif;padding:24px;display:flex;flex-direction:column;gap:22px}
+  h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9aa4ad;margin:0 0 8px}
+  .ticker{overflow:hidden;border-top:1px solid #242c38;border-bottom:1px solid #242c38;padding:8px 0;white-space:nowrap}
+  .ticker div{display:inline-block;font:500 12px/1 "JetBrains Mono",monospace;color:#9aa4ad;animation:rolar 28s linear infinite}
+  .ticker b{color:#e8eaed;font-weight:500}
+  .ticker .up{color:#3fa96b}.ticker .dn{color:#cd4048}.ticker .eq{color:#5b6570}
+  .ticker em{font-style:normal;color:#242c38;margin:0 10px}
+  @keyframes rolar{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .feed{width:330px;background:#14181f;border:1px solid #242c38;border-radius:14px;padding:16px 18px}
+  .feed .cab{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .feed h3{margin:0;font:600 14px/1 Inter}
+  .tg{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#9aa4ad;cursor:pointer}
+  .tg i{width:26px;height:15px;border-radius:999px;background:#242c38;position:relative;display:inline-block}
+  .tg i::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#9aa4ad}
+  .tg.on i{background:#00C0F366}.tg.on i::after{left:13px;background:#00C0F3}
+  .item{display:grid;grid-template-columns:38px 14px 1fr;gap:8px;align-items:start;padding:7px 0;border-top:1px solid #1a212b;font-size:12.5px}
+  .item time{font:500 11px/1.6 "JetBrains Mono",monospace;color:#5b6570}
+  .item b{width:13px;height:13px;border-radius:50%;font:700 9px/13px "JetBrains Mono",monospace;text-align:center;color:#0b0e13;display:inline-block;margin-top:2px}
+</style></head><body>
+
+<div><h2>Ticker de leituras (pausa no hover)</h2>
+<div class="ticker"><div>
+  <b>COPACABANA</b> 0,0mm <span class="eq">▬</span><em>·</em><b>PM2.5 IRAJÁ</b> 13,3 <span class="up">▲</span><em>·</em><b>RIO TIJUCA</b> 65cm <span class="eq">▬</span><em>·</em><b>4.212 VEÍCULOS</b> <span class="up">▲</span><em>·</em><b>ONDAS</b> 1,4m<em>·</em><b>METRÔ L1</b> NORMAL<em>·</em><b>SDU</b> 12 POUSOS/H<em>·</em><b>ESTÁGIO</b> 1<em>·</em>
+  <b>COPACABANA</b> 0,0mm <span class="eq">▬</span><em>·</em><b>PM2.5 IRAJÁ</b> 13,3 <span class="up">▲</span><em>·</em><b>RIO TIJUCA</b> 65cm <span class="eq">▬</span><em>·</em><b>4.212 VEÍCULOS</b> <span class="up">▲</span><em>·</em><b>ONDAS</b> 1,4m<em>·</em><b>METRÔ L1</b> NORMAL<em>·</em><b>SDU</b> 12 POUSOS/H<em>·</em><b>ESTÁGIO</b> 1<em>·</em>
+</div></div></div>
+
+<div class="feed">
+  <div class="cab"><h3>Agora na cidade</h3><span class="tg on"><i></i>só o anormal</span></div>
+  <div class="item"><time>14:28</time><b style="background:#3fa96b">1</b><span>Linha 232 voltou a circular após 52 min</span></div>
+  <div class="item"><time>14:11</time><b style="background:#ad8d2c">2</b><span>PM10 subiu pra moderado em Bangu (54 µg/m³)</span></div>
+  <div class="item"><time>13:47</time><b style="background:#c2662a">3</b><span>COR: bolsão d'água em Jacarepaguá — resolvido às 14:20</span></div>
+  <div class="item"><time>12:40</time><b style="background:#ad8d2c">2</b><span>2 focos de calor na Região Metropolitana (fora do município)</span></div>
+</div>
+
+</body></html>

@@ -1,0 +1,44 @@
+<!-- @dsCard group="Componentes" name="Cartão temático" subtitle="Número-síntese + métricas secundárias + sparkline + selo; estados normal e degradado" -->
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0b0e13;color:#e8eaed;font:14px/1.5 Inter,system-ui,sans-serif;padding:24px;display:flex;gap:16px;flex-wrap:wrap}
+  .cartao{width:330px;background:#14181f;border:1px solid #242c38;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px}
+  .cab{display:flex;align-items:center;justify-content:space-between}
+  .cab h3{margin:0;font:600 16px/1.2 Inter}
+  .expandir{color:#5b6570;font-size:14px;text-decoration:none;border:1px solid #242c38;border-radius:6px;padding:2px 7px}
+  .expandir:hover{color:#00C0F3;border-color:#00C0F3}
+  .numero{font:700 44px/1 "Space Grotesk",sans-serif;font-variant-numeric:tabular-nums}
+  .numero small{font:400 16px/1 Inter;color:#9aa4ad;margin-left:4px}
+  .apoio{font-size:13px;color:#9aa4ad;margin-top:-4px}
+  .micro{display:flex;gap:14px;font:500 12px/1.4 "JetBrains Mono",monospace;color:#9aa4ad;border-top:1px solid #242c38;padding-top:10px}
+  .micro b{color:#e8eaed;font-weight:500}
+  svg{display:block}
+  .selo{font:400 11px/1 "JetBrains Mono",monospace;color:#9aa4ad;display:flex;align-items:center;gap:6px;margin-top:2px}
+  .selo i{width:6px;height:6px;border-radius:50%;background:#3fa96b;display:inline-block}
+  .alerta{background:#ad8d2c14;border:1px solid #ad8d2c40;border-radius:8px;padding:8px 10px;font-size:12px;color:#ad8d2c}
+  .alerta b{font-weight:600}
+</style></head><body>
+
+<!-- estado normal -->
+<div class="cartao">
+  <div class="cab"><h3>Mobilidade</h3><a class="expandir" href="#" title="Expandir">⤢</a></div>
+  <div><div class="numero">4.200<small>veículos</small></div>
+  <div class="apoio">3.642 ônibus + 558 BRT · 96% das linhas ativas</div></div>
+  <div class="alerta"><b>⚠ 3 linhas sem circular há 40+ min:</b> 232 · SV790 · 863</div>
+  <svg width="290" height="34" viewBox="0 0 290 34"><polyline fill="none" stroke="#149cc6" stroke-width="2" points="0,22 24,20 48,24 72,18 96,16 120,19 144,12 168,14 192,10 216,13 240,9 264,11 290,8"/></svg>
+  <div class="micro"><span>metrô <b>L1 ● L2 ● L4 ●</b></span><span>vel. média <b>31 km/h</b></span></div>
+  <div class="selo"><i></i>Fonte: SMTR + MetrôRio · ao vivo (1 min)</div>
+</div>
+
+<!-- estado degradado -->
+<div class="cartao" style="opacity:.92">
+  <div class="cab"><h3>Navios (AIS)</h3><a class="expandir" href="#">⤢</a></div>
+  <div class="alerta">Fonte instável desde 05/08. Última leitura válida <b>há 3 h 12 min</b> — não exibimos o número pra não passar dado velho como atual.</div>
+  <div class="numero" style="color:#5b6570">—</div>
+  <div class="selo"><i style="background:#cd4048"></i>Fonte: aisstream · degradada</div>
+</div>
+
+</body></html>
