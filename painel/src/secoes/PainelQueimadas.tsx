@@ -4,7 +4,7 @@ import React from 'react'
 import type { Modelo } from '../modelo/tipos'
 
 export function PainelQueimadas({ m }: { m: Modelo }) {
-  const { lay, openQueimadas } = m
+  const { lay, openQueimadas, queimadasHero, queimadasSub } = m
   return (
     <>
 {/* QUEIMADAS */}
@@ -16,8 +16,8 @@ export function PainelQueimadas({ m }: { m: Modelo }) {
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
             </div>
             <div style={{display: 'flex', alignItems: 'baseline', gap: '6px'}}>
-              <span style={{fontFamily: "'Space Grotesk',sans-serif", fontSize: '30px', fontWeight: '600', letterSpacing: '-.02em', lineHeight: '1'}}>0</span>
-              <span style={{fontSize: '11px', color: 'var(--tx2)'}}>focos no município · 3 h</span>
+              <span style={{fontFamily: "'Space Grotesk',sans-serif", fontSize: '30px', fontWeight: '600', letterSpacing: '-.02em', lineHeight: '1'}}>{queimadasHero ?? '0'}</span>
+              <span style={{fontSize: '11px', color: 'var(--tx2)'}}>{queimadasSub ?? 'focos no município · 3 h'}</span>
             </div>
             <div style={{flex: '1 1 auto', minHeight: '0', fontSize: '11px', color: 'var(--tx2)', lineHeight: '1.45'}}>3 focos na Região Metropolitana nas últimas 24 h — Duque de Caxias (2), Itaboraí (1). Nenhum dentro do limite municipal.</div>
             <div style={{display: 'flex', alignItems: 'center', gap: '6px', borderTop: '1px solid var(--bd2)', paddingTop: '7px', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx3)', letterSpacing: '.05em'}}>

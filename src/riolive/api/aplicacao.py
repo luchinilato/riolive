@@ -11,7 +11,17 @@ from collections.abc import Awaitable, Callable
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from riolive.api.rotas import agora, eventos, fontes, locais, posicoes, previsao, radar, series
+from riolive.api.rotas import (
+    agora,
+    chuva,
+    eventos,
+    fontes,
+    locais,
+    posicoes,
+    previsao,
+    radar,
+    series,
+)
 
 CACHE_PADRAO_S = 15
 
@@ -47,3 +57,4 @@ app.include_router(series.rota)
 app.include_router(previsao.rota)
 app.include_router(radar.rota)
 app.include_router(locais.rota)
+app.include_router(chuva.rota)

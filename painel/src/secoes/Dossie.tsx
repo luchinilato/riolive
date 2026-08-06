@@ -108,19 +108,6 @@ export function Dossie({ m }: { m: Modelo }) {
             </div>
           </div>
 
-          <div style={{display: 'flex', gap: '12px'}}>
-            <div style={{flex: '1', background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: '10px', padding: '12px 14px', opacity: '.9'}}>
-              <div style={{fontSize: '10px', letterSpacing: '.1em', color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: '600', marginBottom: '8px'}}>Carregando (skeleton)</div>
-              <div style={{height: '28px', width: '52%', borderRadius: '5px', background: 'linear-gradient(90deg,var(--sk1),var(--sk2),var(--sk1))', backgroundSize: '220px 100%', animation: 'shimmer 1.2s infinite linear'}}></div>
-              <div style={{height: '10px', width: '74%', borderRadius: '4px', marginTop: '9px', background: 'linear-gradient(90deg,var(--sk1),var(--sk2),var(--sk1))', backgroundSize: '220px 100%', animation: 'shimmer 1.2s infinite linear'}}></div>
-              <div style={{height: '44px', width: '100%', borderRadius: '5px', marginTop: '9px', background: 'linear-gradient(90deg,var(--sk1),var(--sk2),var(--sk1))', backgroundSize: '220px 100%', animation: 'shimmer 1.2s infinite linear'}}></div>
-            </div>
-            <div style={{flex: '1', background: 'var(--card)', border: '1px solid var(--warn-bd)', borderRadius: '10px', padding: '12px 14px'}}>
-              <div style={{fontSize: '10px', letterSpacing: '.1em', color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: '600', marginBottom: '8px'}}>Fonte fora do ar</div>
-              <div style={{display: 'flex', gap: '7px', padding: '8px 10px', borderRadius: '6px', background: 'var(--warn-bg)', border: '1px solid var(--warn-bd)', fontSize: '11.5px', color: 'var(--warn-tx)', lineHeight: '1.4'}}><span>⚠</span><span>Alerta Rio não responde desde 14:02. Última leitura válida: 13:57 — 0,0 mm. Não estamos exibindo estimativa.</span></div>
-              <div style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx3)', marginTop: '9px'}}>TENTATIVA AUTOMÁTICA A CADA 60 S · <span style={{color: 'var(--live-tx)'}}>VER STATUS</span></div>
-            </div>
-          </div>
         </div>
       </div>
     </>)}

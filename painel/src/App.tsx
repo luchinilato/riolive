@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { EstadoUi } from './modelo/tipos'
 import { modeloBase } from './modelo/base'
+import { estadoDaUrl, urlDoEstado } from './roteador'
 import { aplicarDadosReais, useDadosReais } from './modelo/dadosReais'
 import { Cabecalho } from './secoes/Cabecalho'
 import { Ticker } from './secoes/Ticker'
@@ -32,14 +33,27 @@ const ESTADO_INICIAL: EstadoUi = {
 }
 
 export default function App() {
-  const [ui, setUi] = useState<EstadoUi>(ESTADO_INICIAL)
+  const [ui, setUi] = useState<EstadoUi>({ ...ESTADO_INICIAL, ...estadoDaUrl() })
 
   useEffect(() => {
     const medir = () => setUi((u) => ({ ...u, vw: window.innerWidth, vh: window.innerHeight }))
     medir()
     window.addEventListener('resize', medir)
-    return () => window.removeEventListener('resize', medir)
+    const aoVoltar = () => setUi((u) => ({ ...u, ...estadoDaUrl() }))
+    window.addEventListener('popstate', aoVoltar)
+    return () => {
+      window.removeEventListener('resize', medir)
+      window.removeEventListener('popstate', aoVoltar)
+    }
   }, [])
+
+  // estado de recorte ↔ URL (imprensa compartilha o link)
+  useEffect(() => {
+    const alvo = urlDoEstado(ui)
+    if (window.location.pathname + window.location.search !== alvo) {
+      window.history.pushState(null, '', alvo)
+    }
+  }, [ui.route, ui.dossier, ui.zone, ui.period])
 
   useEffect(() => {
     document.documentElement.dataset.tema = ui.theme
