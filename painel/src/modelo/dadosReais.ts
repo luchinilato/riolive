@@ -35,7 +35,13 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: noDossieChuva, refetchInterval: 60_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, ui, ativo }
+  const mobilidade = useQuery({
+    queryKey: ['mobilidade-linhas'],
+    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/mobilidade/linhas`).then((r) => r.json()),
+    enabled: ativo, refetchInterval: 60_000, retry: 1,
+  })
+
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, ui, ativo }
 }
 
 const hhmm = (iso: string) => {
@@ -146,6 +152,76 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
         up: '—', bars: Array(30).fill(deg ? 'var(--s2)' : 'var(--up-ok)'),
       }
     })
+  }
+
+  // cartão Mobilidade: planejado × realizado real
+  const mo = d.mobilidade.data
+  if (mo) {
+    const paradas: any[] = mo.linhas_paradas ?? []
+    const warn = !mo.gps_saudavel
+      ? 'GPS da frota fora do ar — detector de linha parada em espera'
+      : paradas.length
+        ? `${paradas.length} linha${paradas.length > 1 ? 's' : ''} sem circular há 40+ min: ${paradas.slice(0, 3).map((p) => p.linha).join(', ')}${paradas.length > 3 ? '…' : ''}`
+        : 'Nenhuma linha planejada sem circular agora'
+    saida.mob = {
+      ...saida.mob,
+      warn,
+      warnBg: !mo.gps_saudavel ? 'var(--s2-bg)' : paradas.length ? 'var(--s3-bg)' : 'var(--ok-bg)',
+      warnBd: !mo.gps_saudavel ? 'var(--warn-bd)' : paradas.length ? 'var(--s3-bd)' : 'var(--ok-bd)',
+      warnC: !mo.gps_saudavel ? 'var(--warn-tx)' : paradas.length ? 'var(--s3-tx)' : 'var(--s1)',
+      count: `${mo.linhas_planejadas_agora} LINHAS`,
+    }
+    if (mo.pct_ativas != null && saida.mob.sub?.includes('ao vivo'))
+      saida.mob.sub = `${saida.mob.sub} · ${mo.pct_ativas}% das linhas planejadas ativas`
+  }
+
+  // dossiê de Mobilidade real
+  if (d.ui.dossier === 'mobilidade' && saida.dossier && mo) {
+    const paradas: any[] = mo.linhas_paradas ?? []
+    const linhas: any[] = mo.linhas ?? []
+    const serie: any[] = mo.serie_veiculos_15min ?? []
+    const dossie: any = { ...saida.dossier, title: 'Mobilidade', route: '/mobilidade' }
+    dossie.sev = !mo.gps_saudavel ? SEV[2] : paradas.length > 5 ? SEV[3] : SEV[1]
+    dossie.kpis = [
+      { l: 'Linhas planejadas agora', v: String(mo.linhas_planejadas_agora ?? '—'), u: 'com frequência no GTFS', c: 'var(--tx)', d: 'calendário e janelas vigentes neste instante' },
+      { l: 'Linhas ativas', v: String(mo.linhas_ativas ?? '—'), u: mo.pct_ativas != null ? `${mo.pct_ativas}% do planejado` : '', c: mo.pct_ativas >= 80 ? 'var(--s1)' : 'var(--s2)', d: 'com veículo transmitindo nos últimos 15 min' },
+      { l: 'Linhas paradas (40+ min)', v: mo.gps_saudavel ? String(paradas.length) : '—', u: mo.gps_saudavel ? 'detector ativo' : 'detector em espera', c: paradas.length ? 'var(--s3)' : 'var(--s1)', d: mo.gps_saudavel ? 'planejadas agora, sem nenhum GPS' : 'GPS da frota fora do ar' },
+      { l: 'Veículos no último bucket', v: serie.length ? String(serie.at(-1).veiculos) : '—', u: 'janela de 15 min', c: 'var(--tx)', d: 'agregado contínuo frota_veiculo_15min' },
+    ]
+    if (serie.length >= 2) {
+      const valores = serie.map((p) => p.veiculos)
+      dossie.series1 = poly(valores, 1000, 205, Math.max(...valores))
+      dossie.series2 = ''
+      dossie.s1 = 'veículos ativos por 15 min (ônibus + BRT)'
+      dossie.s2 = 'planejado por faixa horária · em breve'
+      dossie.annW = 0; dossie.annX = -10; dossie.annLabel = ''
+      dossie.chartTitle = 'Frota ativa · últimas 24 h'
+      const passoN = Math.max(1, Math.floor(serie.length / 8))
+      dossie.axis = serie.filter((_: any, i: number) => i % passoN === 0).slice(0, 8).map((p) => hhmm(p.ts))
+      const ult = serie.at(-1)
+      dossie.tipTime = `${hhmm(ult.ts)} · FROTA`
+      dossie.tip1 = `${ult.veiculos} veículos`
+      dossie.tip2 = ''
+    }
+    const piores = [...linhas].slice(0, 40)
+    dossie.rows = piores.map((li) => ({
+      a: `${li.linha}`,
+      b: `${li.headway_min} min`,
+      c: String(li.veiculos),
+      d: li.minutos_sem_gps == null ? 'sem GPS hoje' : li.minutos_sem_gps <= 15 ? 'agora' : `há ${li.minutos_sem_gps} min`,
+      e: li.veiculos > 0 ? 'circulando' : mo.gps_saudavel && li.minutos_sem_gps != null && li.minutos_sem_gps >= 40 ? 'PARADA' : 'sem sinal',
+      ec: li.veiculos > 0 ? 'var(--tx2)' : 'var(--s3)',
+    }))
+    dossie.cols = ['Linha', 'Freq. plan.', 'Veículos', 'Último GPS', 'Situação']
+    dossie.tableTitle = `${linhas.length} linhas planejadas pra agora — piores primeiro`
+    dossie.sortBy = 'MENOS VEÍCULOS'
+    dossie.mapTitle = 'Frota no mapa'
+    dossie.mapDots = []
+    dossie.context = mo.gps_saudavel
+      ? `${mo.linhas_ativas} de ${mo.linhas_planejadas_agora} linhas planejadas estão circulando (${mo.pct_ativas}%). O detector abre um evento por linha sem GPS há 40+ min e fecha quando ela volta.`
+      : 'O GPS da frota está fora do ar — sem leitura confiável, o detector fica em espera pra não gerar falsos positivos em massa. O planejado (GTFS) segue exibido.'
+    dossie.seal = 'SMTR (GPS) + GTFS · DETECTOR A CADA 5 MIN'
+    saida.dossier = dossie
   }
 
   // ticker composto de leituras reais (substitui o mock quando a API responde)
