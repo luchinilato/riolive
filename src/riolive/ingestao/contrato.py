@@ -61,8 +61,11 @@ class EventoNovo(BaseModel):
     visivel_apos: datetime | None = None
     payload: dict[str, Any] | None = None
     # Tipos "vigentes" (ex. estágio da cidade): só existe um evento aberto por tipo;
-    # mudança fecha o anterior e abre outro. Ver gravacao.gravar_eventos_vigentes.
+    # mudança fecha o anterior e abre outro. Ver gravacao.gravar_eventos.
     vigente: bool = False
+    # Evento pontual descartado se o enriquecimento não achar bairro — é o filtro
+    # de município pra fontes sem recorte próprio (ex. focos do INPE, CSV nacional)
+    exigir_bairro: bool = False
 
 
 @dataclass(frozen=True)

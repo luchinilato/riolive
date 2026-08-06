@@ -171,10 +171,24 @@ def gravar_eventos(
 ) -> int:
     """Grava eventos. Pra tipo `vigente` (ex. estágio da cidade) só existe um evento
     aberto por tipo: releitura igual é no-op; mudança fecha o anterior e abre o novo.
+    Evento pontual (não vigente) deduplica pela chave natural (tipo, inicio, h3_r8):
+    fontes como o INPE re-servem a mesma janela em arquivos sucessivos.
     Retorna eventos novos inseridos.
     """
     inseridos = 0
     for novo in eventos:
+        bairro_id, ra_id = (
+            _bairro_do_ponto(sessao, novo.lat, novo.lon)
+            if novo.lat is not None and novo.lon is not None
+            else (None, None)
+        )
+        if novo.exigir_bairro and bairro_id is None:
+            continue  # fora do município (ou dimensão bairro não carregada)
+        h3_r8 = (
+            h3.latlng_to_cell(novo.lat, novo.lon, 8)
+            if novo.lat is not None and novo.lon is not None
+            else None
+        )
         if novo.vigente:
             aberto = sessao.execute(
                 select(Evento)
@@ -190,11 +204,18 @@ def gravar_eventos(
                     .where(Evento.inicio == aberto.inicio, Evento.id == aberto.id)
                     .values(fim=novo.inicio)
                 )
-        bairro_id, ra_id = (
-            _bairro_do_ponto(sessao, novo.lat, novo.lon)
-            if novo.lat is not None and novo.lon is not None
-            else (None, None)
-        )
+        else:
+            repetido = sessao.execute(
+                select(Evento.id)
+                .where(
+                    Evento.tipo == novo.tipo,
+                    Evento.inicio == novo.inicio,
+                    Evento.h3_r8.is_(None) if h3_r8 is None else Evento.h3_r8 == h3_r8,
+                )
+                .limit(1)
+            ).scalar_one_or_none()
+            if repetido is not None:
+                continue
         sessao.add(
             Evento(
                 tipo=novo.tipo,
@@ -211,11 +232,7 @@ def gravar_eventos(
                 ),
                 bairro_id=bairro_id,
                 ra_id=ra_id,
-                h3_r8=(
-                    h3.latlng_to_cell(novo.lat, novo.lon, 8)
-                    if novo.lat is not None and novo.lon is not None
-                    else None
-                ),
+                h3_r8=h3_r8,
                 visivel_apos=novo.visivel_apos,
                 payload=novo.payload,
                 coletado_em=coletado_em,

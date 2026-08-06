@@ -1,6 +1,14 @@
 """Registro das fontes ativas. Um módulo por fonte, exportando FONTE: FonteConfig."""
 
-from riolive.fontes import alerta_rio, estagio_cor, gps_sppo, openaq
+from riolive.fontes import (
+    alerta_rio,
+    estagio_cor,
+    gps_brt,
+    gps_sppo,
+    openaq,
+    queimadas_inpe,
+    rios_ana,
+)
 from riolive.ingestao.contrato import FonteConfig
 
 FONTES: dict[str, FonteConfig] = {
@@ -8,7 +16,10 @@ FONTES: dict[str, FonteConfig] = {
     for cfg in (
         alerta_rio.FONTE,
         gps_sppo.FONTE,
+        gps_brt.FONTE,
         estagio_cor.FONTE,
         openaq.FONTE,
+        rios_ana.FONTE,
+        queimadas_inpe.FONTE,
     )
 }
