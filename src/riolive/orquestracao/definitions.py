@@ -22,6 +22,7 @@ from riolive.fontes import FONTES
 from riolive.ingestao.contrato import FonteConfig
 from riolive.ingestao.execucao import executar_fonte
 from riolive.saude import heartbeat
+from riolive.snapshot import gravar_snapshot
 
 
 def _fabricar_op(cfg: FonteConfig) -> OpDefinition:
@@ -42,7 +43,11 @@ def _fabricar_op(cfg: FonteConfig) -> OpDefinition:
 
 def _cron(cfg: FonteConfig) -> str:
     minutos = max(1, int(cfg.cadencia.total_seconds()) // 60)
-    return "* * * * *" if minutos == 1 else f"*/{minutos} * * * *"
+    if minutos == 1:
+        return "* * * * *"
+    if minutos < 60:
+        return f"*/{minutos} * * * *"
+    return f"0 */{minutos // 60} * * *"
 
 
 _quentes = [cfg for cfg in FONTES.values() if cfg.quente]
@@ -78,6 +83,17 @@ def _fabricar_job_fria(cfg: FonteConfig) -> JobDefinition:
     return _job
 
 
+@op
+def tirar_snapshot(context: OpExecutionContext) -> None:
+    contadores = gravar_snapshot()
+    context.log.info("snapshot: %s", contadores)
+
+
+@job(name="snapshot_cidade", description="Fotografia resumida da cidade (replay da UI, fase 3)")
+def _job_snapshot() -> None:
+    tirar_snapshot()
+
+
 _job_quentes = _fabricar_job_quentes()
 _jobs_frias = [_fabricar_job_fria(cfg) for cfg in _frias]
 
@@ -99,6 +115,13 @@ _schedules = [
         )
         for cfg, job_fria in zip(_frias, _jobs_frias, strict=True)
     ],
+    ScheduleDefinition(
+        name="agenda_snapshot_cidade",
+        job=_job_snapshot,
+        cron_schedule="*/15 * * * *",
+        execution_timezone="America/Sao_Paulo",
+        default_status=DefaultScheduleStatus.RUNNING,
+    ),
 ]
 
-defs = Definitions(jobs=[_job_quentes, *_jobs_frias], schedules=_schedules)
+defs = Definitions(jobs=[_job_quentes, *_jobs_frias, _job_snapshot], schedules=_schedules)

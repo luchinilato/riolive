@@ -34,6 +34,9 @@ class Config(BaseSettings):
     # Sentry; vazio desativa
     sentry_dsn: str = ""
 
+    # Blobs (radar, PDFs): disco local em dev; R2 em produção quando configurado
+    blobs_dir: str = "dados/blobs"
+
     # Chaves de fontes (fase 1+)
     openaq_api_key: SecretStr = SecretStr("")
     tomtom_api_key: SecretStr = SecretStr("")

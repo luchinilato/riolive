@@ -9,6 +9,7 @@ from riolive.modelos.fatos import (
     Evento,
     Medicao,
     Posicao,
+    Previsao,
     SaudeFonte,
     SnapshotCidade,
 )
@@ -27,6 +28,7 @@ __all__ = [
     "Local",
     "Medicao",
     "Posicao",
+    "Previsao",
     "SaudeFonte",
     "SnapshotCidade",
 ]

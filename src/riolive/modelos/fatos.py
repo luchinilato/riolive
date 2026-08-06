@@ -133,6 +133,25 @@ class Evento(Base):
     )
 
 
+class Previsao(Base):
+    """Previsão (Open-Meteo etc.): todas as rodadas, com emitida_em na chave.
+
+    Decisão A de 2026-08-06: histórico de rodadas habilita previsto × ocorrido;
+    o painel lê a view vw_previsao_atual.
+    """
+
+    __tablename__ = "previsao"
+
+    emitida_em: Mapped[ts_tz]
+    local_id: Mapped[int] = mapped_column(ForeignKey("local.id"))
+    metrica: Mapped[str] = mapped_column(String(32))
+    ts_alvo: Mapped[ts_tz]
+    valor: Mapped[float]
+    payload: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
+    __table_args__ = (PrimaryKeyConstraint("local_id", "metrica", "ts_alvo", "emitida_em"),)
+
+
 class SnapshotCidade(Base):
     """Fotografia da cidade a cada 15 min: replay da UI e estado_atual() da fase 3."""
 

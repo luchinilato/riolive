@@ -68,12 +68,28 @@ class EventoNovo(BaseModel):
     exigir_bairro: bool = False
 
 
+class PrevisaoNova(BaseModel):
+    codigo_local: str
+    metrica: str
+    ts_alvo: datetime
+    valor: float
+
+
+class BlobNovo(BaseModel):
+    caminho: str  # relativo dentro do armazém (ex. radar/20260806_1330.png)
+    ts: datetime
+    conteudo: bytes
+    meta: dict[str, Any] | None = None
+
+
 @dataclass(frozen=True)
 class ResultadoColeta:
     medicoes: list[MedicaoNova] = field(default_factory=list)
     posicoes: list[PosicaoNova] = field(default_factory=list)
     eventos: list[EventoNovo] = field(default_factory=list)
     locais: list[LocalNovo] = field(default_factory=list)
+    blobs: list[BlobNovo] = field(default_factory=list)
+    previsoes: list[PrevisaoNova] = field(default_factory=list)
     # Timestamp mais recente do dado em si (não da coleta): insumo do detector de
     # congelamento. None = fonte sem noção de frescor própria.
     marca_frescor: datetime | None = None

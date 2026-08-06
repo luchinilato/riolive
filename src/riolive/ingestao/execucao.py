@@ -77,6 +77,12 @@ def executar_fonte(
                 inseridos["eventos"] = gravacao.gravar_eventos(
                     s, fonte_id, resultado.eventos, coletado_em
                 )
+            if resultado.blobs:
+                inseridos["blobs"] = gravacao.gravar_blobs(s, fonte_id, resultado.blobs)
+            if resultado.previsoes:
+                inseridos["previsoes"] = gravacao.inserir_previsoes(
+                    s, resultado.previsoes, mapa_locais, coletado_em
+                )
         if resultado.marca_frescor is not None:
             idade = coletado_em - resultado.marca_frescor
             if idade > cfg.tolerancia_frescor:

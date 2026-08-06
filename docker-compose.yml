@@ -43,6 +43,7 @@ services:
         required: false
     volumes:
       - ./docker/dagster.yaml:/app/.dagster_home/dagster.yaml:ro
+      - ./dados:/app/dados
     depends_on:
       db:
         condition: service_healthy
@@ -56,6 +57,7 @@ services:
         required: false
     volumes:
       - ./docker/dagster.yaml:/app/.dagster_home/dagster.yaml:ro
+      - ./dados:/app/dados
     depends_on:
       db:
         condition: service_healthy

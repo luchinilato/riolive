@@ -6,7 +6,9 @@ from riolive.fontes import (
     gps_brt,
     gps_sppo,
     openaq,
+    openmeteo,
     queimadas_inpe,
+    radar_sumare,
     rios_ana,
 )
 from riolive.ingestao.contrato import FonteConfig
@@ -21,5 +23,8 @@ FONTES: dict[str, FonteConfig] = {
         openaq.FONTE,
         rios_ana.FONTE,
         queimadas_inpe.FONTE,
+        radar_sumare.FONTE,
+        openmeteo.FONTE_TEMPO,
+        openmeteo.FONTE_MAR,
     )
 }

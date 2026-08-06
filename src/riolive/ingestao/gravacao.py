@@ -13,14 +13,17 @@ from sqlalchemy import select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
+from riolive.blobs import armazem
 from riolive.ingestao.contrato import (
+    BlobNovo,
     EventoNovo,
     FonteConfig,
     LocalNovo,
     MedicaoNova,
     PosicaoNova,
+    PrevisaoNova,
 )
-from riolive.modelos import Evento, Fonte, Local, Medicao, Posicao
+from riolive.modelos import BlobManifesto, Evento, Fonte, Local, Medicao, Posicao, Previsao
 
 TAMANHO_LOTE = 5000
 
@@ -238,6 +241,55 @@ def gravar_eventos(
                 coletado_em=coletado_em,
             )
         )
+        inseridos += 1
+    sessao.flush()
+    return inseridos
+
+
+def inserir_previsoes(
+    sessao: Session,
+    previsoes: list[PrevisaoNova],
+    mapa_locais: dict[str, int],
+    emitida_em: datetime,
+) -> int:
+    """Insere uma rodada de previsão; todas as rodadas são preservadas (decisão A)."""
+    valores: list[dict[str, Any]] = [
+        {
+            "emitida_em": emitida_em,
+            "local_id": mapa_locais[p.codigo_local],
+            "metrica": p.metrica,
+            "ts_alvo": p.ts_alvo,
+            "valor": p.valor,
+        }
+        for p in previsoes
+    ]
+    inseridos = 0
+    for i in range(0, len(valores), TAMANHO_LOTE):
+        lote = valores[i : i + TAMANHO_LOTE]
+        resultado = sessao.execute(
+            insert(Previsao)
+            .values(lote)
+            .on_conflict_do_nothing(index_elements=["local_id", "metrica", "ts_alvo", "emitida_em"])
+            .returning(Previsao.ts_alvo)
+        )
+        inseridos += len(resultado.all())
+    return inseridos
+
+
+def gravar_blobs(sessao: Session, fonte_id: int, blobs: list[BlobNovo]) -> int:
+    """Salva blobs no armazém e registra no manifesto; caminho repetido é no-op."""
+    deposito = armazem()
+    inseridos = 0
+    for blob in blobs:
+        existe = sessao.execute(
+            select(BlobManifesto.id)
+            .where(BlobManifesto.fonte_id == fonte_id, BlobManifesto.path == blob.caminho)
+            .limit(1)
+        ).scalar_one_or_none()
+        if existe is not None:
+            continue
+        deposito.salvar(blob.caminho, blob.conteudo)
+        sessao.add(BlobManifesto(fonte_id=fonte_id, ts=blob.ts, path=blob.caminho, meta=blob.meta))
         inseridos += 1
     sessao.flush()
     return inseridos
