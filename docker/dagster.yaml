@@ -1,0 +1,14 @@
+# Instância do Dagster (montado em $DAGSTER_HOME/dagster.yaml pelo compose)
+storage:
+  postgres:
+    postgres_url: postgresql://riolive:riolive@db:5432/dagster
+
+# Cadência de 1 min gera muitos runs: retenção curta pra não inchar o banco
+retention:
+  schedule:
+    purge_after_days: 7
+  sensor:
+    purge_after_days: 7
+
+telemetry:
+  enabled: false
