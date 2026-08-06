@@ -21,6 +21,7 @@ import { PainelNavios } from './secoes/PainelNavios'
 import { Feed } from './secoes/Feed'
 import { VistaMapa } from './secoes/VistaMapa'
 import { VistaStatus } from './secoes/VistaStatus'
+import { VistaMobile } from './secoes/VistaMobile'
 import { Rodape } from './secoes/Rodape'
 import { Dossie } from './secoes/Dossie'
 
@@ -57,6 +58,11 @@ export default function App() {
   const m = aplicarDadosReais(modeloBase(ui, acoes), dados)
 
   const emDossie = m.dossier != null
+
+  // ≤640px: pilha rolável (DEC do layout) — sem o palco escalado do desktop
+  if ((ui.vw ?? 1440) <= 640) {
+    return <VistaMobile m={m} />
+  }
 
   return (
     <div style={{ height: '100vh', width: '100%', overflow: 'hidden', background: 'var(--bg)',

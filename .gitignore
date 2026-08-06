@@ -30,3 +30,5 @@ dados/
 painel/rascunho/
 painel/node_modules/
 painel/dist/
+
+painel/public/rio.pmtiles

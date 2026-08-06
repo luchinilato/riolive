@@ -2,9 +2,10 @@
    a fonte visual da verdade é docs/design/handoff/painel-rio.dc.html */
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
+import { MapaReal } from './MapaReal'
 
 export function VistaMapa({ m }: { m: Modelo }) {
-  const { copyLabel, copyLink, frames, isMapa, layers, mapFleet, mapIncidents, mapPresets } = m
+  const { copyLabel, copyLink, frames, isMapa, layers, mapPresets, presetAtivo } = m
   return (
     <>
 {/* ================= MAPA ================= */}
@@ -25,30 +26,7 @@ export function VistaMapa({ m }: { m: Modelo }) {
 
         <div style={{flex: '1 1 auto', minHeight: '0', display: 'flex', gap: '12px'}}>
           <div style={{flex: '1 1 auto', minWidth: '0', position: 'relative', border: '1px solid var(--bd)', borderRadius: '10px', overflow: 'hidden', background: 'var(--bg2)', backgroundImage: 'linear-gradient(var(--map-grid) 1px,transparent 1px),linear-gradient(90deg,var(--map-grid) 1px,transparent 1px),linear-gradient(115deg,var(--map-grid2) 1px,transparent 1px)', backgroundSize: '46px 46px,46px 46px,90px 90px'}}>
-            <div style={{position: 'absolute', left: '12px', top: '12px', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', letterSpacing: '.06em', padding: '3px 7px', border: '1px solid var(--bd)', borderRadius: '4px', background: 'var(--scrim)'}}>BASEMAP PLACEHOLDER · MAPLIBRE</div>
-            {(mapFleet as any[]).map((p: any, pI: number) => (<React.Fragment key={pI}>
-              <span style={{position: 'absolute', left: `${p.x}%`, top: `${p.y}%`, width: '3px', height: '3px', borderRadius: '50%', background: '#149cc6', opacity: '.85'}}></span>
-            </React.Fragment>))}
-            {(mapIncidents as any[]).map((i: any, iI: number) => (<React.Fragment key={iI}>
-              <span style={{position: 'absolute', left: `${i.x}%`, top: `${i.y}%`, width: '16px', height: '16px', background: `${i.c}`, opacity: '.55', clipPath: 'polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)'}}></span>
-            </React.Fragment>))}
-            <div style={{position: 'absolute', left: '41%', top: '37%', transform: 'translate(-50%,-100%)', width: '250px', background: 'var(--card)', border: '1px solid var(--bd-strong)', borderRadius: '8px', padding: '10px', boxShadow: 'var(--shadow)'}}>
-              <div style={{display: 'flex', alignItems: 'center', gap: '7px'}}>
-                <span style={{padding: '1px 5px', borderRadius: '4px', border: '1px solid var(--s3)', color: 'var(--s3)', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>▲ 3</span>
-                <span style={{fontSize: '12px', fontWeight: '600', color: 'var(--tx)'}}>Linha 232 parada</span>
-              </div>
-              <div style={{fontSize: '11px', color: 'var(--tx2)', marginTop: '6px', lineHeight: '1.4'}}>Sem GPS ativo há 47 min no trecho Penha → Central. Ocorrência de tiro a 380 m às 13:52.</div>
-              <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', borderTop: '1px solid var(--bd2)', paddingTop: '7px'}}>
-                <span style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx3)'}}>SMTR + FOGO CRUZADO · 14:04</span>
-                <span style={{marginLeft: 'auto', fontSize: '11px', color: 'var(--live-tx)', cursor: 'pointer'}}>⧉ copiar link</span>
-              </div>
-              <span style={{position: 'absolute', left: '50%', bottom: '-6px', marginLeft: '-6px', width: '10px', height: '10px', background: 'var(--card)', borderRight: '1px solid var(--bd-strong)', borderBottom: '1px solid var(--bd-strong)', transform: 'rotate(45deg)'}}></span>
-            </div>
-            <div style={{position: 'absolute', left: '12px', bottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', borderRadius: '6px', background: 'var(--scrim)', border: '1px solid var(--bd)', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx2)'}}>
-              <span><span style={{color: '#149cc6'}}>●</span> FROTA ATIVA 4.212</span>
-              <span><span style={{color: 'var(--s4)'}}>⬢</span> OCORRÊNCIAS 24H</span>
-              <span><span style={{color: 'var(--s3)'}}>▲</span> LINHAS PARADAS 3</span>
-            </div>
+            <MapaReal preset={presetAtivo} />
           </div>
 
           <div style={{flex: '0 0 268px', background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: '10px', display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>

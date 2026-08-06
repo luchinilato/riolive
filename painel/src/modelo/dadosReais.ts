@@ -132,5 +132,20 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     })
   }
 
+  // mobileList é derivada dos painéis no modelo base — re-deriva com os valores reais
+  if (Array.isArray(saida.mobileList)) {
+    saida.mobileList = saida.mobileList.map((cartao: any) => {
+      if (cartao.t === 'Chuva e água' && saida.chuva)
+        return { ...cartao, v: saida.chuva.hero, sub: saida.chuva.sub }
+      if (cartao.t === 'Mobilidade' && saida.mob)
+        return { ...cartao, v: saida.mob.hero, sub: saida.mob.sub }
+      if (cartao.t === 'Previsão' && saida.previsao)
+        return { ...cartao, v: saida.previsao.hero }
+      if (cartao.t === 'Qualidade do ar' && saida.ar)
+        return { ...cartao, u: saida.ar.heroSub }
+      return cartao
+    })
+  }
+
   return saida
 }

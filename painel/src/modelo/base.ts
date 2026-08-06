@@ -371,7 +371,7 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       tickerLoop: tick.concat(tick), tickerState: s.paused ? 'paused' : 'running',
       pauseTicker: () => defina({ paused:true }), resumeTicker: () => defina({ paused:false }),
       chuva, mob, transito, previsao, seguranca, ar, ceu, mar, memoria, lay, ramp:RAMP,
-      fleetDots, hexes, mapFleet, mapIncidents, mapPresets, layers, frames, sources,
+      fleetDots, hexes, mapFleet, mapIncidents, mapPresets, layers, frames, sources, presetAtivo: active,
       feed, feedCount: feedAll.length + ' EVENTOS · 24H',
       abn: { track: s.onlyAbn ? 'var(--brand)' : 'var(--bd4)', x: s.onlyAbn ? 14 : 2, c: s.onlyAbn ? 'var(--live-tx)' : 'var(--tx2)' },
       toggleAbnormal: () => defina({ onlyAbn: !s.onlyAbn }),
