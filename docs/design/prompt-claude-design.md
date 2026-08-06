@@ -72,6 +72,7 @@ Mais de 5 séries: agrupar em "Outros", nunca gerar cor nova. Texto de rótulo/v
 3. **Rotulagem obrigatória**: todo número, gráfico ou mapa carrega um selo discreto "Fonte: X · há N min". É requisito do produto, não decoração — desenhe um componente elegante e reutilizável pra isso.
 4. **Honestidade sobre falhas**: se uma fonte está fora do ar ou com dado velho, o cartão mostra isso claramente (estado "degradado") em vez de esconder ou exibir número obsoleto como se fosse atual.
 5. **Todo estado de filtro vive na URL** (a imprensa compartilha o recorte). Indique visualmente que as vistas são compartilháveis (botão "copiar link deste recorte").
+6. **Densidade com hierarquia.** A home deve dar a sensação de MUITO dado ao vivo — é um monitor de sinais vitais, e a abundância de leituras é parte da credibilidade e do impacto. Meta concreta: 50+ números visíveis na home sem rolagem no desktop, em camadas (número-síntese grande → linha de métricas secundárias → micro-tabela ou sparkline), mais um ticker e um feed correndo. O que separa isso de "poluído": hierarquia tipográfica rígida, alinhamento em grid, e o ciano reservado ao que está vivo. Denso, não militar: nada de scanlines, HUDs ou verde-radar.
 
 ## Escala de severidade (usada em todo o produto)
 
@@ -83,21 +84,34 @@ Crie tokens de cor pros 5 níveis funcionando sobre fundo escuro, com versão ac
 
 ### Tela 1 — Home (desktop e mobile)
 
+**Navegação**: Agora · Mapa · Análises · Status. ("Análises" é a camada de aprofundamento — antigo "Painéis".)
+
 **Cabeçalho de estado** (topo, sempre visível): estágio atual da cidade em destaque + um resumo de uma linha. Mock: "**Estágio 1 — Normalidade** · A cidade opera normalmente. Sem chuva nas últimas 24h." Fonte: COR · há 3 min.
+
+**Ticker de leituras** (faixa fina logo abaixo do cabeçalho, rolagem horizontal contínua e pausável): leituras ao vivo intercaladas de todas as fontes, em JetBrains Mono. Mock: `COPACABANA 0,0mm · PM2.5 IRAJÁ 13,3 · RIO TIJUCA 65cm ▬ · 4.212 VEÍCULOS ▲ · ONDAS 1,4m · METRÔ L1 NORMAL · SDU 12 POUSOS/H · ESTÁGIO 1`. É o elemento que faz a página parecer um organismo vivo.
+
+**Feed "agora na cidade"** (coluna direita no desktop, ~320 px): lista cronológica dos últimos eventos/transições de todas as fontes, com badge de severidade e idade. Mock: "14:28 · linha 232 voltou a circular", "14:11 · PM10 subiu pra moderado em Bangu", "13:47 · COR: bolsão d'água em Jacarepaguá — resolvido 14:20", "12:40 · 2 focos de calor na Região Metropolitana (fora do município)". O feed rola independente.
 
 **Grade de cartões temáticos** (a ordem muda conforme severidade; num dia calmo):
 
-1. **Chuva e água** — número-síntese: "0,0 mm na última hora (todas as 33 estações)". Mini-mapa com o radar sobreposto (mock: 2 ecos verdes fracos na serra, cidade limpa). Sparkline de chuva 24h (flat em zero). Linha secundária: "Rios: Tijuca 65 cm — estável". Selo: Alerta Rio + ANA · há 4 min.
-2. **Mobilidade** — número-síntese grande: "**4.200 veículos em circulação**" com detalhe "3.642 ônibus + 558 BRT · 96% das linhas planejadas ativas". Um aviso de exemplo do detector: "⚠ 3 linhas sem circular há 40+ min: 232, SV790, 863". Mini-mapa de pontos da frota. Selo: SMTR · ao vivo (1 min).
-3. **Previsão** — hoje à tarde: "**31 °C**, sem chuva à vista · umidade 58%". Faixa horária das próximas 12h (mini gráfico de barras de temperatura + gotas de probabilidade de chuva). Selo: Open-Meteo · rodada de 14h.
-4. **Qualidade do ar** — "**Boa** · PM2.5 máx 16,7 µg/m³ (Campinho)". Mapinha de bolhas ou lista das 3 piores estações. Selo: OpenAQ · há 20 min.
-5. **Mar e praias** — "Ondas de 1,4 m, período 9 s · mar calmo". Selo: Open-Meteo Marine.
-6. **Queimadas** — "0 focos no município nas últimas 3h". Selo: INPE · há 8 min.
-7. **Cartão de memória (Tese 2)** — um cartão editorial que contextualiza: "Agosto até agora: 12 mm de chuva — 34% da média histórica do mês". Este cartão é o diferencial do produto; dê a ele um tratamento visual próprio (citação de dado, tipografia maior).
+O painel cobre o escopo COMPLETO de lançamento — inclua TODOS os cartões abaixo, mesmo os de fonte que ainda entra (desenhe-os com dados de exemplo normais, não como "em breve"):
+
+1. **Chuva e água** — número-síntese: "0,0 mm na última hora (todas as 33 estações)". Mini-mapa com o radar sobreposto (mock: 2 ecos verdes fracos na serra, cidade limpa). Sparkline de chuva 24h (flat em zero). Linha secundária: "Rios: Tijuca 65 cm — estável · Acari, Maracanã, Faria-Timbó ok". Selo: Alerta Rio + ANA · há 4 min.
+2. **Mobilidade** — número-síntese grande: "**4.200 veículos em circulação**" com detalhe "3.642 ônibus + 558 BRT · 96% das linhas planejadas ativas". Um aviso de exemplo do detector: "⚠ 3 linhas sem circular há 40+ min: 232, SV790, 863". Mini-mapa de pontos da frota. Linha do metrô: "L1 ● L2 ● L4 ● operação normal". Selo: SMTR + MetrôRio · ao vivo (1 min).
+3. **Segurança** — número-síntese: "**3 ocorrências de tiro** nas últimas 24 h" com detalhe "Zona Norte 2 · Zona Oeste 1 · nenhuma nas últimas 6 h". Mini-mapa H3 (hexágonos discretos, sem pino sensacionalista) + linha de contexto mensal: "julho: 214 ocorrências no estado — taxa 1,24/100 mil (ISP)". Selo: Fogo Cruzado + ISP · há 12 min. IMPORTANTE: tratamento visual sério e contido — é dado sensível; nada de vermelho piscante.
+4. **Trânsito** — "Velocidade média dos corredores: **31 km/h** · fluxo livre 42". Micro-tabela dos 4 piores corredores agora (Av. Brasil 18 km/h ▼, Aterro 51 ▲, Linha Amarela 24, Av. das Américas 27). Derivado da nossa frota + TomTom. Selo: SMTR/TomTom · há 5 min.
+5. **Previsão** — hoje à tarde: "**31 °C**, sem chuva à vista · umidade 58% · vento 18 km/h SE". Faixa horária das próximas 12 h (mini barras de temperatura + gotas de probabilidade de chuva). Selo: Open-Meteo · rodada de 14h.
+6. **Qualidade do ar** — "**Boa** · PM2.5 máx 16,7 µg/m³ (Campinho)". Lista das 3 piores estações com barrinhas + "28 estações reportando". Selo: OpenAQ · há 20 min.
+7. **Mar e praias** — "Ondas de **1,4 m**, período 9 s · mar calmo" + balneabilidade: "Praias: 14 próprias · 3 impróprias (Botafogo, Flamengo, Ramos)". Selo: Open-Meteo Marine + INEA · boletim de 04/08.
+8. **Céu** — "**14 aeronaves** sobre a cidade agora · SDU 12 pousos/h · GIG 21". Linha secundária: "pontualidade julho: 87% (VRA/ANAC)". Selo: adsb.lol · ao vivo.
+9. **Queimadas** — "0 focos no município nas últimas 3 h · 3 na Região Metropolitana em 24 h". Selo: INPE · há 8 min.
+10. **Cidade viva** — agenda + serviços: "Sáb 19:30 · Flamengo × Vitória, Maracanã (esquema especial de trânsito)" + "Águas do Rio: manutenção programada em Irajá, qui 22h–5h". Selo: TheSportsDB + Águas do Rio.
+11. **Cartão de memória (Tese 2)** — um cartão editorial que contextualiza: "Agosto até agora: 12 mm de chuva — 34% da média histórica do mês". Este cartão é o diferencial do produto; dê a ele um tratamento visual próprio (citação de dado, tipografia maior, botão "copiar dado citável").
+12. **Navios (AIS)** — exemplo do estado degradado: fonte instável, mostrando última leitura válida com aviso honesto.
 
 **Rodapé**: link pra página de status das fontes ("12 de 12 fontes operando normalmente ●"), metodologia (placeholder), e nota de licença dos dados.
 
-**Versão mobile**: os cartões empilham; o cabeçalho de estado vira uma barra compacta fixa; navegação inferior com 4 itens (Agora, Mapa, Painéis, Status).
+**Versão mobile**: os cartões empilham; o cabeçalho de estado vira uma barra compacta fixa; navegação inferior com 4 itens (Agora, Mapa, Análises, Status). O ticker permanece (uma linha, rolagem contínua); o feed vira uma aba dentro de "Agora".
 
 ### Tela 2 — Vista Mapa (`/mapa`)
 
@@ -112,7 +126,11 @@ Mapa escuro da cidade ocupando a área principal, com:
 
 Tabela/lista pública de todas as fontes: nome, órgão, estado atual (online/degradada/fora/congelada com os ícones da escala), última leitura, uptime 30 dias (barrinha estilo status page). Mock: 11 online + 1 degradada ("Navios (AIS) — instável desde 05/08"). É a página da transparência — visual de status page séria.
 
-### Tela 4 — Detalhe de um painel (exemplo: Chuva e água)
+### Tela 4 — Índice de Análises (`/analises`)
+
+A porta de entrada da camada de aprofundamento: grade com um bloco por tema (os mesmos 10 temas dos cartões da home), cada um com título, número-síntese atual e um resumo do que a análise oferece ("séries desde 1997", "planejado × realizado por linha", "taxa /100 mil por região"). Deixe claro pelo design que aqui é onde mora o histórico e o contexto — a home é o agora, as Análises são a memória.
+
+### Tela 5 — Detalhe de uma Análise (exemplo: Chuva e água)
 
 Página aprofundada: gráfico de série temporal grande (chuva por hora, 24h–30 dias, com anotações de eventos: faixa vermelha quando a cidade entrou em Estágio 3), tabela das 33 estações ordenável, mapa das estações, e o bloco de contexto histórico ("percentil 95 pra agosto"). Seletor de período e comparação com a média histórica.
 
@@ -126,6 +144,8 @@ Página aprofundada: gráfico de série temporal grande (chuva por hora, 24h–3
 - **Mini-mapa** (moldura padrão pra frota/radar dentro de cartões).
 - **Chip de filtro** (ativo/inativo) e **botão "copiar link"**.
 - **Banner de estado degradado** (quando uma fonte do cartão está fora).
+- **Ticker de leituras** (item mono + separador, com variação ▲▼▬).
+- **Item de feed** (timestamp mono + badge de severidade + texto de uma linha).
 
 ## Estados a desenhar
 
@@ -134,4 +154,4 @@ Página aprofundada: gráfico de série temporal grande (chuva por hora, 24h–3
 
 ## Entregáveis
 
-Home (desktop + mobile, dia calmo), Home dia de crise (desktop), Vista Mapa (desktop), Status (desktop), Detalhe Chuva (desktop) — e o inventário de componentes/tokens (cores, tipografia, espaçamentos) organizado pra virar design system.
+Home (desktop + mobile, dia calmo), Home dia de crise (desktop), Vista Mapa (desktop), Índice de Análises (desktop), Detalhe Chuva (desktop), Status (desktop) — e o inventário de componentes/tokens (cores, tipografia, espaçamentos) organizado pra virar design system.
