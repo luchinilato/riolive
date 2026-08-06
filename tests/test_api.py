@@ -40,7 +40,9 @@ def test_fontes_lista_todas_com_estado(cliente: TestClient) -> None:
     corpo = cliente.get("/fontes").json()
     slugs = {f["slug"] for f in corpo}
     assert {"alerta_rio", "gps_sppo", "estagio_cor", "openaq"} <= slugs
-    assert all(f["estado"] in ("online", "degradada", "fora", "congelada") for f in corpo)
+    assert all(
+        f["estado"] in ("online", "degradada", "fora", "congelada", "desconhecido") for f in corpo
+    )  # "desconhecido" = fonte registrada sem transição ainda (ex. detector interno)
 
 
 def test_eventos_vigentes_incluem_estagio(cliente: TestClient) -> None:

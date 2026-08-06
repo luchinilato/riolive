@@ -13,7 +13,7 @@ from typing import Any
 from sqlalchemy import select, text, update
 
 from riolive.db import sessao
-from riolive.mobilidade import detectar_paradas, gps_saudavel, linhas_agora
+from riolive.mobilidade import detectar_paradas, gps_confiavel, linhas_agora
 from riolive.modelos import Evento
 
 logger = logging.getLogger(__name__)
@@ -39,8 +39,9 @@ def rodar() -> dict[str, int]:
     """Executa uma rodada; retorna contadores (abertos, fechados, vigentes)."""
     agora = datetime.now(tz=UTC)
     with sessao() as s:
-        if not gps_saudavel(s):
-            logger.warning("GPS fora do ar: detector em espera (sem abrir/fechar eventos)")
+        confiavel, motivo = gps_confiavel(s)
+        if not confiavel:
+            logger.warning("detector em espera: %s", motivo)
             return {"abertos": 0, "fechados": 0, "vigentes": -1}
 
         fonte_id = _garantir_fonte(s)

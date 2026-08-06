@@ -35,13 +35,19 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: noDossieChuva, refetchInterval: 60_000, retry: 1,
   })
 
+  const radarMapa = useQuery({
+    queryKey: ['radar-mapa'],
+    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/radar?quadros=12`).then((r) => r.json()),
+    enabled: ativo && ui.route === 'mapa', refetchInterval: 120_000, retry: 1,
+  })
+
   const mobilidade = useQuery({
     queryKey: ['mobilidade-linhas'],
     queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/mobilidade/linhas`).then((r) => r.json()),
     enabled: ativo, refetchInterval: 60_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, ui, ativo }
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, radarMapa, ui, ativo }
 }
 
 const hhmm = (iso: string) => {
@@ -149,7 +155,13 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
         i: deg ? '◆' : '●', c: deg ? 'var(--s2)' : 'var(--s1)',
         age: f.desde ? `desde ${hhmm(f.desde)}` : '—',
         agec: deg ? 'var(--s2)' : 'var(--tx2)',
-        up: '—', bars: Array(30).fill(deg ? 'var(--s2)' : 'var(--up-ok)'),
+        up: f.uptime_pct != null ? `${String(f.uptime_pct).replace('.', ',')}%` : '—',
+        bars: (f.dias ?? Array(30).fill(null)).map((dia: string | null) =>
+          dia === 'online' ? 'var(--up-ok)'
+          : dia === 'degradada' ? 'var(--s2)'
+          : dia === 'congelada' ? 'var(--s3)'
+          : dia === 'fora' ? 'var(--s4)'
+          : 'var(--bd2)'),  // sem dado: neutro, não verde
       }
     })
   }
@@ -308,6 +320,15 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       ]
     }
     saida.dossier = dossie
+  }
+
+  // timeline do mapa: quadros reais do radar (o mais novo em ciano)
+  const quadros: any[] = d.radarMapa.data?.quadros ?? []
+  if (quadros.length >= 2) {
+    saida.frames = quadros.map((q, i) => ({
+      h: 8 + Math.round((i / (quadros.length - 1)) * 8),
+      c: i === quadros.length - 1 ? 'var(--live-tx)' : 'var(--bd4)',
+    }))
   }
 
   // mobileList é derivada dos painéis no modelo base — re-deriva com os valores reais

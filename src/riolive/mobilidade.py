@@ -97,16 +97,42 @@ def linhas_agora(sessao: Session) -> list[LinhaAgora]:
     return saida
 
 
-def gps_saudavel(sessao: Session) -> bool:
-    """Trava do detector: só detecta parada com o GPS online (senão é falso positivo em massa)."""
-    estado = sessao.execute(
+MIN_ONLINE_CONTINUO = 20  # minutos de fonte online contínua antes de confiar
+FROTA_MINIMA_ONIBUS = 1500  # abaixo disso a janela de 15 min ainda está repovoando
+
+
+def gps_confiavel(sessao: Session) -> tuple[bool, str]:
+    """Trava do detector contra falso positivo em massa.
+
+    Três condições (aprendidas com a rajada de 111 falsos no flapping do SPPO em
+    2026-08-06): fonte online, online há 20+ min CONTÍNUOS (a transição recente
+    significa janela ainda repovoando), e frota mínima de ônibus transmitindo.
+    """
+    linha = sessao.execute(
         text(
-            "SELECT DISTINCT ON (f.slug) u.estado FROM saude_fonte u "
-            "JOIN fonte f ON f.id = u.fonte_id WHERE f.slug = 'gps_sppo' "
-            "ORDER BY f.slug, u.ts DESC"
+            "SELECT DISTINCT ON (f.slug) u.estado, "
+            "EXTRACT(EPOCH FROM now() - u.ts)::int / 60 AS minutos "
+            "FROM saude_fonte u JOIN fonte f ON f.id = u.fonte_id "
+            "WHERE f.slug = 'gps_sppo' ORDER BY f.slug, u.ts DESC"
         )
-    ).scalar_one_or_none()
-    return estado == "online"
+    ).first()
+    if linha is None or linha.estado != "online":
+        return False, "GPS da frota fora do ar"
+    if linha.minutos < MIN_ONLINE_CONTINUO:
+        return False, f"GPS voltou há {linha.minutos} min — aguardando janela repovoar"
+    frota = sessao.execute(
+        text(
+            "SELECT count(DISTINCT veiculo_id) FROM posicao "
+            "WHERE modal = 'onibus' AND ts > now() - interval '15 minutes'"
+        )
+    ).scalar_one()
+    if frota < FROTA_MINIMA_ONIBUS:
+        return False, f"só {frota} ônibus transmitindo — janela incompleta"
+    return True, "ok"
+
+
+def gps_saudavel(sessao: Session) -> bool:
+    return gps_confiavel(sessao)[0]
 
 
 def detectar_paradas(linhas: list[LinhaAgora]) -> list[LinhaAgora]:

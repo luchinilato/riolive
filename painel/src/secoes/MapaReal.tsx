@@ -1,7 +1,7 @@
 /* Mapa real: MapLibre + basemap Protomaps (PMTiles no R2; cópia local em dev)
    com camadas vivas da API — frota (/posicoes) e radar (/radar). */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Protocol } from 'pmtiles'
@@ -34,7 +34,7 @@ export function MapaReal({ preset }: { preset: string }) {
     refetchInterval: 30_000,
     retry: 1,
   })
-  const radar = useQuery({ queryKey: ['radar-mapa'], queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/radar?quadros=1`).then((r) => r.json()), refetchInterval: 120_000, retry: 1 })
+  const radar = useQuery({ queryKey: ['radar-mapa'], queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/radar?quadros=12`).then((r) => r.json()), refetchInterval: 120_000, retry: 1 })
 
   useEffect(() => {
     if (!alvo.current || mapa.current) return
@@ -93,12 +93,21 @@ export function MapaReal({ preset }: { preset: string }) {
     fonte?.setData(posicoes.data)
   }, [posicoes.data, posicoes.dataUpdatedAt])
 
-  // radar: quadro mais novo como overlay, só no recorte de chuva
+  const [quadroIdx, setQuadroIdx] = useState(0)
+  useEffect(() => {
+    const quadros = radar.data?.quadros ?? []
+    if (preset !== 'chuva' || quadros.length < 2) return
+    const id = setInterval(() => setQuadroIdx((i) => (i + 1) % quadros.length), 700)
+    return () => clearInterval(id)
+  }, [preset, radar.data])
+
+  // radar: animação dos últimos quadros, só no recorte de chuva
   useEffect(() => {
     const m = mapa.current
     if (!m || !pronto.current) return
     const mostrar = preset === 'chuva'
-    const quadro = radar.data?.quadros?.at(-1)
+    const quadros = radar.data?.quadros ?? []
+    const quadro = quadros[quadroIdx % Math.max(1, quadros.length)] ?? quadros.at(-1)
     const bounds = radar.data?.bounds
     const existente = m.getSource('radar') as maplibregl.ImageSource | undefined
     if (!mostrar || !quadro?.url || !bounds) {
@@ -117,7 +126,7 @@ export function MapaReal({ preset }: { preset: string }) {
       m.addSource('radar', { type: 'image', url: quadro.url, coordinates: cantos })
       m.addLayer({ id: 'radar', type: 'raster', source: 'radar', paint: { 'raster-opacity': 0.75 } })
     }
-  }, [preset, radar.data, radar.dataUpdatedAt])
+  }, [preset, radar.data, radar.dataUpdatedAt, quadroIdx])
 
   const nFrota = posicoes.data?.features?.length ?? 0
 
@@ -126,7 +135,7 @@ export function MapaReal({ preset }: { preset: string }) {
       <div ref={alvo} style={{ position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', left: '12px', bottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', borderRadius: '6px', background: 'var(--scrim)', border: '1px solid var(--bd)', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx2)', pointerEvents: 'none' }}>
         <span><span style={{ color: '#149cc6' }}>●</span> FROTA AO VIVO {nFrota.toLocaleString('pt-BR')}</span>
-        {preset === 'chuva' && <span><span style={{ color: '#57b7dc' }}>▦</span> RADAR · QUADRO MAIS NOVO</span>}
+        {preset === 'chuva' && <span><span style={{ color: '#57b7dc' }}>▦</span> RADAR · ANIMANDO {String((radar.data?.quadros ?? []).length)} QUADROS</span>}
         <span style={{ color: 'var(--tx3)' }}>BASEMAP PROTOMAPS · R2</span>
       </div>
     </>

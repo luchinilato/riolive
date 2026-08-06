@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from sqlalchemy import text
 
 from riolive.db import sessao
-from riolive.mobilidade import detectar_paradas, gps_saudavel, linhas_agora, resumo
+from riolive.mobilidade import detectar_paradas, gps_confiavel, linhas_agora, resumo
 
 rota = APIRouter(tags=["mobilidade"])
 
@@ -15,7 +15,7 @@ rota = APIRouter(tags=["mobilidade"])
 def planejado_realizado() -> dict[str, Any]:
     with sessao() as s:
         linhas = linhas_agora(s)
-        saudavel = gps_saudavel(s)
+        saudavel, motivo = gps_confiavel(s)
         paradas = detectar_paradas(linhas) if saudavel else []
         serie = s.execute(
             text(
@@ -26,6 +26,7 @@ def planejado_realizado() -> dict[str, Any]:
         ).all()
     return {
         "gps_saudavel": saudavel,
+        "gps_motivo": motivo,
         **resumo(linhas),
         "linhas_paradas": [
             {"linha": p.linha, "nome": p.nome, "minutos_sem_gps": p.minutos_sem_gps}
