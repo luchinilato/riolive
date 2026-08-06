@@ -48,7 +48,11 @@ def _cron(cfg: FonteConfig) -> str:
         return "* * * * *"
     if minutos < 60:
         return f"*/{minutos} * * * *"
-    return f"0 */{minutos // 60} * * *"
+    if minutos < 24 * 60:
+        return f"0 */{minutos // 60} * * *"
+    if minutos < 7 * 24 * 60:
+        return "0 6 * * *"  # diária, 6h local
+    return "0 6 * * 1"  # semanal, segunda 6h local"
 
 
 _quentes = [cfg for cfg in FONTES.values() if cfg.quente]

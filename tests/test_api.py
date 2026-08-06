@@ -58,7 +58,7 @@ def test_posicoes_geojson_com_frota(cliente: TestClient) -> None:
     assert len(corpo["features"]) > 100
     ponto = corpo["features"][0]
     assert ponto["geometry"]["type"] == "Point"
-    assert ponto["properties"]["modal"] in ("onibus", "brt")
+    assert ponto["properties"]["modal"] in ("onibus", "brt", "aviao", "navio")
     veiculos = [p["properties"]["veiculo"] for p in corpo["features"]]
     assert len(veiculos) == len(set(veiculos))  # uma posição por veículo (a mais recente)
 

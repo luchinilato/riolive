@@ -4,9 +4,11 @@ from riolive.fontes import (
     aguas_rio,
     alerta_rio,
     ceu_adsb,
+    diario_oficial,
     estagio_cor,
     gps_brt,
     gps_sppo,
+    isp_rj,
     jogos,
     metro_rio,
     openaq,
@@ -36,5 +38,7 @@ FONTES: dict[str, FonteConfig] = {
         jogos.FONTE,
         aguas_rio.FONTE,
         transito_tomtom.FONTE,
+        diario_oficial.FONTE,
+        isp_rj.FONTE,
     )
 }
