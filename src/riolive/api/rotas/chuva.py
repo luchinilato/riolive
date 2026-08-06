@@ -55,6 +55,5 @@ def estacoes_chuva() -> list[dict[str, Any]]:
             est["leituras"][linha.metrica] = linha.valor
             est["ts"] = max(est["ts"], linha.ts) if est["ts"] else linha.ts
     return [
-        {**est, "ts": est["ts"].isoformat() if est["ts"] else None}
-        for est in por_estacao.values()
+        {**est, "ts": est["ts"].isoformat() if est["ts"] else None} for est in por_estacao.values()
     ]

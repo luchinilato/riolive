@@ -18,6 +18,7 @@ from dagster import (
     op,
 )
 
+from riolive.detectores import linha_parada
 from riolive.fontes import FONTES
 from riolive.ingestao.contrato import FonteConfig
 from riolive.ingestao.execucao import executar_fonte
@@ -94,6 +95,20 @@ def _job_snapshot() -> None:
     tirar_snapshot()
 
 
+@op
+def detectar_linhas_paradas(context: OpExecutionContext) -> None:
+    resultado = linha_parada.rodar()
+    context.log.info("detector linha_parada: %s", resultado)
+
+
+@job(
+    name="detector_linha_parada",
+    description="Planejado × realizado: abre/fecha eventos de linha sem circular",
+)
+def _job_linha_parada() -> None:
+    detectar_linhas_paradas()
+
+
 _job_quentes = _fabricar_job_quentes()
 _jobs_frias = [_fabricar_job_fria(cfg) for cfg in _frias]
 
@@ -116,6 +131,13 @@ _schedules = [
         for cfg, job_fria in zip(_frias, _jobs_frias, strict=True)
     ],
     ScheduleDefinition(
+        name="agenda_detector_linha_parada",
+        job=_job_linha_parada,
+        cron_schedule="*/5 * * * *",
+        execution_timezone="America/Sao_Paulo",
+        default_status=DefaultScheduleStatus.RUNNING,
+    ),
+    ScheduleDefinition(
         name="agenda_snapshot_cidade",
         job=_job_snapshot,
         cron_schedule="*/15 * * * *",
@@ -124,4 +146,7 @@ _schedules = [
     ),
 ]
 
-defs = Definitions(jobs=[_job_quentes, *_jobs_frias, _job_snapshot], schedules=_schedules)
+defs = Definitions(
+    jobs=[_job_quentes, *_jobs_frias, _job_snapshot, _job_linha_parada],
+    schedules=_schedules,
+)
