@@ -20,11 +20,35 @@ logger = logging.getLogger(__name__)
 
 INICIO_HISTORIA = "2016-01-01"
 PAGINAS_POR_LOGIN = 50
-PAUSA_S = 0.25  # gentileza com a API deles
+PAUSA_S = 1.0  # o rate limit deles derrubou a 0.25s (429 na página ~52)
+ESPERA_429_S = 90
+
+
+def _data_retomada() -> str:
+    """Retoma da fronteira do backfill, IGNORANDO os últimos 7 dias.
+
+    A coleta em tempo real grava o presente — usar o max(inicio) cru pularia
+    todo o miolo da história (aconteceu em 2026-08-06).
+    """
+    from sqlalchemy import text
+
+    with sessao() as s:
+        fronteira = s.execute(
+            text(
+                "SELECT max(inicio)::date FROM evento "
+                "WHERE tipo = 'tiroteio' AND inicio < now() - interval '7 days'"
+            )
+        ).scalar_one_or_none()
+    if fronteira is None:
+        return INICIO_HISTORIA
+    return fronteira.isoformat()
 
 
 def principal() -> None:
     logging.basicConfig(level=logging.INFO)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    inicio = _data_retomada()
+    logger.info("começando de %s", inicio)
     total = 0
     pagina = 1
     with ClienteHttp() as cliente:
@@ -32,7 +56,15 @@ def principal() -> None:
         while True:
             if pagina % PAGINAS_POR_LOGIN == 0:
                 token = _logar(cliente)
-            corpo = buscar_pagina(cliente, token, pagina, INICIO_HISTORIA)
+            try:
+                corpo = buscar_pagina(cliente, token, pagina, inicio)
+            except Exception as exc:
+                if "429" in str(exc):
+                    logger.warning("rate limit (429): esperando %ss", ESPERA_429_S)
+                    time.sleep(ESPERA_429_S)
+                    token = _logar(cliente)
+                    continue
+                raise
             eventos = [interpretar_ocorrencia(o) for o in corpo["data"]]
             with sessao() as s:
                 fonte_id = garantir_fonte(s, FONTE)
