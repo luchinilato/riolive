@@ -25,3 +25,8 @@ tmp*/
 # Dados locais
 dados/
 *.dump
+
+# intermediários da conversão do handoff (deriváveis)
+painel/rascunho/
+painel/node_modules/
+painel/dist/
