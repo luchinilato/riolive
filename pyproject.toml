@@ -24,6 +24,7 @@ dependencies = [
     "redis>=5.0",
     "defusedxml>=0.7",
     "dagster-webserver>=1.9",
+    "boto3>=1.43.65",
 ]
 
 [dependency-groups]
@@ -74,7 +75,15 @@ packages = ["riolive"]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["geoalchemy2.*", "h3.*", "shapely.*", "dagster.*", "dagster_postgres.*"]
+module = [
+    "geoalchemy2.*",
+    "h3.*",
+    "shapely.*",
+    "dagster.*",
+    "dagster_postgres.*",
+    "boto3.*",
+    "botocore.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

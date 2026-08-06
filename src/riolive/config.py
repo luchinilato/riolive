@@ -34,8 +34,21 @@ class Config(BaseSettings):
     # Sentry; vazio desativa
     sentry_dsn: str = ""
 
-    # Blobs (radar, PDFs): disco local em dev; R2 em produção quando configurado
+    # Blobs (radar, PDFs): R2 quando configurado; senão disco local (dev)
     blobs_dir: str = "dados/blobs"
+    r2_endpoint: str = ""
+    r2_access_key_id: SecretStr = SecretStr("")
+    r2_secret_access_key: SecretStr = SecretStr("")
+    r2_bucket: str = ""
+
+    @property
+    def r2_configurado(self) -> bool:
+        return bool(
+            self.r2_endpoint
+            and self.r2_bucket
+            and self.r2_access_key_id.get_secret_value()
+            and self.r2_secret_access_key.get_secret_value()
+        )
 
     # Chaves de fontes (fase 1+)
     openaq_api_key: SecretStr = SecretStr("")
