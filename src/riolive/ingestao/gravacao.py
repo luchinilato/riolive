@@ -180,6 +180,13 @@ def gravar_eventos(
     """
     inseridos = 0
     for novo in eventos:
+        if novo.encerrar:
+            sessao.execute(
+                update(Evento)
+                .where(Evento.tipo == novo.tipo, Evento.fim.is_(None))
+                .values(fim=novo.inicio)
+            )
+            continue
         bairro_id, ra_id = (
             _bairro_do_ponto(sessao, novo.lat, novo.lon)
             if novo.lat is not None and novo.lon is not None
@@ -200,8 +207,10 @@ def gravar_eventos(
                 .limit(1)
             ).scalar_one_or_none()
             if aberto is not None:
-                if aberto.severidade == novo.severidade and aberto.inicio == novo.inicio:
-                    continue  # mesmo estado vigente, nada a fazer
+                # mesmo estado vigente (severidade e título) = releitura; nada a fazer.
+                # inicio não entra: fontes sem timestamp próprio mandam inicio=agora
+                if aberto.severidade == novo.severidade and aberto.titulo == novo.titulo:
+                    continue
                 sessao.execute(
                     update(Evento)
                     .where(Evento.inicio == aberto.inicio, Evento.id == aberto.id)

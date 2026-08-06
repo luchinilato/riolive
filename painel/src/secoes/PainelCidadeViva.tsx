@@ -4,7 +4,7 @@ import React from 'react'
 import type { Modelo } from '../modelo/tipos'
 
 export function PainelCidadeViva({ m }: { m: Modelo }) {
-  const { lay, openCidade } = m
+  const { lay, openCidade, cidadeVivaItens } = m
   return (
     <>
 {/* CIDADE VIVA */}
@@ -16,19 +16,13 @@ export function PainelCidadeViva({ m }: { m: Modelo }) {
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
             </div>
             <div style={{flex: '1 1 auto', minHeight: '0', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', gap: '7px'}}>
-              <div style={{display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '0'}}>
-                <span style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--live-tx)'}}>SÁB 19:30</span>
-                <span style={{minWidth: '0', fontSize: '11px', color: 'var(--tx)', lineHeight: '1.35'}}>Flamengo × Vitória, Maracanã <span style={{color: 'var(--tx2)'}}>— esquema especial de trânsito</span></span>
+              {(cidadeVivaItens as any[]).map((item: any, itemI: number) => (
+                <div key={itemI} style={{display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '0', borderTop: itemI ? '1px solid var(--bd3)' : 'none', paddingTop: itemI ? '7px' : '0'}}>
+                  <span style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: item.cor ?? 'var(--tx3)'}}>{item.quando}</span>
+                  <span style={{minWidth: '0', fontSize: '11px', color: 'var(--tx)', lineHeight: '1.35'}}>{item.titulo} {Boolean(item.sub) && (<span style={{color: 'var(--tx2)'}}>— {item.sub}</span>)}</span>
+                </div>
+              ))}
               </div>
-              <div style={{display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '0', borderTop: '1px solid var(--bd3)', paddingTop: '7px'}}>
-                <span style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--s2)'}}>QUI 22H</span>
-                <span style={{minWidth: '0', fontSize: '11px', color: 'var(--tx)', lineHeight: '1.35'}}>Águas do Rio: manutenção programada em Irajá <span style={{color: 'var(--tx2)'}}>até 5h</span></span>
-              </div>
-              <div style={{display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '0', borderTop: '1px solid var(--bd3)', paddingTop: '7px'}}>
-                <span style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)'}}>DOM 07:00</span>
-                <span style={{minWidth: '0', fontSize: '11px', color: 'var(--tx2)', lineHeight: '1.35'}}>Aterro do Flamengo fechado para lazer</span>
-              </div>
-            </div>
             <div style={{display: 'flex', alignItems: 'center', gap: '6px', borderTop: '1px solid var(--bd2)', paddingTop: '7px', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx3)', letterSpacing: '.05em'}}>
               <span style={{width: '5px', height: '5px', borderRadius: '50%', background: 'var(--s1)'}}></span>THESPORTSDB + ÁGUAS DO RIO · HÁ 30 MIN
             </div>

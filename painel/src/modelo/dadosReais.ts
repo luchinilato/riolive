@@ -130,7 +130,10 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       estagio_cor: 'COR', foco_calor: 'INPE', linha_parada: 'SMTR',
     }
     saida.feedReal = true
-    const feed = d.eventos.data.slice(0, 12).map((e: any) => ({
+    const feed = d.eventos.data
+      .filter((e: any) => new Date(e.inicio) <= new Date())
+      .slice(0, 12)
+      .map((e: any) => ({
       h: hhmm(e.inicio),
       sev: SEV[Math.min(5, Math.max(1, e.severidade))],
       txt: e.titulo + (e.fim ? '' : ' — vigente'),
@@ -234,6 +237,49 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       : 'O GPS da frota está fora do ar — sem leitura confiável, o detector fica em espera pra não gerar falsos positivos em massa. O planejado (GTFS) segue exibido.'
     dossie.seal = 'SMTR (GPS) + GTFS · DETECTOR A CADA 5 MIN'
     saida.dossier = dossie
+  }
+
+  // Céu: aeronaves reais (o modal aviao entra sozinho no /agora)
+  if (ag?.veiculos_ativos?.aviao != null) {
+    saida.ceu = { ...m.ceu, hero: String(ag.veiculos_ativos.aviao) }
+  }
+
+  // metrô real: evento vigente metro_lN = linha com problema; ausência = normal
+  if (d.eventos.data) {
+    const metroVigentes = d.eventos.data.filter((e: any) => e.tipo?.startsWith('metro_') && !e.fim)
+    const problema = (n: number) => metroVigentes.find((e: any) => e.tipo === `metro_l${n}`)
+    const corLinha = (n: number) => (problema(n) ? 'var(--s3)' : 'var(--s1)')
+    saida.mob = {
+      ...saida.mob,
+      m1: corLinha(1), m2: corLinha(2), m4: corLinha(4),
+      metro: metroVigentes.length
+        ? metroVigentes.map((e: any) => e.titulo.replace('Metrô ', '').toUpperCase()).join(' · ')
+        : 'METRÔ NORMAL',
+    }
+  }
+
+  // Cidade viva real: próximos jogos + comunicados de água
+  if (d.eventos.data) {
+    const diaSemana = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
+    const quando = (iso: string) => {
+      const dt = new Date(iso)
+      return `${diaSemana[dt.getDay()]} ${hhmm(iso)}`
+    }
+    const jogos = d.eventos.data
+      .filter((e: any) => e.tipo === 'jogo' && new Date(e.inicio) > new Date())
+      .sort((a: any, b: any) => (a.inicio < b.inicio ? -1 : 1))
+      .slice(0, 3)
+      .map((e: any) => ({
+        quando: quando(e.inicio), cor: 'var(--live-tx)',
+        titulo: e.titulo.replace(' vs ', ' × '),
+        sub: e.descricao?.split('·').at(-1)?.trim() ?? null,
+      }))
+    const aguas = d.eventos.data
+      .filter((e: any) => e.tipo === 'agua')
+      .slice(0, 2)
+      .map((e: any) => ({ quando: quando(e.inicio), cor: 'var(--s2)', titulo: e.titulo, sub: null }))
+    const itens = [...jogos, ...aguas]
+    if (itens.length) saida.cidadeVivaItens = itens.slice(0, 4)
   }
 
   // ticker composto de leituras reais (substitui o mock quando a API responde)

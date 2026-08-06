@@ -66,6 +66,9 @@ class EventoNovo(BaseModel):
     # Evento pontual descartado se o enriquecimento não achar bairro — é o filtro
     # de município pra fontes sem recorte próprio (ex. focos do INPE, CSV nacional)
     exigir_bairro: bool = False
+    # Encerramento de vigente: fecha o evento aberto deste tipo (se houver) sem
+    # abrir outro — ex. linha do metrô voltou ao normal
+    encerrar: bool = False
 
 
 class PrevisaoNova(BaseModel):

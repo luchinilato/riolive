@@ -371,6 +371,11 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       tickerLoop: tick.concat(tick), tickerState: s.paused ? 'paused' : 'running',
       pauseTicker: () => defina({ paused:true }), resumeTicker: () => defina({ paused:false }),
       chuva, mob, transito, previsao, seguranca, ar, ceu, mar, memoria, lay, ramp:RAMP,
+      cidadeVivaItens: [
+        { quando:'SÁB 19:30', cor:'var(--live-tx)', titulo:'Flamengo × Vitória, Maracanã', sub:'esquema especial de trânsito' },
+        { quando:'QUI 22H', cor:'var(--s2)', titulo:'Águas do Rio: manutenção programada em Irajá', sub:'até 5h' },
+        { quando:'DOM 07:00', cor:null, titulo:'Aterro do Flamengo fechado para lazer', sub:null },
+      ],
       fleetDots, hexes, mapFleet, mapIncidents, mapPresets, layers, frames, sources, presetAtivo: active,
       feed, feedCount: feedAll.length + ' EVENTOS · 24H',
       abn: { track: s.onlyAbn ? 'var(--brand)' : 'var(--bd4)', x: s.onlyAbn ? 14 : 2, c: s.onlyAbn ? 'var(--live-tx)' : 'var(--tx2)' },
