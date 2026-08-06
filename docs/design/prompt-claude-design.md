@@ -20,7 +20,50 @@ Crie o layout de um **painel público de dados em tempo real da cidade do Rio de
 2. **Cidadão comum**: quer resposta rápida ("vai chover?", "o ônibus tá rodando?"), não exploração de dados.
 3. **Comunidade técnica**: avalia a credibilidade pelo rigor (fontes, timestamps, honestidade sobre falhas).
 
-Tom visual: **sóbrio, confiável e legível por leigos**. Nem "sala de comando militar" (sem verde-radar, sem grids de scanline, sem estética de filme de guerra), nem infantil/gamificado. Referência de sensação: a seriedade de um serviço público bem feito com a nitidez de um bom site de jornalismo de dados. **Tema escuro** como padrão (o produto vive de mapa e radar), com tipografia excelente pra números. A identidade visual (nome, logo) está em definição — use um wordmark placeholder "RIO • AGORA" discreto e cores neutras próprias, sem inventar marca.
+Tom visual: **sóbrio, confiável e legível por leigos**. Nem "sala de comando militar" (sem verde-radar, sem grids de scanline, sem estética de filme de guerra), nem infantil/gamificado. Referência de sensação: a seriedade de um serviço público bem feito com a nitidez de um bom site de jornalismo de dados. Conceito da identidade: **"monitor de sinais vitais da cidade"** — pulso, sparkline, sinal vivo.
+
+**Nome e logo ainda não existem.** Não crie logo, não crie wordmark, não invente nome: no lugar da marca, reserve um espaço vazio de ~140×28 px no header (pode marcar com um retângulo pontilhado discreto "marca"). Todo o resto do design system abaixo é definitivo.
+
+## Design system de partida (tokens obrigatórios)
+
+Use exatamente estes valores — eles vêm da identidade já aprovada do projeto e as paletas de dados foram validadas por contraste e daltonismo sobre a superfície escura.
+
+**Cores de marca**
+- Azul profundo `#004A80` — cor institucional. Uso pontual: momentos de destaque de marca, fundos de bloco hero, estados selecionados. **Não** é o fundo da página.
+- Ciano `#00C0F3` — o "sinal vivo". Reservado pra: indicador "ao vivo" (dot pulsante), links/ações, valor em destaque no cartão de memória. Usar com parcimônia — é o que faz o painel parecer vivo; se estiver em tudo, não destaca nada.
+
+**Superfícies e texto (tema escuro, o padrão)**
+- Fundo da página `#0b0e13` · cartão `#14181f` · cartão elevado/hover `#1a212b` · borda `#242c38`
+- Texto primário `#e8eaed` · secundário `#9aa4ad` · desabilitado `#5b6570`
+- Números sempre com algarismos tabulares.
+
+**Severidade 1–5 (escala de status, espelha os estágios do COR)** — cada badge SEMPRE com número e ícone, nunca cor sozinha:
+- 1 Normalidade `#3fa96b` · 2 Mobilização `#ad8d2c` · 3 Atenção `#c2662a` · 4 Alerta `#cd4048` · 5 Crise `#9b52d6`
+
+**Séries de gráfico (paleta categórica, ordem FIXA — nunca reciclar nem repintar ao filtrar)**
+1. `#149cc6` (ciano-dado) · 2. `#c08428` (âmbar) · 3. `#8a6adf` (violeta) · 4. `#cf5590` (rosa) · 5. `#649a30` (verde)
+Mais de 5 séries: agrupar em "Outros", nunca gerar cor nova. Texto de rótulo/valor usa os tokens de texto, nunca a cor da série.
+
+**Rampa sequencial (magnitude: intensidade de chuva, mapas de calor)** — um matiz, claro→escuro:
+`#9bd7ec → #57b7dc → #2c96c4 → #1d7cab → #166490 → #114e75`
+
+**Tipografia** (Google Fonts, todas gratuitas)
+- Display e números-síntese: **Space Grotesk** (geométrica com alma de dado, conforme o conceito da identidade)
+- Texto e UI: **Inter**
+- Timestamps, códigos de estação e selos de fonte: **JetBrains Mono**
+- Escala: 12 / 13 / 15 (corpo) / 18 / 24 / 34 / 48 (número-síntese)
+
+**Layout e grid**
+- Grid de 12 colunas, largura máxima do conteúdo 1320 px, gutter 24 px, margens laterais 24 px.
+- Cartões: raio 14 px, padding 20 px, borda 1 px `#242c38`, sem sombras pesadas (elevação por cor de superfície).
+- Spans na home desktop: cartão destaque (o mais severo do momento) = 8 colunas; cartões normais = 4 colunas; cartão de memória = 6 colunas.
+- Espaçamento em escala de 4: 4/8/12/16/24/32/48. Breakpoints: 640 (mobile), 1024 (tablet), 1440.
+- Gráficos: linhas de 2 px, grid recessivo (borda sutil), tooltips em toda série temporal, legenda presente quando houver 2+ séries.
+
+**Regras de uso da cor** (herdadas da metodologia de dataviz do projeto)
+- Cor de status (severidade) nunca vira cor de série de gráfico, e vice-versa.
+- Nunca dois eixos y no mesmo gráfico; nunca rainbow em escala de magnitude.
+- Estado "fonte degradada" usa o âmbar de severidade 2 + ícone, com texto explicativo.
 
 ## Princípios inegociáveis
 
