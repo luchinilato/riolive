@@ -1,8 +1,8 @@
 /* Gerado do handoff do Claude Design (seção mapa) — edite com cuidado:
    a fonte visual da verdade é docs/design/handoff/painel-rio.dc.html */
-import React from 'react'
 import type { Modelo } from '../modelo/tipos'
-import { MapaReal } from './MapaReal'
+import React, { Suspense } from 'react'
+const MapaReal = React.lazy(() => import('./MapaReal').then((m) => ({ default: m.MapaReal })))
 
 export function VistaMapa({ m }: { m: Modelo }) {
   const { copyLabel, copyLink, frames, isMapa, layers, mapPresets, presetAtivo } = m
@@ -26,7 +26,7 @@ export function VistaMapa({ m }: { m: Modelo }) {
 
         <div style={{flex: '1 1 auto', minHeight: '0', display: 'flex', gap: '12px'}}>
           <div style={{flex: '1 1 auto', minWidth: '0', position: 'relative', border: '1px solid var(--bd)', borderRadius: '10px', overflow: 'hidden', background: 'var(--bg2)', backgroundImage: 'linear-gradient(var(--map-grid) 1px,transparent 1px),linear-gradient(90deg,var(--map-grid) 1px,transparent 1px),linear-gradient(115deg,var(--map-grid2) 1px,transparent 1px)', backgroundSize: '46px 46px,46px 46px,90px 90px'}}>
-            <MapaReal preset={presetAtivo} />
+            <Suspense fallback={<div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', letterSpacing: '.08em' }}>CARREGANDO MAPA…</div>}><MapaReal preset={presetAtivo} /></Suspense>
           </div>
 
           <div style={{flex: '0 0 268px', background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: '10px', display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
