@@ -1,6 +1,6 @@
 # riolive — design system (painel público de dados do Rio)
 
-Painel web público, tema escuro, pt-BR. Conceito: **monitor de sinais vitais da cidade** — denso de dados ao vivo, com hierarquia rígida. Sóbrio e acessível a leigos; nunca estética militar (sem scanlines/HUD/verde-radar). Nome e logo em definição: **não criar marca**; reservar espaço vazio ~140×28 no header.
+Painel web público, tema escuro, pt-BR. Conceito: **monitor de sinais vitais da cidade** — um **cockpit de viewport**: no desktop a home tem a altura exata da tela (zero rolagem de página), grade rígida de painéis com altura fixa por linha (nunca masonry, nunca buraco), conteúdo excedente rola dentro do próprio painel. Denso de dados ao vivo com hierarquia rígida; sóbrio; nunca estética militar (sem scanlines/HUD/verde-radar). No mobile vira pilha rolável. Nome e logo em definição: **não criar marca**; reservar espaço vazio ~140×28 no header.
 
 ## Cores
 
@@ -19,15 +19,15 @@ Painel web público, tema escuro, pt-BR. Conceito: **monitor de sinais vitais da
 
 Todas as paletas foram validadas por contraste (≥3:1 sobre `#14181f`) e daltonismo. Regras: status nunca vira cor de série; nunca dois eixos y; texto usa tokens de texto, nunca a cor da série.
 
-## Tipografia
+## Tipografia (escala compacta de cockpit)
 
-- **Space Grotesk** 700/500 — números-síntese (48/34, tabular) e títulos de tela (24)
-- **Inter** 600/500/400 — títulos de cartão (18), corpo (15), apoio (13)
-- **JetBrains Mono** 500/400 — dados técnicos, timestamps, selos de fonte, ticker (12/11)
+- **Space Grotesk** 700/500 — números-síntese (**28–32**, tabular; 44+ só no painel-destaque e no cabeçalho de estado), títulos de tela (16)
+- **Inter** 600/500/400 — títulos de painel em CAPS (11), corpo (12), apoio (13)
+- **JetBrains Mono** 500/400 — dados técnicos, timestamps, selos, ticker (10/11)
 
-## Layout
+## Layout (modelo cockpit)
 
-Grid 12 colunas · conteúdo máx 1320px · gutter 24 · margens 24. Cartão: raio 14, padding 20, borda 1px, elevação por cor (sem sombra pesada). Spans: destaque 8 col · normal 4 · memória 6. Espaçamento em escala de 4 (4–48). Breakpoints 640/1024/1440.
+Largura total da tela (sem max-width) · margens 16 · gutter **12**. Grade 12 colunas × linhas de **altura fixa** (~280px em 1080p); painel preenche a célula inteira; alturas iguais por linha; buracos proibidos; excedente rola dentro do painel (fade na borda inferior). Painel: raio 10, padding 12–14, borda 1px, header fino em CAPS 11 com contador à direita. Espaçamento em escala de 4 (4–24). Breakpoints 640 (vira pilha rolável) / 1024 / 1440.
 
 ## Componentes-chave e regras de produto
 

@@ -47,18 +47,18 @@ Mais de 5 séries: agrupar em "Outros", nunca gerar cor nova. Texto de rótulo/v
 **Rampa sequencial (magnitude: intensidade de chuva, mapas de calor)** — um matiz, claro→escuro:
 `#9bd7ec → #57b7dc → #2c96c4 → #1d7cab → #166490 → #114e75`
 
-**Tipografia** (Google Fonts, todas gratuitas)
+**Tipografia** (Google Fonts, todas gratuitas) — escala COMPACTA de cockpit
 - Display e números-síntese: **Space Grotesk** (geométrica com alma de dado, conforme o conceito da identidade)
-- Texto e UI: **Inter**
-- Timestamps, códigos de estação e selos de fonte: **JetBrains Mono**
-- Escala: 12 / 13 / 15 (corpo) / 18 / 24 / 34 / 48 (número-síntese)
+- Texto e UI: **Inter** · Timestamps, códigos e selos: **JetBrains Mono**
+- Escala: 10 (mono denso) / 11 (selos, headers de painel em CAPS) / 12 (corpo) / 13 / 16 (título) / **28–32 (número-síntese)**. Reserve 44+ APENAS pro painel-destaque e pro cabeçalho de estado. Números sempre tabulares.
 
-**Layout e grid**
-- Grid de 12 colunas, largura máxima do conteúdo 1320 px, gutter 24 px, margens laterais 24 px.
-- Cartões: raio 14 px, padding 20 px, borda 1 px `#242c38`, sem sombras pesadas (elevação por cor de superfície).
-- Spans na home desktop: cartão destaque (o mais severo do momento) = 8 colunas; cartões normais = 4 colunas; cartão de memória = 6 colunas.
-- Espaçamento em escala de 4: 4/8/12/16/24/32/48. Breakpoints: 640 (mobile), 1024 (tablet), 1440.
-- Gráficos: linhas de 2 px, grid recessivo (borda sutil), tooltips em toda série temporal, legenda presente quando houver 2+ séries.
+**Layout e grid (modelo cockpit)**
+- **Largura total da tela** (sem max-width), margens 16 px, gutter **12 px**.
+- Grade de 12 colunas × linhas de **altura fixa** (ex.: 3 linhas de painéis no viewport de 1080p, ~280 px cada, além do cabeçalho+ticker). Painel = célula preenchida por inteiro; alturas iguais por linha; **buracos são proibidos**.
+- Conteúdo excedente rola dentro do painel (com fade sutil na borda inferior indicando que há mais).
+- Painéis: raio 10 px, padding 12–14 px, borda 1 px `#242c38`. Header de painel fino: título em CAPS 11px + contador à direita (ex.: "MOBILIDADE · 4.212"), no estilo de barra de título.
+- Espaçamento em escala de 4: 4/8/12/16/24. Breakpoints: 640 (mobile, vira pilha rolável), 1024, 1440.
+- Gráficos: linhas de 2 px, grid recessivo, tooltips em toda série temporal, legenda presente quando houver 2+ séries.
 
 **Regras de uso da cor** (herdadas da metodologia de dataviz do projeto)
 - Cor de status (severidade) nunca vira cor de série de gráfico, e vice-versa.
@@ -72,7 +72,7 @@ Mais de 5 séries: agrupar em "Outros", nunca gerar cor nova. Texto de rótulo/v
 3. **Rotulagem obrigatória**: todo número, gráfico ou mapa carrega um selo discreto "Fonte: X · há N min". É requisito do produto, não decoração — desenhe um componente elegante e reutilizável pra isso.
 4. **Honestidade sobre falhas**: se uma fonte está fora do ar ou com dado velho, o cartão mostra isso claramente (estado "degradado") em vez de esconder ou exibir número obsoleto como se fosse atual.
 5. **Todo estado de filtro vive na URL** (a imprensa compartilha o recorte). Indique visualmente que as vistas são compartilháveis (botão "copiar link deste recorte").
-6. **Densidade com hierarquia.** A home deve dar a sensação de MUITO dado ao vivo — é um monitor de sinais vitais, e a abundância de leituras é parte da credibilidade e do impacto. Meta concreta: 50+ números visíveis na home sem rolagem no desktop, em camadas (número-síntese grande → linha de métricas secundárias → micro-tabela ou sparkline), mais um ticker e um feed correndo. O que separa isso de "poluído": hierarquia tipográfica rígida, alinhamento em grid, e o ciano reservado ao que está vivo. Denso, não militar: nada de scanlines, HUDs ou verde-radar.
+6. **A home é um COCKPIT DE VIEWPORT, não um documento.** No desktop (≥1280px) a home tem EXATAMENTE a altura da tela: **zero rolagem de página**. Grade rígida de painéis com **altura fixa por linha** — painel preenche a célula inteira (nunca masonry, nunca buraco); conteúdo que não cabe rola DENTRO do próprio painel (feeds, listas, tabelas têm scroll interno). Largura total da tela (sem max-width; margens de 16px). Tipografia compacta: o dado é denso porque a tipografia é pequena e o padding é apertado, não porque as coisas são grandes. Meta: 80+ números visíveis simultaneamente. O que separa isso de "poluído": hierarquia tipográfica rígida, alinhamento absoluto na grade, ciano só no que está vivo. Denso, não militar: nada de scanlines, HUDs ou verde-radar. (No mobile o cockpit vira pilha rolável — inevitável e correto.)
 
 ## Escala de severidade (usada em todo o produto)
 
@@ -98,7 +98,9 @@ Crie tokens de cor pros 5 níveis funcionando sobre fundo escuro, com versão ac
 
 **Grade de cartões temáticos** (a ordem muda conforme severidade; num dia calmo):
 
-O painel cobre o escopo COMPLETO de lançamento — inclua TODOS os cartões abaixo, mesmo os de fonte que ainda entra (desenhe-os com dados de exemplo normais, não como "em breve"):
+**Estrutura do cockpit (desktop 1080p, tudo dentro do viewport)**: cabeçalho de estado (fino) + ticker + grade de painéis em linhas de altura fixa. O feed "agora na cidade" é um painel alto na coluna direita (rolagem interna). O painel do tema mais severo do momento ocupa célula dupla. Os 12 temas abaixo SEMPRE visíveis simultaneamente — nenhum fica "abaixo da dobra". Cada painel: header CAPS 11px com contador, corpo compacto em camadas (número 28–32 → linha de apoio → micro-tabela/sparkline → selo).
+
+O painel cobre o escopo COMPLETO de lançamento — inclua TODOS os temas abaixo, mesmo os de fonte que ainda entra (desenhe-os com dados de exemplo normais, não como "em breve"):
 
 1. **Chuva e água** — número-síntese: "0,0 mm na última hora (todas as 33 estações)". Mini-mapa com o radar sobreposto (mock: 2 ecos verdes fracos na serra, cidade limpa). Sparkline de chuva 24h (flat em zero). Linha secundária: "Rios: Tijuca 65 cm — estável · Acari, Maracanã, Faria-Timbó ok". Selo: Alerta Rio + ANA · há 4 min.
 2. **Mobilidade** — número-síntese grande: "**4.200 veículos em circulação**" com detalhe "3.642 ônibus + 558 BRT · 96% das linhas planejadas ativas". Um aviso de exemplo do detector: "⚠ 3 linhas sem circular há 40+ min: 232, SV790, 863". Mini-mapa de pontos da frota. Linha do metrô: "L1 ● L2 ● L4 ● operação normal". Selo: SMTR + MetrôRio · ao vivo (1 min).
