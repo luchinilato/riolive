@@ -10,7 +10,7 @@ import respx
 
 from riolive.fontes import gps_sppo
 from riolive.ingestao.contrato import ErroSchema
-from riolive.ingestao.fetcher import ClienteHttp
+from riolive.ingestao.fetcher import ClienteHttp, ErroRede
 
 
 def _coletar_fixture(conteudo: bytes) -> gps_sppo.ResultadoColeta:
@@ -71,4 +71,18 @@ def test_payload_nao_lista_e_falha_de_schema() -> None:
             return_value=httpx.Response(200, json={"erro": "manutencao"})
         )
         with ClienteHttp() as cliente, pytest.raises(ErroSchema):
+            gps_sppo.coletar(cliente)
+
+
+def test_timeout_interno_do_backend_e_falha_de_rede() -> None:
+    # Payload real de 2026-08-06: HTTP 200 com dict de erro — transitório, não schema
+    erro = {
+        "RetornoOK": False,
+        "IdentificacaoLogin": None,
+        "DescricaoErro": "Execution Timeout Expired.",
+        "Empresas": None,
+    }
+    with respx.mock:
+        respx.get(url__startswith=gps_sppo.URL).mock(return_value=httpx.Response(200, json=erro))
+        with ClienteHttp() as cliente, pytest.raises(ErroRede):
             gps_sppo.coletar(cliente)

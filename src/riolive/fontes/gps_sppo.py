@@ -20,7 +20,7 @@ from riolive.ingestao.contrato import (
     PosicaoNova,
     ResultadoColeta,
 )
-from riolive.ingestao.fetcher import ClienteHttp
+from riolive.ingestao.fetcher import ClienteHttp, ErroRede
 
 URL = "https://dados.mobilidade.rio/gps/sppo"
 JANELA = timedelta(minutes=3)  # sobrepõe a cadência de 1 min de propósito
@@ -72,6 +72,10 @@ def coletar(cliente: ClienteHttp) -> ResultadoColeta:
         registros = resposta.json()
     except json.JSONDecodeError as exc:
         raise ErroSchema(f"resposta não é JSON: {exc}") from exc
+    if isinstance(registros, dict) and registros.get("RetornoOK") is False:
+        # Backend do SPPO devolve HTTP 200 com dict de erro em timeout interno
+        # (visto em 2026-08-06): é falha transitória, não mudança de formato
+        raise ErroRede(f"servidor SPPO com erro interno: {registros.get('DescricaoErro')}")
     if not isinstance(registros, list):
         raise ErroSchema(f"esperava lista, veio {type(registros).__name__}")
 

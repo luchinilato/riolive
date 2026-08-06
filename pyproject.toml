@@ -25,6 +25,8 @@ dependencies = [
     "defusedxml>=0.7",
     "dagster-webserver>=1.9",
     "boto3>=1.43.65",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
 ]
 
 [dependency-groups]
@@ -66,6 +68,9 @@ ignore = [
 ]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]  # assert é a ferramenta do pytest
+# S608: os f-strings de SQL só interpolam fragmentos literais fixos (condições
+# hardcoded e tabela vinda de Literal); valores do usuário são sempre bound (:param)
+"src/riolive/api/rotas/**" = ["S608"]
 
 [tool.mypy]
 python_version = "3.12"

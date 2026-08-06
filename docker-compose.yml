@@ -28,6 +28,21 @@ services:
       timeout: 3s
       retries: 12
 
+  api:
+    build: .
+    command: uvicorn riolive.api.aplicacao:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      RIOLIVE_DATABASE_URL: postgresql+psycopg://riolive:riolive@db:5432/riolive
+      RIOLIVE_REDIS_URL: redis://redis:6379/0
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      db:
+        condition: service_healthy
+
   dagster-webserver:
     build: .
     command: dagster-webserver -h 0.0.0.0 -p 3000 -w workspace.yaml
