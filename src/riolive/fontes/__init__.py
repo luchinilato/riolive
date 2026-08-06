@@ -6,6 +6,7 @@ from riolive.fontes import (
     ceu_adsb,
     diario_oficial,
     estagio_cor,
+    fogo_cruzado,
     gps_brt,
     gps_sppo,
     isp_rj,
@@ -40,5 +41,6 @@ FONTES: dict[str, FonteConfig] = {
         transito_tomtom.FONTE,
         diario_oficial.FONTE,
         isp_rj.FONTE,
+        fogo_cruzado.FONTE,
     )
 }

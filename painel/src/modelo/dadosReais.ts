@@ -47,13 +47,19 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: ativo, refetchInterval: 300_000, retry: 1,
   })
 
+  const ispMensal = useQuery({
+    queryKey: ['isp-letalidade'],
+    queryFn: () => api.serie('isp_letalidade_violenta', 'bruto', 24 * 90),
+    enabled: ativo, refetchInterval: 3_600_000, retry: 1,
+  })
+
   const mobilidade = useQuery({
     queryKey: ['mobilidade-linhas'],
     queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/mobilidade/linhas`).then((r) => r.json()),
     enabled: ativo, refetchInterval: 60_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, radarMapa, ui, ativo }
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, ui, ativo }
 }
 
 const hhmm = (iso: string) => {
@@ -355,6 +361,30 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     dossie.context = 'A camada base de trânsito é a velocidade derivada da nossa própria frota (cidade inteira); o TomTom calibra os corredores estruturais por amostragem, dentro do free tier. Fluidez = velocidade atual ÷ fluxo livre do trecho.'
     dossie.seal = 'TOMTOM FLOW + FROTA SMTR · AMOSTRADO'
     saida.dossier = dossie
+  }
+
+  // Segurança real: ocorrências do Fogo Cruzado nas 24 h + contexto mensal do ISP
+  if (d.eventos.data) {
+    const tiros = d.eventos.data.filter((e: any) => e.tipo === 'tiroteio')
+    if (tiros.length || d.eventos.data.length) {
+      const mortos = tiros.reduce((s: number, e: any) => s + (e.titulo.includes('morto') ? 1 : 0), 0)
+      const ultimo = tiros[0]
+      saida.seguranca = {
+        ...m.seguranca,
+        sev: tiros.length ? SEV[Math.max(...tiros.map((e: any) => e.severidade))] : SEV[1],
+        hero: String(tiros.length),
+        sub: tiros.length
+          ? `${mortos ? `${mortos} com morte · ` : ''}último: ${ultimo.titulo.toLowerCase()} às ${hhmm(ultimo.inicio)}`
+          : 'nenhuma ocorrência registrada nas últimas 24 h',
+      }
+    }
+  }
+  const ispPontos: any[] = d.ispMensal.data?.pontos ?? []
+  if (ispPontos.length) {
+    const ult = ispPontos.at(-1)
+    const mesesPt = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']
+    const dt = new Date(ult.ts)
+    saida.segurancaIspLinha = `${mesesPt[dt.getUTCMonth()]}/${dt.getUTCFullYear()}: ${Math.round(ult.valor)} vítimas de letalidade violenta na capital (ISP)`
   }
 
   // ticker composto de leituras reais (substitui o mock quando a API responde)

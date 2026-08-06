@@ -120,3 +120,52 @@ def test_isp_coluna_sumida_e_falha_de_schema() -> None:
         )
         with ClienteHttp() as cliente, pytest.raises(ErroSchema):
             isp_rj.coletar(cliente)
+
+
+# ---------------- Fogo Cruzado ----------------
+
+from pathlib import Path  # noqa: E402
+
+from riolive.fontes import fogo_cruzado  # noqa: E402
+
+
+def test_fogo_cruzado_ocorrencia_real_vira_evento(fixtures: Path) -> None:
+    import json as json_mod
+
+    corpo = json_mod.loads((fixtures / "fogo_cruzado.json").read_text())
+    evento = fogo_cruzado.interpretar_ocorrencia(corpo["data"][0])
+    assert evento.tipo == "tiroteio"
+    assert evento.severidade in (3, 4)
+    assert evento.lat and evento.lon  # pino exato, por DEC
+    assert evento.visivel_apos is None  # sem atraso, por DEC
+    assert evento.fim == evento.inicio
+    assert evento.payload is not None and evento.payload["id_fogo_cruzado"]
+
+
+def test_fogo_cruzado_severidade_por_vitimas() -> None:
+    base = {
+        "date": "2026-08-06T10:00:00.000Z",
+        "latitude": "-22.9",
+        "longitude": "-43.2",
+        "neighborhood": {"name": "PAVUNA"},
+        "policeAction": False,
+        "victims": [],
+    }
+    sem_vitima = fogo_cruzado.interpretar_ocorrencia(dict(base))
+    assert sem_vitima.severidade == 3
+    com_morto = fogo_cruzado.interpretar_ocorrencia(
+        {**base, "victims": [{"type": "People", "situation": "Dead"}]}
+    )
+    assert com_morto.severidade == 4
+    assert "1 morto" in com_morto.titulo
+
+
+def test_fogo_cruzado_sem_credencial_e_defeito_nosso(monkeypatch) -> None:
+    monkeypatch.setenv("FOGO_CRUZADO_USER", "")
+    monkeypatch.setenv("FOGO_CRUZADO_PASSWORD", "")
+    from riolive.config import config
+
+    config.cache_clear()
+    with ClienteHttp() as cliente, pytest.raises(RuntimeError, match="FOGO_CRUZADO"):
+        fogo_cruzado.coletar(cliente)
+    config.cache_clear()

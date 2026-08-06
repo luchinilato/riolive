@@ -4,7 +4,7 @@ import React from 'react'
 import type { Modelo } from '../modelo/tipos'
 
 export function PainelSeguranca({ m }: { m: Modelo }) {
-  const { hexes, lay, openSeguranca, seguranca } = m
+  const { hexes, lay, openSeguranca, seguranca, segurancaIspLinha } = m
   return (
     <>
 {/* SEGURANÇA */}
@@ -27,7 +27,7 @@ export function PainelSeguranca({ m }: { m: Modelo }) {
                 </React.Fragment>))}
                 <div style={{position: 'absolute', left: '6px', bottom: '5px', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx3)'}}>H3 · 24H</div>
               </div>
-              <div style={{flex: '0 0 auto', fontSize: '10px', color: 'var(--tx2)', lineHeight: '1.3'}}>julho: <span style={{fontFamily: "'JetBrains Mono',monospace", color: 'var(--tx)'}}>214</span> no estado — taxa <span style={{fontFamily: "'JetBrains Mono',monospace", color: 'var(--tx)'}}>1,24</span>/100 mil (ISP)</div>
+              <div style={{flex: '0 0 auto', fontSize: '10px', color: 'var(--tx2)', lineHeight: '1.3'}}>{segurancaIspLinha ?? 'série mensal do ISP desde 2003 no dossiê'}</div>
             </div>
             <div style={{display: 'flex', alignItems: 'center', gap: '6px', borderTop: '1px solid var(--bd2)', paddingTop: '7px', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx3)', letterSpacing: '.05em'}}>
               <span style={{width: '5px', height: '5px', borderRadius: '50%', background: 'var(--s1)'}}></span>FONTE: FOGO CRUZADO + ISP · HÁ 12 MIN

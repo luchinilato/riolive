@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -49,6 +49,12 @@ class Config(BaseSettings):
             and self.r2_access_key_id.get_secret_value()
             and self.r2_secret_access_key.get_secret_value()
         )
+
+    # Fogo Cruzado (nomes sem prefixo, como o Luciano cadastrou no .env)
+    fogo_cruzado_user: str = Field("", validation_alias="FOGO_CRUZADO_USER")
+    fogo_cruzado_password: SecretStr = Field(
+        SecretStr(""), validation_alias="FOGO_CRUZADO_PASSWORD"
+    )
 
     # Chaves de fontes (fase 1+)
     openaq_api_key: SecretStr = SecretStr("")
