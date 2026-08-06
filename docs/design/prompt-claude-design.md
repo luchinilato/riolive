@@ -84,13 +84,17 @@ Crie tokens de cor pros 5 níveis funcionando sobre fundo escuro, com versão ac
 
 ### Tela 1 — Home (desktop e mobile)
 
-**Navegação**: Agora · Mapa · Análises · Status. ("Análises" é a camada de aprofundamento — antigo "Painéis".)
+**Navegação**: Agora · Mapa · Status. Não existe seção de "análises": o aprofundamento de cada tema é alcançado **expandindo o próprio cartão** (ver "Padrão de expansão" abaixo).
 
-**Cabeçalho de estado** (topo, sempre visível): estágio atual da cidade em destaque + um resumo de uma linha. Mock: "**Estágio 1 — Normalidade** · A cidade opera normalmente. Sem chuva nas últimas 24h." Fonte: COR · há 3 min.
+**Padrão de expansão de cartão** (central no produto): todo cartão temático tem affordance visível de expandir (ícone ⤢ e título clicável). Ao expandir, o cartão cresce em transição animada até ocupar a tela inteira e vira o **dossiê do tema**: histórico completo, séries longas, tabelas, contexto. Por baixo da animação é uma navegação de rota — **cada tema expandido tem URL própria** (`/chuva`, `/mobilidade`, `/seguranca`...), o botão voltar funciona e fechar devolve a home na mesma posição de rolagem. O cartão é o resumo; expandido, é o assunto inteiro.
+
+**Cabeçalho de estado** (topo, sempre visível): estágio atual da cidade em destaque + um resumo de uma linha + o **seletor territorial global**: um controle "**Cidade inteira ▾**" que abre busca por zona/bairro. Escolher um território re-escopa a home INTEIRA — todos os cartões recalculam pro recorte (chuva das estações da zona, frota circulando ali, ar da zona, eventos dali) e um chip visível "Zona Norte ✕" marca o estado, refletido na URL (`?zona=norte`). Mock do cabeçalho: "**Estágio 1 — Normalidade** · A cidade opera normalmente. Sem chuva nas últimas 24h." Fonte: COR · há 3 min.
+
+**Endereço de cada filtro no produto** (todos serializam na URL — a imprensa compartilha o recorte exato): território = seletor global da home · período = dentro do cartão expandido (24h/7d/30d) e na timeline do mapa · camadas = mapa · severidade ("só o anormal") = toggle no feed e chip no mapa. Não crie uma barra de filtros genérica repetida em toda tela.
 
 **Ticker de leituras** (faixa fina logo abaixo do cabeçalho, rolagem horizontal contínua e pausável): leituras ao vivo intercaladas de todas as fontes, em JetBrains Mono. Mock: `COPACABANA 0,0mm · PM2.5 IRAJÁ 13,3 · RIO TIJUCA 65cm ▬ · 4.212 VEÍCULOS ▲ · ONDAS 1,4m · METRÔ L1 NORMAL · SDU 12 POUSOS/H · ESTÁGIO 1`. É o elemento que faz a página parecer um organismo vivo.
 
-**Feed "agora na cidade"** (coluna direita no desktop, ~320 px): lista cronológica dos últimos eventos/transições de todas as fontes, com badge de severidade e idade. Mock: "14:28 · linha 232 voltou a circular", "14:11 · PM10 subiu pra moderado em Bangu", "13:47 · COR: bolsão d'água em Jacarepaguá — resolvido 14:20", "12:40 · 2 focos de calor na Região Metropolitana (fora do município)". O feed rola independente.
+**Feed "agora na cidade"** (coluna direita no desktop, ~320 px): lista cronológica dos últimos eventos/transições de todas as fontes, com badge de severidade e idade. Mock: "14:28 · linha 232 voltou a circular", "14:11 · PM10 subiu pra moderado em Bangu", "13:47 · COR: bolsão d'água em Jacarepaguá — resolvido 14:20", "12:40 · 2 focos de calor na Região Metropolitana (fora do município)". O feed rola independente e tem um toggle "**só o anormal**" (severidade ≥ 2) no seu topo.
 
 **Grade de cartões temáticos** (a ordem muda conforme severidade; num dia calmo):
 
@@ -111,26 +115,25 @@ O painel cobre o escopo COMPLETO de lançamento — inclua TODOS os cartões aba
 
 **Rodapé**: link pra página de status das fontes ("12 de 12 fontes operando normalmente ●"), metodologia (placeholder), e nota de licença dos dados.
 
-**Versão mobile**: os cartões empilham; o cabeçalho de estado vira uma barra compacta fixa; navegação inferior com 4 itens (Agora, Mapa, Análises, Status). O ticker permanece (uma linha, rolagem contínua); o feed vira uma aba dentro de "Agora".
+**Versão mobile**: os cartões empilham; o cabeçalho de estado vira uma barra compacta fixa; navegação inferior com 3 itens (Agora, Mapa, Status). O ticker permanece (uma linha, rolagem contínua); o feed vira uma aba dentro de "Agora"; tocar num cartão abre o tema em tela cheia (o padrão de expansão no mobile).
 
 ### Tela 2 — Vista Mapa (`/mapa`)
 
-Mapa escuro da cidade ocupando a área principal, com:
-- **Painel de camadas** (lateral no desktop, sheet inferior no mobile): ligar/desligar Frota, Radar, Chuva por estação, Eventos, Qualidade do ar. Cada camada com seu selo de fonte.
-- **Linha do tempo** no rodapé do mapa pra animar o radar (últimos 40 min, botão play).
-- **Chips de filtro** no topo: bairro/zona, janela de tempo (3h/24h), severidade ("só o anormal").
-- Botão "copiar link deste recorte".
-- Um pino de exemplo aberto (popover): evento com título, severidade, horário, fonte.
+O mapa é a vista de **correlação espacial**: o único lugar onde camadas de temas diferentes se cruzam sobre a cidade (ex.: ocorrências de tiro + ônibus que pararam de circular — o ativo editorial do produto). Não é um GIS genérico.
+
+IMPORTANTE — **não desenhe cartografia**: represente o mapa como um retângulo de basemap escuro placeholder (textura sutil de malha viária, rotulado "MapLibre") e concentre TODO o design no chrome ao redor:
+
+- **Chips de recorte pronto** no topo — cada um liga um conjunto curado de camadas: **"Chuva agora"** (radar + chuva por estação + nível de rios), **"Transporte"** (frota + linhas paradas + status do metrô), **"Segurança × transporte"** (ocorrências + frota — destaque este como o recorte-assinatura do produto), **"Meu bairro"** (seletor de bairro + tudo que está anormal ali). Um chip "Personalizar" abre o painel avançado.
+- **Painel de camadas avançado** (recolhido por padrão; lateral no desktop, sheet no mobile): liga/desliga camada individual, cada uma com selo de fonte e idade da leitura.
+- **Timeline** no rodapé SÓ quando uma camada temporal está ativa (radar/eventos): últimos 40 min, botão play, quadros do radar.
+- Chips de contexto: zona/bairro, janela (3h/24h), "só o anormal". Botão "copiar link deste recorte".
+- Um popover de exemplo aberto num evento: título, badge de severidade, horário, fonte, "copiar link".
 
 ### Tela 3 — Status das fontes (`/status`)
 
 Tabela/lista pública de todas as fontes: nome, órgão, estado atual (online/degradada/fora/congelada com os ícones da escala), última leitura, uptime 30 dias (barrinha estilo status page). Mock: 11 online + 1 degradada ("Navios (AIS) — instável desde 05/08"). É a página da transparência — visual de status page séria.
 
-### Tela 4 — Índice de Análises (`/analises`)
-
-A porta de entrada da camada de aprofundamento: grade com um bloco por tema (os mesmos 10 temas dos cartões da home), cada um com título, número-síntese atual e um resumo do que a análise oferece ("séries desde 1997", "planejado × realizado por linha", "taxa /100 mil por região"). Deixe claro pelo design que aqui é onde mora o histórico e o contexto — a home é o agora, as Análises são a memória.
-
-### Tela 5 — Detalhe de uma Análise (exemplo: Chuva e água)
+### Tela 4 — Cartão expandido (exemplo: Chuva e água, rota `/chuva`)
 
 Página aprofundada: gráfico de série temporal grande (chuva por hora, 24h–30 dias, com anotações de eventos: faixa vermelha quando a cidade entrou em Estágio 3), tabela das 33 estações ordenável, mapa das estações, e o bloco de contexto histórico ("percentil 95 pra agosto"). Seletor de período e comparação com a média histórica.
 
@@ -154,4 +157,4 @@ Página aprofundada: gráfico de série temporal grande (chuva por hora, 24h–3
 
 ## Entregáveis
 
-Home (desktop + mobile, dia calmo), Home dia de crise (desktop), Vista Mapa (desktop), Índice de Análises (desktop), Detalhe Chuva (desktop), Status (desktop) — e o inventário de componentes/tokens (cores, tipografia, espaçamentos) organizado pra virar design system.
+Home (desktop + mobile, dia calmo), Home dia de crise (desktop), **Home filtrada por território** ("Zona Norte" ativa no seletor global, cartões re-escopados), transição de expansão (home → cartão de Chuva expandido, 2-3 quadros), Cartão expandido Chuva (desktop), Vista Mapa (desktop), Status (desktop) — e o inventário de componentes/tokens (cores, tipografia, espaçamentos) organizado pra virar design system.
