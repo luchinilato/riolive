@@ -22,6 +22,7 @@ from riolive.api.rotas import (
     previsao,
     radar,
     series,
+    transito,
 )
 
 CACHE_PADRAO_S = 15
@@ -60,3 +61,4 @@ app.include_router(radar.rota)
 app.include_router(locais.rota)
 app.include_router(chuva.rota)
 app.include_router(mobilidade.rota)
+app.include_router(transito.rota)

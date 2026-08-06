@@ -41,13 +41,19 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: ativo && ui.route === 'mapa', refetchInterval: 120_000, retry: 1,
   })
 
+  const transitoCorredores = useQuery({
+    queryKey: ['transito-corredores'],
+    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/transito/corredores`).then((r) => r.json()),
+    enabled: ativo, refetchInterval: 300_000, retry: 1,
+  })
+
   const mobilidade = useQuery({
     queryKey: ['mobilidade-linhas'],
     queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/mobilidade/linhas`).then((r) => r.json()),
     enabled: ativo, refetchInterval: 60_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, radarMapa, ui, ativo }
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, radarMapa, ui, ativo }
 }
 
 const hhmm = (iso: string) => {
@@ -280,6 +286,75 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       .map((e: any) => ({ quando: quando(e.inicio), cor: 'var(--s2)', titulo: e.titulo, sub: null }))
     const itens = [...jogos, ...aguas]
     if (itens.length) saida.cidadeVivaItens = itens.slice(0, 4)
+  }
+
+  // Trânsito real: cartão com os 4 piores corredores e dossiê /transito
+  const tc = d.transitoCorredores.data
+  if (tc?.media_kmh != null) {
+    const seta = (c: any) =>
+      c.fluidez_pct == null ? { d: '▬', dc: 'var(--tx2)' }
+      : c.fluidez_pct < 60 ? { d: '▼', dc: 'var(--s3)' }
+      : c.fluidez_pct > 85 ? { d: '▲', dc: 'var(--s1)' }
+      : { d: '▬', dc: 'var(--tx2)' }
+    saida.transito = {
+      ...m.transito,
+      sev: tc.congestionados >= 3 ? SEV[3] : tc.congestionados >= 1 ? SEV[2] : SEV[1],
+      hero: String(tc.media_kmh),
+      count: `${tc.corredores.length} CORR`,
+      sub: `fluxo livre ${tc.media_livre_kmh} km/h · TomTom nos corredores + nossa frota`,
+      rows: tc.corredores.slice(0, 4).map((c: any) => ({
+        n: c.nome.replace(' · ', ' — '), v: String(Math.round(c.agora_kmh ?? 0)), ...seta(c),
+      })),
+    }
+  }
+
+  if (d.ui.dossier === 'transito' && saida.dossier && tc) {
+    const dossie: any = { ...saida.dossier, title: 'Trânsito', route: '/transito' }
+    dossie.sev = tc.congestionados >= 3 ? SEV[3] : tc.congestionados >= 1 ? SEV[2] : SEV[1]
+    const pior = tc.corredores[0]
+    dossie.kpis = [
+      { l: 'Velocidade média agora', v: String(tc.media_kmh ?? '—'), u: `km/h · fluxo livre ${tc.media_livre_kmh ?? '—'}`, c: 'var(--tx)', d: `média dos ${tc.corredores.length} corredores monitorados` },
+      { l: 'Pior corredor', v: pior?.fluidez_pct != null ? `${pior.fluidez_pct}%` : '—', u: pior?.nome ?? '', c: (pior?.fluidez_pct ?? 100) < 60 ? 'var(--s3)' : 'var(--tx)', d: pior ? `${Math.round(pior.agora_kmh)} de ${Math.round(pior.livre_kmh)} km/h` : '' },
+      { l: 'Corredores congestionados', v: String(tc.congestionados), u: 'abaixo de 60% da fluidez', c: tc.congestionados ? 'var(--s3)' : 'var(--s1)', d: 'razão velocidade atual ÷ fluxo livre' },
+      { l: 'Amostragem TomTom', v: 'pico', u: '15/15 min · fora: 1×/h', c: 'var(--tx3)', d: '~17,3 mil das 20 mil req/mês do free tier' },
+    ]
+    const serie: any[] = tc.serie_24h ?? []
+    if (serie.length >= 2) {
+      const valores = serie.map((p) => p.vel)
+      dossie.series1 = poly(valores, 1000, 205, Math.max(...valores))
+      dossie.series2 = ''
+      dossie.s1 = 'velocidade média dos corredores (km/h)'
+      dossie.s2 = ''
+      dossie.annW = 0; dossie.annX = -10; dossie.annLabel = ''
+      dossie.chartTitle = 'Velocidade média · últimas 24 h'
+      const passoN = Math.max(1, Math.floor(serie.length / 8))
+      dossie.axis = serie.filter((_: any, i: number) => i % passoN === 0).slice(0, 8).map((p) => hhmm(p.ts))
+      const ult = serie.at(-1)
+      dossie.tipTime = `${hhmm(ult.ts)} · MÉDIA`
+      dossie.tip1 = `${ult.vel} km/h`
+      dossie.tip2 = ''
+    } else {
+      dossie.chartTitle = 'Velocidade média · série em construção (agregado horário materializa ao longo do dia)'
+      dossie.series1 = ''; dossie.series2 = ''; dossie.annW = 0; dossie.annLabel = ''
+      dossie.s1 = 'velocidade média dos corredores (km/h)'; dossie.s2 = ''
+      dossie.tipTime = ''; dossie.tip1 = ''; dossie.tip2 = ''
+    }
+    dossie.rows = tc.corredores.map((c: any) => ({
+      a: c.nome,
+      b: c.agora_kmh != null ? `${Math.round(c.agora_kmh)} km/h` : '—',
+      c: c.livre_kmh != null ? `${Math.round(c.livre_kmh)} km/h` : '—',
+      d: c.fluidez_pct != null ? `${c.fluidez_pct}%` : '—',
+      e: c.fluidez_pct == null ? 'sem leitura' : c.fluidez_pct < 60 ? 'CONGESTIONADO' : c.fluidez_pct > 85 ? 'fluindo' : 'moderado',
+      ec: c.fluidez_pct != null && c.fluidez_pct < 60 ? 'var(--s3)' : 'var(--tx2)',
+    }))
+    dossie.cols = ['Corredor', 'Agora', 'Fluxo livre', 'Fluidez', 'Situação']
+    dossie.tableTitle = `${tc.corredores.length} corredores monitorados — piores primeiro`
+    dossie.sortBy = 'FLUIDEZ'
+    dossie.mapTitle = 'Corredores no mapa'
+    dossie.mapDots = []
+    dossie.context = 'A camada base de trânsito é a velocidade derivada da nossa própria frota (cidade inteira); o TomTom calibra os corredores estruturais por amostragem, dentro do free tier. Fluidez = velocidade atual ÷ fluxo livre do trecho.'
+    dossie.seal = 'TOMTOM FLOW + FROTA SMTR · AMOSTRADO'
+    saida.dossier = dossie
   }
 
   // ticker composto de leituras reais (substitui o mock quando a API responde)
