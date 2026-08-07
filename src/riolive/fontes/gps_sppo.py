@@ -69,9 +69,12 @@ class RegistroSppo(BaseModel):
         return bruto
 
 
-def coletar(cliente: ClienteHttp) -> ResultadoColeta:
-    fim = datetime.now(tz=TZ_RIO)
-    inicio = fim - JANELA
+def coletar_janela(cliente: ClienteHttp, inicio: datetime, fim: datetime) -> ResultadoColeta:
+    """Coleta um intervalo arbitrário — a origem serve janelas passadas.
+
+    `inicio` e `fim` são hora local do Rio, como a API exige. Separado de
+    `coletar` pra que o backfill (`semente.gps_sppo`) use o mesmo parser.
+    """
     formato = "%Y-%m-%d %H:%M:%S"
     resposta = cliente.obter(
         URL,
@@ -127,6 +130,11 @@ def coletar(cliente: ClienteHttp) -> ResultadoColeta:
         raise ErroSchema(f"dado no futuro ({marca_frescor.isoformat()}): o Z virou UTC de verdade?")
 
     return ResultadoColeta(posicoes=posicoes, marca_frescor=marca_frescor)
+
+
+def coletar(cliente: ClienteHttp) -> ResultadoColeta:
+    fim = datetime.now(tz=TZ_RIO)
+    return coletar_janela(cliente, fim - JANELA, fim)
 
 
 FONTE = FonteConfig(
