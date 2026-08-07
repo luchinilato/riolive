@@ -9,7 +9,7 @@ Uso: `python -m riolive.semente.fogo_cruzado`
 
 import logging
 import time
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from riolive.db import sessao
 from riolive.fontes.fogo_cruzado import FONTE, _logar, buscar_pagina, interpretar_ocorrencia
@@ -33,7 +33,7 @@ def _data_retomada() -> str:
     from sqlalchemy import text
 
     with sessao() as s:
-        fronteira = s.execute(
+        fronteira: date | None = s.execute(
             text(
                 "SELECT max(inicio)::date FROM evento "
                 "WHERE tipo = 'tiroteio' AND inicio < now() - interval '7 days'"

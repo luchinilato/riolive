@@ -1,0 +1,19 @@
+# Fase sem domínio: serve por IP na porta 80.
+# Quando o domínio existir (Pulso Rio), trocar :80 pelo hostname — o Caddy
+# emite TLS sozinho — e colocar o Cloudflare na frente conforme a DEC de stack.
+
+:80 {
+	encode zstd gzip
+
+	# API pública sob /api (o painel é buildado com VITE_API_URL=/api)
+	handle_path /api/* {
+		reverse_proxy api:8000
+	}
+
+	# Painel (SPA com History API: rotas caem no index.html)
+	handle {
+		root * /srv/painel
+		try_files {path} /index.html
+		file_server
+	}
+}
