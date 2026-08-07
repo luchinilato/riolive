@@ -1,0 +1,102 @@
+[project]
+name = "riolive"
+version = "0.1.0"
+description = "Painel público em tempo real da cidade do Rio de Janeiro — backend de ingestão, persistência e API"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [{ name = "Luciano Chinilato", email = "luciano@rheunion.com" }]
+dependencies = [
+    "httpx>=0.28",
+    "tenacity>=9.0",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "sqlalchemy>=2.0",
+    "geoalchemy2>=0.16",
+    "psycopg[binary]>=3.2",
+    "alembic>=1.14",
+    "dagster>=1.9",
+    "dagster-postgres>=0.25",
+    "shapely>=2.0",
+    "h3>=4.1",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.3",
+    "redis>=5.0",
+    "defusedxml>=0.7",
+    "dagster-webserver>=1.9",
+    "boto3>=1.43.65",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9",
+    "mypy>=1.14",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "respx>=0.22",
+    "types-beautifulsoup4",
+    "types-defusedxml>=0.7.0.20260504",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/riolive"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "S",        # bandit
+    "DTZ",      # datetimes ingênuos são bug neste projeto (fontes misturam UTC e hora local)
+    "RUF",
+]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # prosa em português usa × e afins legitimamente
+]
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]  # assert é a ferramenta do pytest
+# S608: os f-strings de SQL só interpolam fragmentos literais fixos (condições
+# hardcoded e tabela vinda de Literal); valores do usuário são sempre bound (:param)
+"src/riolive/api/rotas/**" = ["S608"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+packages = ["riolive"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+    "geoalchemy2.*",
+    "h3.*",
+    "shapely.*",
+    "dagster.*",
+    "dagster_postgres.*",
+    "boto3.*",
+    "botocore.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "rede: testes que batem em serviços externos reais (excluídos por padrão)",
+]
+
+[tool.coverage.run]
+source = ["src/riolive"]

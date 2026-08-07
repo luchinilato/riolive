@@ -1,0 +1,17 @@
+# Segredos NUNCA entram na imagem — env vem do compose (env_file/environment).
+# Também evita o autoload de .env do Dagster sobrepor o ambiente do container.
+.env
+.env.*
+
+.git
+.venv
+__pycache__
+*.py[cod]
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.coverage
+htmlcov
+.dagster_home
+dados
+*.xlsx

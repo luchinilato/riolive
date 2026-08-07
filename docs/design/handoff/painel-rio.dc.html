@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#0b0e13; --bg2:#0e121a; --bg3:#07090d;
+    --card:#14181f; --card2:#1a212b;
+    --bd:#242c38; --bd2:#1d242e; --bd3:#171d26; --bd4:#2c3644; --bd-strong:#2f3947;
+    --grid:#161c25; --map-grid:rgba(36,44,56,.55); --map-grid2:rgba(36,44,56,.35);
+    --scrim:rgba(11,14,19,.78);
+    --tx:#e8eaed; --tx2:#9aa4ad; --tx3:#5b6570; --tx4:#3a4452;
+    --brand:#004A80; --brand2:#0a6aad; --on-brand:#dff2fd; --on-brand2:#8fcdee;
+    --live:#00C0F3; --live-tx:#00C0F3; --live-bg:rgba(0,192,243,.09); --live-bd:rgba(0,192,243,.2);
+    --hero-grad:linear-gradient(180deg,#0d2138,#14181f 66%); --hero-bd:#1d3f5e;
+    --warn-bg:rgba(173,141,44,.10); --warn-bd:#4a3d1c; --warn-tx:#d9b855;
+    --ok-bg:rgba(63,169,107,.08); --ok-bd:#234a33; --up-ok:#2c5f43;
+    --sk1:#1a212b; --sk2:#232c39;
+    --s1:#3fa96b; --s2:#ad8d2c; --s3:#c2662a; --s4:#cd4048; --s5:#9b52d6;
+    --s1-bg:rgba(63,169,107,.10); --s2-bg:rgba(173,141,44,.10); --s3-bg:rgba(194,102,42,.12);
+    --s4-bg:rgba(205,64,72,.12); --s5-bg:rgba(155,82,214,.12);
+    --s4-bd:#5a2429; --s3-bd:#5a3a1c; --s3-tx:#e08a4a; --s4-dim:#7a3238;
+    --shadow:0 18px 40px rgba(0,0,0,.6);
+  }
+  :root[data-tema="claro"] {
+    --bg:#eef1f5; --bg2:#e4e9ef; --bg3:#dde2e9;
+    --card:#ffffff; --card2:#f4f7fa;
+    --bd:#d2dae2; --bd2:#e3e8ee; --bd3:#ebeff4; --bd4:#c5cfd9; --bd-strong:#b8c3ce;
+    --grid:#e8edf2; --map-grid:rgba(120,136,152,.34); --map-grid2:rgba(120,136,152,.22);
+    --scrim:rgba(255,255,255,.86);
+    --tx:#111820; --tx2:#4d5a67; --tx3:#7b8794; --tx4:#a6b1bc;
+    --brand:#004A80; --brand2:#00385f; --on-brand:#ffffff; --on-brand2:#a9d3ee;
+    --live:#0093c4; --live-tx:#00688f; --live-bg:rgba(0,147,196,.10); --live-bd:rgba(0,147,196,.28);
+    --hero-grad:linear-gradient(180deg,#dfecf7,#ffffff 66%); --hero-bd:#b3cee5;
+    --warn-bg:rgba(160,127,26,.13); --warn-bd:#d8c68d; --warn-tx:#7a6112;
+    --ok-bg:rgba(47,125,79,.10); --ok-bd:#a8cdb7; --up-ok:#8cc4a4;
+    --sk1:#edf1f5; --sk2:#e0e6ec;
+    --s1:#2f7d4f; --s2:#836811; --s3:#9d4c17; --s4:#b52831; --s5:#7134ad;
+    --s1-bg:rgba(47,125,79,.11); --s2-bg:rgba(131,104,17,.12); --s3-bg:rgba(157,76,23,.11);
+    --s4-bg:rgba(181,40,49,.10); --s5-bg:rgba(113,52,173,.10);
+    --s4-bd:#e2b3b6; --s3-bd:#dcbc9c; --s3-tx:#9d4c17; --s4-dim:#d9a7ab;
+    --shadow:0 18px 40px rgba(23,35,48,.18);
+  }
+  html, body { margin:0; padding:0; background:var(--bg); }
+  * { box-sizing:border-box; }
+  a { color:var(--live-tx); text-decoration:none; }
+  a:hover { color:var(--brand2); }
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-thumb { background:var(--bd4); border-radius:3px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  @keyframes pulse { 0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(0,150,200,.45);} 50% { opacity:.55; box-shadow:0 0 0 5px rgba(0,150,200,0);} }
+  @keyframes tick { from { transform:translateX(0);} to { transform:translateX(-50%);} }
+  @keyframes expandIn { from { opacity:0; transform:scale(.94) translateY(10px);} to { opacity:1; transform:none;} }
+  @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+  @keyframes shimmer { 0% { background-position:-200px 0 } 100% { background-position:220px 0 } }
+</style>
+</helmet>
+
+<div style="height:100vh;width:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:Inter,system-ui,sans-serif;font-size:12px;display:flex;flex-direction:column;font-feature-settings:'tnum' 1;-webkit-font-smoothing:antialiased">
+
+  <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+  <div style="width:100vw;height:100vh;overflow:hidden">
+  <div style="width:{{ stage.w }}px;height:{{ stage.h }}px;transform:{{ stage.t }};transform-origin:top left;display:flex;flex-direction:column;overflow:hidden">
+
+    <!-- ================= CABEÇALHO DE ESTADO ================= -->
+    <div style="display:flex;align-items:center;gap:16px;padding:0 16px;height:56px;flex:0 0 56px;border-bottom:1px solid var(--bd);background:var(--bg)">
+      <div style="width:140px;height:28px;border:1px dashed var(--tx4);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;flex:0 0 auto">marca</div>
+
+      <div style="display:flex;gap:2px;flex:0 0 auto">
+        <div onClick="{{ goHome }}" style="padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:{{ navA.c }};background:{{ navA.b }}" style-hover="background:var(--card2)">Agora</div>
+        <div onClick="{{ goMapa }}" style="padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:{{ navM.c }};background:{{ navM.b }}" style-hover="background:var(--card2)">Mapa</div>
+        <div onClick="{{ goStatus }}" style="padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:{{ navS.c }};background:{{ navS.b }}" style-hover="background:var(--card2)">Status</div>
+      </div>
+
+      <div style="width:1px;height:26px;background:var(--bd)"></div>
+
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto">
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;border:1px solid {{ sev.c }};background:{{ sev.bg }};flex:0 0 auto">
+          <span style="font-size:11px;color:{{ sev.c }}">{{ sev.i }}</span>
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:{{ sev.c }};line-height:1">{{ sev.n }}</span>
+          <span style="font-size:12px;font-weight:600;color:{{ sev.c }};letter-spacing:.01em">{{ sev.l }}</span>
+        </div>
+        <div style="min-width:0;overflow:hidden;padding-right:8px">
+          <div style="font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ headline }}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);margin-top:2px">FONTE: COR · HÁ 3 MIN</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto;white-space:nowrap">
+        <sc-if value="{{ zoneChip }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 8px 5px 10px;border-radius:999px;background:var(--brand);border:1px solid var(--brand2);font-size:11px;font-weight:500;color:var(--on-brand)">
+            <span>{{ zoneChip }}</span>
+            <span onClick="{{ clearZone }}" style="cursor:pointer;color:var(--on-brand2);font-size:11px">✕</span>
+          </div>
+        </sc-if>
+        <div onClick="{{ toggleZonePicker }}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;border:1px solid var(--bd);background:var(--card);cursor:pointer;font-size:12px" style-hover="background:var(--card2)">
+          <span style="color:var(--tx2)">Território</span>
+          <span style="color:var(--tx);font-weight:500">{{ zoneLabel }}</span>
+          <span style="color:var(--tx3);font-size:9px">▾</span>
+        </div>
+        <div onClick="{{ copyLink }}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;border:1px solid var(--bd);background:var(--card);cursor:pointer;font-size:11px;color:var(--live-tx)" style-hover="background:var(--card2)">⧉ {{ copyLabel }}</div>
+        <div onClick="{{ toggleMode }}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;border:1px dashed var(--tx4);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx2);white-space:nowrap" style-hover="background:var(--card2)">DEMO: {{ modeLabel }}</div>
+        <div onClick="{{ toggleTheme }}" title="Alternar tema" style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;border:1px solid var(--bd);background:var(--card);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx2);white-space:nowrap" style-hover="background:var(--card2)">{{ themeIcon }} {{ themeLabel }}</div>
+        <div style="display:flex;align-items:center;gap:6px;padding-left:4px">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--live);animation:pulse 2s infinite"></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx2);letter-spacing:.06em">AO VIVO</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- seletor territorial aberto -->
+    <sc-if value="{{ zonePickerOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;top:58px;right:16px;z-index:60;width:280px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;box-shadow:var(--shadow);animation:fadeIn .12s">
+        <input placeholder="Buscar zona ou bairro" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:7px 9px;color:var(--tx);font-size:12px;font-family:Inter,sans-serif;outline:none" />
+        <div style="display:flex;flex-direction:column;gap:1px;margin-top:8px;max-height:240px;overflow:auto">
+          <sc-for list="{{ zones }}" as="z" hint-placeholder-count="6">
+            <div onClick="{{ z.pick }}" style="display:flex;justify-content:space-between;align-items:center;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--tx)" style-hover="background:var(--card2)">
+              <span>{{ z.label }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3)">{{ z.meta }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ================= TICKER ================= -->
+    <div onMouseEnter="{{ pauseTicker }}" onMouseLeave="{{ resumeTicker }}" style="flex:0 0 30px;height:30px;border-bottom:1px solid var(--bd);background:var(--bg2);overflow:hidden;position:relative;display:flex;align-items:center">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:44px;z-index:2;background:linear-gradient(90deg,var(--bg2),transparent)"></div>
+      <div style="position:absolute;right:0;top:0;bottom:0;width:44px;z-index:2;background:linear-gradient(270deg,var(--bg2),transparent)"></div>
+      <div style="display:flex;width:max-content;animation:tick 62s linear infinite;animation-play-state:{{ tickerState }}">
+        <sc-for list="{{ tickerLoop }}" as="t" hint-placeholder-count="10">
+          <div style="display:flex;align-items:center;gap:7px;padding:0 14px;border-right:1px solid var(--bd2);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.04em">
+            <span style="color:var(--tx3)">{{ t.k }}</span>
+            <span style="color:var(--tx);font-weight:500">{{ t.v }}</span>
+            <span style="color:{{ t.dc }}">{{ t.d }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- ================= HOME ================= -->
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1 1 auto;min-height:0;display:flex;gap:12px;padding:12px 16px">
+
+        <!-- GRADE DE PAINÉIS -->
+        <div style="flex:1 1 auto;min-width:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr);gap:12px">
+
+          <!-- CHUVA E ÁGUA -->
+          <div onClick="{{ openChuva }}" style="background:var(--card);border:1px solid {{ chuva.bd }};border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.chuva.s }};order:{{ lay.chuva.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid {{ chuva.sev.c }};color:{{ chuva.sev.c }};font-family:'JetBrains Mono',monospace;font-size:10px">{{ chuva.sev.i }} {{ chuva.sev.n }}</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Chuva e água</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">{{ chuva.count }}</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;display:flex;gap:12px;overflow:hidden">
+              <div style="flex:1 1 0;min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:5px">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:600;letter-spacing:-.02em;line-height:1;color:{{ chuva.hc }}">{{ chuva.hero }}</span>
+                  <span style="font-family:'Space Grotesk',sans-serif;font-size:14px;color:var(--tx2)">mm/h</span>
+                </div>
+                <div style="font-size:12px;color:var(--tx2);line-height:1.35">{{ chuva.sub }}</div>
+                <div style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:flex-end">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.08em;margin-bottom:3px">CHUVA 24H · MM</div>
+                  <svg viewBox="0 0 220 34" preserveAspectRatio="none" style="width:100%;height:30px;display:block">
+                    <line x1="0" y1="33" x2="220" y2="33" stroke="var(--bd)" stroke-width="1"></line>
+                    <line x1="0" y1="17" x2="220" y2="17" stroke="var(--card2)" stroke-width="1"></line>
+                    <polyline points="{{ chuva.spark }}" fill="none" stroke="#149cc6" stroke-width="2" stroke-linejoin="round"></polyline>
+                  </svg>
+                </div>
+                <div style="flex:0 0 auto;font-size:11px;color:var(--tx2);border-top:1px solid var(--bd2);padding-top:6px;line-height:1.35">{{ chuva.rios }}</div>
+              </div>
+              <div style="flex:0 0 132px;display:flex;flex-direction:column;gap:4px">
+                <div style="flex:1 1 auto;border-radius:6px;border:1px solid var(--bd);position:relative;overflow:hidden;background:var(--bg2);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:14px 14px">
+                  <div style="position:absolute;left:12%;top:22%;width:34%;height:30%;border-radius:50%;background:{{ chuva.echo1 }};filter:blur(5px)"></div>
+                  <div style="position:absolute;left:52%;top:44%;width:26%;height:26%;border-radius:50%;background:{{ chuva.echo2 }};filter:blur(5px)"></div>
+                  <div style="position:absolute;left:8px;bottom:6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">RADAR</div>
+                </div>
+                <div style="display:flex;gap:2px;align-items:center">
+                  <sc-for list="{{ ramp }}" as="c" hint-placeholder-count="6">
+                    <span style="flex:1;height:5px;background:{{ c }};border-radius:1px"></span>
+                  </sc-for>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);margin-left:4px">mm/h</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex:0 0 auto;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--s1)"></span>FONTE: ALERTA RIO + ANA · HÁ 4 MIN
+            </div>
+          </div>
+
+          <!-- MOBILIDADE -->
+          <div onClick="{{ openMob }}" style="background:var(--card);border:1px solid {{ mob.bd }};border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.mob.s }};order:{{ lay.mob.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid {{ mob.sev.c }};color:{{ mob.sev.c }};font-family:'JetBrains Mono',monospace;font-size:10px">{{ mob.sev.i }} {{ mob.sev.n }}</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Mobilidade</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">{{ mob.count }}</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;display:flex;gap:12px;overflow:hidden">
+              <div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1">{{ mob.hero }}</span>
+                  <span style="font-size:11px;color:var(--tx2)">veículos</span>
+                </div>
+                <div style="font-size:11px;color:var(--tx2);line-height:1.4">{{ mob.sub }}</div>
+                <div style="display:flex;align-items:flex-start;gap:6px;padding:6px 8px;border-radius:6px;background:{{ mob.warnBg }};border:1px solid {{ mob.warnBd }};font-size:11px;color:{{ mob.warnC }};line-height:1.35">
+                  <span>⚠</span><span>{{ mob.warn }}</span>
+                </div>
+                <div style="margin-top:auto;display:flex;gap:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx2);border-top:1px solid var(--bd2);padding-top:6px">
+                  <span><span style="color:{{ mob.m1 }}">●</span> L1</span><span><span style="color:{{ mob.m2 }}">●</span> L2</span><span><span style="color:{{ mob.m4 }}">●</span> L4</span><span style="color:var(--tx3)">{{ mob.metro }}</span>
+                </div>
+              </div>
+              <div style="flex:0 0 96px;border-radius:6px;border:1px solid var(--bd);background:var(--bg2);position:relative;overflow:hidden;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:12px 12px">
+                <sc-for list="{{ fleetDots }}" as="p" hint-placeholder-count="30">
+                  <span style="position:absolute;left:{{ p.x }}%;top:{{ p.y }}%;width:2px;height:2px;border-radius:50%;background:{{ p.c }}"></span>
+                </sc-for>
+                <div style="position:absolute;left:6px;bottom:5px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">FROTA</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--live);animation:pulse 2s infinite"></span>FONTE: SMTR + METRÔRIO · AO VIVO (1 MIN)
+            </div>
+          </div>
+
+          <!-- TRÂNSITO -->
+          <div onClick="{{ openTransito }}" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.transito.s }};order:{{ lay.transito.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid {{ transito.sev.c }};color:{{ transito.sev.c }};font-family:'JetBrains Mono',monospace;font-size:10px">{{ transito.sev.i }} {{ transito.sev.n }}</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Trânsito</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">{{ transito.count }}</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1">{{ transito.hero }}</span>
+              <span style="font-size:11px;color:var(--tx2)">km/h médios</span>
+            </div>
+            <div style="font-size:11px;color:var(--tx2)">{{ transito.sub }}</div>
+            <div style="flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:1px">
+              <sc-for list="{{ transito.rows }}" as="r" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid var(--bd3)">
+                  <span style="flex:1 1 auto;min-width:0;font-size:11px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.n }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tx)">{{ r.v }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:{{ r.dc }};width:10px">{{ r.d }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--s1)"></span>FONTE: SMTR/TOMTOM · HÁ 5 MIN
+            </div>
+          </div>
+
+          <!-- PREVISÃO -->
+          <div onClick="{{ openPrevisao }}" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.previsao.s }};order:{{ lay.previsao.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid {{ previsao.sev.c }};color:{{ previsao.sev.c }};font-family:'JetBrains Mono',monospace;font-size:10px">{{ previsao.sev.i }} {{ previsao.sev.n }}</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Previsão</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">12H</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px;min-width:0">
+              <span style="flex:0 0 auto;white-space:nowrap;font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1">{{ previsao.hero }}</span>
+              <span style="min-width:0;font-size:11px;color:var(--tx2)">{{ previsao.heroSub }}</span>
+            </div>
+            <div style="font-size:11px;color:var(--tx2)">umidade 58% · vento 18 km/h SE</div>
+            <div style="flex:1 1 auto;min-height:0;display:flex;align-items:flex-end;gap:3px;padding-top:4px">
+              <sc-for list="{{ previsao.hours }}" as="h" hint-placeholder-count="12">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx2)">{{ h.t }}</span>
+                  <span style="width:100%;background:#c08428;border-radius:2px;height:{{ h.bar }}px"></span>
+                  <span style="width:100%;background:#149cc6;border-radius:2px;height:{{ h.rain }}px;opacity:.8"></span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">{{ h.h }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--s1)"></span>FONTE: OPEN-METEO · RODADA DE 14H
+            </div>
+          </div>
+
+          <!-- SEGURANÇA -->
+          <div onClick="{{ openSeguranca }}" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.seguranca.s }};order:{{ lay.seguranca.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid {{ seguranca.sev.c }};color:{{ seguranca.sev.c }};font-family:'JetBrains Mono',monospace;font-size:10px">{{ seguranca.sev.i }} {{ seguranca.sev.n }}</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Segurança</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">{{ seguranca.count }}</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:hidden">
+              <div style="display:flex;align-items:baseline;gap:6px;min-width:0">
+                <span style="font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1">{{ seguranca.hero }}</span>
+                <span style="font-size:11px;color:var(--tx2);min-width:0">ocorrências de tiro · 24 h</span>
+              </div>
+              <div style="font-size:11px;color:var(--tx2);line-height:1.4">{{ seguranca.sub }}</div>
+              <div style="flex:1 1 auto;min-height:30px;border-radius:6px;border:1px solid var(--bd);background:var(--bg2);position:relative;overflow:hidden">
+                <sc-for list="{{ hexes }}" as="h" hint-placeholder-count="12">
+                  <span style="position:absolute;left:{{ h.x }}%;top:{{ h.y }}%;width:13px;height:13px;background:{{ h.c }};clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)"></span>
+                </sc-for>
+                <div style="position:absolute;left:6px;bottom:5px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">H3 · 24H</div>
+              </div>
+              <div style="flex:0 0 auto;font-size:10px;color:var(--tx2);line-height:1.3">julho: <span style="font-family:'JetBrains Mono',monospace;color:var(--tx)">214</span> no estado — taxa <span style="font-family:'JetBrains Mono',monospace;color:var(--tx)">1,24</span>/100 mil (ISP)</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--s1)"></span>FONTE: FOGO CRUZADO + ISP · HÁ 12 MIN
+            </div>
+          </div>
+
+          <!-- QUALIDADE DO AR -->
+          <div onClick="{{ openAr }}" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.ar.s }};order:{{ lay.ar.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid {{ ar.sev.c }};color:{{ ar.sev.c }};font-family:'JetBrains Mono',monospace;font-size:10px">{{ ar.sev.i }} {{ ar.sev.n }}</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Qualidade do ar</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1;color:{{ ar.hc }}">{{ ar.hero }}</span>
+              <span style="font-size:11px;color:var(--tx2)">{{ ar.heroSub }}</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:6px;padding-top:2px">
+              <sc-for list="{{ ar.rows }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--tx)">{{ r.n }}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--tx2)">{{ r.v }}</span></div>
+                  <div style="height:4px;background:var(--bd2);border-radius:2px;overflow:hidden"><span style="display:block;height:4px;width:{{ r.p }}%;background:{{ r.c }}"></span></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--s1)"></span>FONTE: OPENAQ · HÁ 20 MIN
+            </div>
+          </div>
+
+          <!-- MAR E PRAIAS -->
+          <div onClick="{{ openMar }}" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.mar.s }};order:{{ lay.mar.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid {{ mar.sev.c }};color:{{ mar.sev.c }};font-family:'JetBrains Mono',monospace;font-size:10px">{{ mar.sev.i }} {{ mar.sev.n }}</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Mar e praias</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">17</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="flex:0 0 auto;white-space:nowrap;font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1;color:{{ mar.hc }}">{{ mar.hero }}</span>
+              <span style="min-width:0;font-size:11px;color:var(--tx2)">{{ mar.heroSub }}</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;gap:6px">
+                <div style="flex:1;border:1px solid var(--bd2);border-radius:6px;padding:6px 8px">
+                  <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;color:var(--s1);line-height:1">{{ mar.proprias }}</div>
+                  <div style="font-size:10px;color:var(--tx2);margin-top:2px">próprias</div>
+                </div>
+                <div style="flex:1;border:1px solid var(--bd2);border-radius:6px;padding:6px 8px">
+                  <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;color:var(--s3);line-height:1">{{ mar.improprias }}</div>
+                  <div style="font-size:10px;color:var(--tx2);margin-top:2px">impróprias</div>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--tx2);line-height:1.4">{{ mar.list }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--s1)"></span>OPEN-METEO MARINE + INEA · BOLETIM 04/08
+            </div>
+          </div>
+
+          <!-- CÉU -->
+          <div onClick="{{ openCeu }}" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.ceu.s }};order:{{ lay.ceu.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid {{ ceu.sev.c }};color:{{ ceu.sev.c }};font-family:'JetBrains Mono',monospace;font-size:10px">{{ ceu.sev.i }} {{ ceu.sev.n }}</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Céu</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">{{ ceu.count }}</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1">{{ ceu.hero }}</span>
+              <span style="font-size:11px;color:var(--tx2)">aeronaves sobre a cidade</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--tx2)">
+              <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd3);padding-bottom:4px"><span>SDU pousos/h</span><span style="font-family:'JetBrains Mono',monospace;color:{{ ceu.sduC }}">{{ ceu.sdu }}</span></div>
+              <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd3);padding-bottom:4px"><span>GIG pousos/h</span><span style="font-family:'JetBrains Mono',monospace;color:var(--tx)">{{ ceu.gig }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span>pontualidade julho</span><span style="font-family:'JetBrains Mono',monospace;color:var(--tx)">87%</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--live);animation:pulse 2s infinite"></span>FONTE: ADSB.LOL · AO VIVO
+            </div>
+          </div>
+
+          <!-- CARTÃO DE MEMÓRIA -->
+          <div style="background:var(--hero-grad);border:1px solid var(--hero-bd);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;grid-column:span {{ lay.memoria.s }};order:{{ lay.memoria.o }}">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--live-tx);text-transform:uppercase">Memória da cidade</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">SÉRIE 1997–2026</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;display:flex;gap:14px;align-items:stretch;overflow:hidden">
+              <div style="flex:1 1 0;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden">
+                <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:500;line-height:1.3;color:var(--tx);text-wrap:pretty">{{ memoria.quote1 }} <span style="color:var(--live-tx)">{{ memoria.quoteHi }}</span> {{ memoria.quote2 }}</div>
+                <div style="font-size:11px;color:var(--tx2);margin-top:7px;line-height:1.4">{{ memoria.sub }}</div>
+              </div>
+              <div style="flex:0 0 170px;display:flex;flex-direction:column;gap:4px">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.08em">AGOSTO · MM ACUMULADOS</div>
+                <div style="display:flex;align-items:flex-end;gap:3px;height:56px">
+                  <sc-for list="{{ memoria.bars }}" as="b" hint-placeholder-count="10">
+                    <span style="flex:1;background:{{ b.c }};height:{{ b.h }}%;border-radius:1px"></span>
+                  </sc-for>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)"><span>2017</span><span>2026</span></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--hero-bd);padding-top:8px">
+              <div onClick="{{ copyQuote }}" style="display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:6px;background:var(--brand);border:1px solid var(--brand2);color:var(--on-brand);font-size:11px;font-weight:500;cursor:pointer" style-hover="background:var(--brand2)">⧉ {{ quoteLabel }}</div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">FONTE: ALERTA RIO (SÉRIE HISTÓRICA) · HÁ 4 MIN</span>
+            </div>
+          </div>
+
+          <!-- QUEIMADAS -->
+          <div onClick="{{ openQueimadas }}" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.queimadas.s }};order:{{ lay.queimadas.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid var(--s1);color:var(--s1);font-family:'JetBrains Mono',monospace;font-size:10px">● 1</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Queimadas</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">3H</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1">0</span>
+              <span style="font-size:11px;color:var(--tx2)">focos no município · 3 h</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;font-size:11px;color:var(--tx2);line-height:1.45">3 focos na Região Metropolitana nas últimas 24 h — Duque de Caxias (2), Itaboraí (1). Nenhum dentro do limite municipal.</div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--s1)"></span>FONTE: INPE · HÁ 8 MIN
+            </div>
+          </div>
+
+          <!-- CIDADE VIVA -->
+          <div onClick="{{ openCidade }}" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.cidade.s }};order:{{ lay.cidade.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid var(--s2);color:var(--s2);font-family:'JetBrains Mono',monospace;font-size:10px">◆ 2</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Cidade viva</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">4</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:7px">
+              <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--live-tx)">SÁB 19:30</span>
+                <span style="min-width:0;font-size:11px;color:var(--tx);line-height:1.35">Flamengo × Vitória, Maracanã <span style="color:var(--tx2)">— esquema especial de trânsito</span></span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;min-width:0;border-top:1px solid var(--bd3);padding-top:7px">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--s2)">QUI 22H</span>
+                <span style="min-width:0;font-size:11px;color:var(--tx);line-height:1.35">Águas do Rio: manutenção programada em Irajá <span style="color:var(--tx2)">até 5h</span></span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;min-width:0;border-top:1px solid var(--bd3);padding-top:7px">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3)">DOM 07:00</span>
+                <span style="min-width:0;font-size:11px;color:var(--tx2);line-height:1.35">Aterro do Flamengo fechado para lazer</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--s1)"></span>THESPORTSDB + ÁGUAS DO RIO · HÁ 30 MIN
+            </div>
+          </div>
+
+          <!-- NAVIOS · DEGRADADO -->
+          <div onClick="{{ openNavios }}" style="background:var(--card);border:1px solid var(--warn-bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;grid-column:span {{ lay.navios.s }};order:{{ lay.navios.o }}" style-hover="background:var(--card2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:flex;align-items:center;gap:5px;padding:1px 5px;border-radius:4px;border:1px solid var(--s2);color:var(--s2);font-family:'JetBrains Mono',monospace;font-size:10px">◆ 2</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Navios (AIS)</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">BAÍA</span>
+              <span style="flex:0 0 auto;color:var(--tx3);font-size:11px">⤢</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:6px;padding:6px 8px;border-radius:6px;background:var(--warn-bg);border:1px solid var(--warn-bd);font-size:11px;color:var(--warn-tx);line-height:1.35">
+              <span>⚠</span><span>Fonte degradada desde 05/08. Exibindo a última leitura válida — não é o estado atual.</span>
+            </div>
+            <div style="flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:4px;opacity:.62">
+              <div style="display:flex;align-items:baseline;gap:6px">
+                <span style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1;color:var(--tx2)">38</span>
+                <span style="font-size:11px;color:var(--tx3)">embarcações na Baía</span>
+              </div>
+              <div style="font-size:11px;color:var(--tx3)">12 fundeadas · 6 atracadas no Porto · 20 em trânsito</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--s2);letter-spacing:.05em">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--s2)"></span>FONTE: AISSTREAM · LEITURA DE HÁ 19 H
+            </div>
+          </div>
+
+        </div>
+
+        <!-- FEED -->
+        <div style="flex:0 0 320px;background:var(--card);border:1px solid var(--bd);border-radius:10px;display:flex;flex-direction:column;overflow:hidden">
+          <div style="flex:0 0 auto;padding:10px 12px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:8px">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--live);animation:pulse 2s infinite"></span>
+            <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase">Agora na cidade</span>
+            <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">{{ feedCount }}</span>
+          </div>
+          <div style="flex:0 0 auto;padding:8px 12px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:8px">
+            <div onClick="{{ toggleAbnormal }}" style="width:28px;height:16px;border-radius:8px;background:{{ abn.track }};position:relative;cursor:pointer;transition:background .15s">
+              <span style="position:absolute;top:2px;left:{{ abn.x }}px;width:12px;height:12px;border-radius:50%;background:var(--tx);transition:left .15s"></span>
+            </div>
+            <span onClick="{{ toggleAbnormal }}" style="font-size:11px;color:{{ abn.c }};cursor:pointer">só o anormal <span style="color:var(--tx3)">(severidade ≥ 2)</span></span>
+          </div>
+          <div style="flex:1 1 auto;min-height:0;overflow:auto;position:relative">
+            <sc-for list="{{ feed }}" as="f" hint-placeholder-count="12">
+              <div style="display:flex;gap:9px;padding:9px 12px;border-bottom:1px solid var(--bd3);cursor:pointer" style-hover="background:var(--card2)">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);flex:0 0 34px;padding-top:1px">{{ f.h }}</span>
+                <span style="flex:0 0 auto;padding-top:1px;font-size:9px;color:{{ f.sev.c }}">{{ f.sev.i }}</span>
+                <span style="flex:1 1 auto;min-width:0;font-size:11.5px;color:var(--tx);line-height:1.4;text-wrap:pretty">{{ f.txt }}<span style="color:var(--tx3)"> · {{ f.src }}</span></span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="flex:0 0 auto;height:22px;margin-top:-22px;pointer-events:none;background:linear-gradient(180deg,transparent,var(--card))"></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ================= MAPA ================= -->
+    <sc-if value="{{ isMapa }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding:12px 16px;gap:10px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ mapPresets }}" as="p" hint-placeholder-count="5">
+            <div onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid {{ p.bd }};background:{{ p.bg }};color:{{ p.c }};font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:var(--card2)">
+              <span style="font-size:10px;color:{{ p.dot }}">{{ p.icon }}</span>{{ p.label }}
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">{{ p.n }}</span>
+            </div>
+          </sc-for>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+            <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;border:1px solid var(--bd);background:var(--card);font-size:11px;color:var(--tx2);white-space:nowrap">Janela <span style="color:var(--tx);font-family:'JetBrains Mono',monospace">3h</span> <span style="color:var(--tx3)">/ 24h</span></div>
+            <div onClick="{{ copyLink }}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;border:1px solid var(--bd);background:var(--card);cursor:pointer;font-size:11px;color:var(--live-tx);white-space:nowrap">⧉ {{ copyLabel }}</div>
+          </div>
+        </div>
+
+        <div style="flex:1 1 auto;min-height:0;display:flex;gap:12px">
+          <div style="flex:1 1 auto;min-width:0;position:relative;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:var(--bg2);background-image:linear-gradient(var(--map-grid) 1px,transparent 1px),linear-gradient(90deg,var(--map-grid) 1px,transparent 1px),linear-gradient(115deg,var(--map-grid2) 1px,transparent 1px);background-size:46px 46px,46px 46px,90px 90px">
+            <div style="position:absolute;left:12px;top:12px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);letter-spacing:.06em;padding:3px 7px;border:1px solid var(--bd);border-radius:4px;background:var(--scrim)">BASEMAP PLACEHOLDER · MAPLIBRE</div>
+            <sc-for list="{{ mapFleet }}" as="p" hint-placeholder-count="60">
+              <span style="position:absolute;left:{{ p.x }}%;top:{{ p.y }}%;width:3px;height:3px;border-radius:50%;background:#149cc6;opacity:.85"></span>
+            </sc-for>
+            <sc-for list="{{ mapIncidents }}" as="i" hint-placeholder-count="6">
+              <span style="position:absolute;left:{{ i.x }}%;top:{{ i.y }}%;width:16px;height:16px;background:{{ i.c }};opacity:.55;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)"></span>
+            </sc-for>
+            <div style="position:absolute;left:41%;top:37%;transform:translate(-50%,-100%);width:250px;background:var(--card);border:1px solid var(--bd-strong);border-radius:8px;padding:10px;box-shadow:var(--shadow)">
+              <div style="display:flex;align-items:center;gap:7px">
+                <span style="padding:1px 5px;border-radius:4px;border:1px solid var(--s3);color:var(--s3);font-family:'JetBrains Mono',monospace;font-size:10px">▲ 3</span>
+                <span style="font-size:12px;font-weight:600;color:var(--tx)">Linha 232 parada</span>
+              </div>
+              <div style="font-size:11px;color:var(--tx2);margin-top:6px;line-height:1.4">Sem GPS ativo há 47 min no trecho Penha → Central. Ocorrência de tiro a 380 m às 13:52.</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px;border-top:1px solid var(--bd2);padding-top:7px">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">SMTR + FOGO CRUZADO · 14:04</span>
+                <span style="margin-left:auto;font-size:11px;color:var(--live-tx);cursor:pointer">⧉ copiar link</span>
+              </div>
+              <span style="position:absolute;left:50%;bottom:-6px;margin-left:-6px;width:10px;height:10px;background:var(--card);border-right:1px solid var(--bd-strong);border-bottom:1px solid var(--bd-strong);transform:rotate(45deg)"></span>
+            </div>
+            <div style="position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:6px;background:var(--scrim);border:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx2)">
+              <span><span style="color:#149cc6">●</span> FROTA ATIVA 4.212</span>
+              <span><span style="color:var(--s4)">⬢</span> OCORRÊNCIAS 24H</span>
+              <span><span style="color:var(--s3)">▲</span> LINHAS PARADAS 3</span>
+            </div>
+          </div>
+
+          <div style="flex:0 0 268px;background:var(--card);border:1px solid var(--bd);border-radius:10px;display:flex;flex-direction:column;overflow:hidden">
+            <div style="padding:10px 12px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase">Camadas</span>
+              <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">4/11 ATIVAS</span>
+            </div>
+            <div style="flex:1 1 auto;overflow:auto">
+              <sc-for list="{{ layers }}" as="l" hint-placeholder-count="10">
+                <div onClick="{{ l.toggle }}" style="display:flex;gap:9px;align-items:flex-start;padding:9px 12px;border-bottom:1px solid var(--bd3);cursor:pointer" style-hover="background:var(--card2)">
+                  <span style="flex:0 0 auto;margin-top:1px;width:13px;height:13px;border-radius:3px;border:1px solid {{ l.bd }};background:{{ l.bg }};display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--bg)">{{ l.mark }}</span>
+                  <span style="flex:1 1 auto;min-width:0">
+                    <span style="display:block;font-size:11.5px;color:{{ l.tc }}">{{ l.n }}</span>
+                    <span style="display:block;font-family:'JetBrains Mono',monospace;font-size:9px;color:{{ l.sc }};margin-top:2px">{{ l.src }}</span>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card)">
+          <span style="width:26px;height:26px;border-radius:50%;background:var(--brand);border:1px solid var(--brand2);display:flex;align-items:center;justify-content:center;color:var(--on-brand);font-size:10px;cursor:pointer">▶</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx2)">RADAR · ÚLTIMOS 40 MIN</span>
+          <div style="flex:1 1 auto;display:flex;gap:2px;align-items:center">
+            <sc-for list="{{ frames }}" as="f" hint-placeholder-count="20">
+              <span style="flex:1;height:{{ f.h }}px;background:{{ f.c }};border-radius:1px"></span>
+            </sc-for>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx)">14:31</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ================= STATUS ================= -->
+    <sc-if value="{{ isStatus }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1 1 auto;min-height:0;overflow:auto;padding:16px">
+        <div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:14px">
+          <div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600">Status das fontes</div>
+            <div style="font-size:12px;color:var(--tx2);margin-top:4px">Toda fonte que alimenta o painel, seu estado atual e o histórico de 30 dias. Se algo está fora do ar, está aqui.</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <div style="padding:8px 12px;border:1px solid var(--ok-bd);border-radius:8px;background:var(--ok-bg)"><span style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:var(--s1)">11</span> <span style="font-size:11px;color:var(--tx2)">online</span></div>
+            <div style="padding:8px 12px;border:1px solid var(--warn-bd);border-radius:8px;background:var(--warn-bg)"><span style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:var(--s2)">1</span> <span style="font-size:11px;color:var(--tx2)">degradada</span></div>
+            <div style="padding:8px 12px;border:1px solid var(--bd);border-radius:8px"><span style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:var(--tx)">99,4%</span> <span style="font-size:11px;color:var(--tx2)">uptime 30 d</span></div>
+          </div>
+        </div>
+        <div style="border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:var(--card)">
+          <div style="display:grid;grid-template-columns:1.6fr 1.2fr .9fr 1fr 1.4fr;gap:12px;padding:9px 14px;border-bottom:1px solid var(--bd);background:var(--bg2);font-size:10px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;font-weight:600">
+            <span>Fonte</span><span>Órgão</span><span>Estado</span><span>Última leitura</span><span>Uptime 30 dias</span>
+          </div>
+          <sc-for list="{{ sources }}" as="s" hint-placeholder-count="12">
+            <div style="display:grid;grid-template-columns:1.6fr 1.2fr .9fr 1fr 1.4fr;gap:12px;padding:10px 14px;border-bottom:1px solid var(--bd3);align-items:center" style-hover="background:var(--card2)">
+              <span style="font-size:12px;color:var(--tx)">{{ s.n }}</span>
+              <span style="font-size:11px;color:var(--tx2)">{{ s.org }}</span>
+              <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:{{ s.c }}">{{ s.i }} {{ s.state }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:{{ s.agec }}">{{ s.age }}</span>
+              <span style="display:flex;gap:2px;align-items:center">
+                <sc-for list="{{ s.bars }}" as="b" hint-placeholder-count="30">
+                  <span style="flex:1;height:16px;border-radius:1px;background:{{ b }}"></span>
+                </sc-for>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx2);margin-left:6px">{{ s.up }}</span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--tx3);line-height:1.5">Congelada = a fonte responde, mas devolve o mesmo valor há mais tempo que o seu intervalo esperado de atualização. Nesses casos o painel mostra a última leitura válida com aviso, nunca um número obsoleto como se fosse atual.</div>
+      </div>
+    </sc-if>
+
+    <!-- ================= RODAPÉ ================= -->
+    <div style="flex:0 0 30px;height:30px;border-top:1px solid var(--bd);background:var(--bg);display:flex;align-items:center;gap:16px;padding:0 16px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);letter-spacing:.04em">
+      <span onClick="{{ goStatus }}" style="cursor:pointer;color:var(--tx2)"><span style="color:var(--s1)">●</span> 11 DE 12 FONTES OPERANDO NORMALMENTE</span>
+      <span style="color:var(--tx4)">/</span>
+      <span style="cursor:pointer">METODOLOGIA</span>
+      <span style="color:var(--tx4)">/</span>
+      <span style="cursor:pointer">LICENÇA DOS DADOS · CC-BY 4.0</span>
+      <span style="margin-left:auto">ATUALIZADO 14:31:07 · FUSO AMERICA/SAO_PAULO</span>
+    </div>
+
+    <!-- ================= CARTÃO EXPANDIDO (DOSSIÊ) ================= -->
+    <sc-if value="{{ dossier }}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;flex-direction:column;animation:expandIn .26s cubic-bezier(.2,.7,.3,1)">
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bd)">
+          <span onClick="{{ closeDossier }}" style="display:flex;align-items:center;gap:7px;padding:6px 10px;border:1px solid var(--bd);border-radius:6px;cursor:pointer;font-size:12px;color:var(--tx2);white-space:nowrap" style-hover="background:var(--card2)">← Voltar</span>
+          <span style="display:flex;align-items:center;gap:5px;padding:2px 6px;border-radius:4px;border:1px solid {{ dossier.sev.c }};color:{{ dossier.sev.c }};font-family:'JetBrains Mono',monospace;font-size:10px">{{ dossier.sev.i }} {{ dossier.sev.n }}</span>
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:600">{{ dossier.title }}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);padding:3px 7px;border:1px solid var(--bd);border-radius:4px">{{ dossier.route }}</span>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+            <sc-for list="{{ periods }}" as="p" hint-placeholder-count="3">
+              <span onClick="{{ p.pick }}" style="padding:5px 11px;border-radius:6px;border:1px solid {{ p.bd }};background:{{ p.bg }};color:{{ p.c }};font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer">{{ p.label }}</span>
+            </sc-for>
+            <span onClick="{{ copyLink }}" style="padding:6px 10px;border-radius:6px;border:1px solid var(--bd);background:var(--card);cursor:pointer;font-size:11px;color:var(--live-tx)">⧉ {{ copyLabel }}</span>
+          </div>
+        </div>
+
+        <div style="flex:1 1 auto;min-height:0;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:12px">
+            <sc-for list="{{ dossier.kpis }}" as="k" hint-placeholder-count="4">
+              <div style="flex:1;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px">
+                <div style="font-size:10px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;font-weight:600">{{ k.l }}</div>
+                <div style="display:flex;align-items:baseline;gap:6px;margin-top:6px">
+                  <span style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1;color:{{ k.c }}">{{ k.v }}</span>
+                  <span style="font-size:11px;color:var(--tx2)">{{ k.u }}</span>
+                </div>
+                <div style="font-size:11px;color:var(--tx2);margin-top:6px">{{ k.d }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase">{{ dossier.chartTitle }}</span>
+              <span style="display:flex;align-items:center;gap:12px;margin-left:auto;font-size:11px;color:var(--tx2)">
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:#149cc6"></span>{{ dossier.s1 }}</span>
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:#c08428"></span>{{ dossier.s2 }}</span>
+              </span>
+            </div>
+            <div style="position:relative;height:210px">
+              <svg viewBox="0 0 1000 210" preserveAspectRatio="none" style="width:100%;height:210px;display:block">
+                <sc-for list="{{ gridY }}" as="g" hint-placeholder-count="5">
+                  <line x1="0" y1="{{ g }}" x2="1000" y2="{{ g }}" stroke="var(--bd2)" stroke-width="1"></line>
+                </sc-for>
+                <rect x="{{ dossier.annX }}" y="0" width="{{ dossier.annW }}" height="210" fill="rgba(205,64,72,.13)"></rect>
+                <polyline points="{{ dossier.series2 }}" fill="none" stroke="#c08428" stroke-width="2" stroke-dasharray="4 4"></polyline>
+                <polyline points="{{ dossier.series1 }}" fill="none" stroke="#149cc6" stroke-width="2" stroke-linejoin="round"></polyline>
+              </svg>
+              <div style="position:absolute;left:{{ dossier.annLeft }}%;top:6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--s4);letter-spacing:.05em">{{ dossier.annLabel }}</div>
+              <div style="position:absolute;left:26%;top:34%;background:var(--card2);border:1px solid var(--bd-strong);border-radius:6px;padding:7px 9px;font-size:11px;box-shadow:var(--shadow)">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3)">{{ dossier.tipTime }}</div>
+                <div style="display:flex;gap:10px;margin-top:4px"><span style="color:var(--tx)">{{ dossier.tip1 }}</span><span style="color:var(--tx2)">{{ dossier.tip2 }}</span></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">
+              <sc-for list="{{ dossier.axis }}" as="a" hint-placeholder-count="7"><span>{{ a }}</span></sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:stretch">
+            <div style="flex:1 1 auto;min-width:0;background:var(--card);border:1px solid var(--bd);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;max-height:300px">
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd2)">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase">{{ dossier.tableTitle }}</span>
+                <span style="flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">ORDENADO POR {{ dossier.sortBy }} ▾</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1.6fr .8fr .8fr .8fr .8fr;gap:10px;padding:7px 14px;border-bottom:1px solid var(--bd2);background:var(--bg2);font-size:10px;letter-spacing:.08em;color:var(--tx3);text-transform:uppercase">
+                <sc-for list="{{ dossier.cols }}" as="c" hint-placeholder-count="5"><span>{{ c }}</span></sc-for>
+              </div>
+              <div style="flex:1 1 auto;overflow:auto">
+                <sc-for list="{{ dossier.rows }}" as="r" hint-placeholder-count="14">
+                  <div style="display:grid;grid-template-columns:1.6fr .8fr .8fr .8fr .8fr;gap:10px;padding:6px 14px;border-bottom:1px solid var(--bd3);font-size:11.5px;align-items:center" style-hover="background:var(--card2)">
+                    <span style="color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.a }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;color:var(--tx)">{{ r.b }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;color:var(--tx2)">{{ r.c }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;color:var(--tx2)">{{ r.d }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;color:{{ r.ec }}">{{ r.e }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="flex:0 0 330px;display:flex;flex-direction:column;gap:12px">
+              <div style="flex:1 1 auto;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-height:0">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx2);text-transform:uppercase">{{ dossier.mapTitle }}</span>
+                <div style="flex:1 1 auto;min-height:120px;border-radius:6px;border:1px solid var(--bd);background:var(--bg2);position:relative;overflow:hidden;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:18px 18px">
+                  <sc-for list="{{ dossier.mapDots }}" as="p" hint-placeholder-count="20">
+                    <span style="position:absolute;left:{{ p.x }}%;top:{{ p.y }}%;width:7px;height:7px;border-radius:50%;background:{{ p.c }};border:1px solid var(--bg)"></span>
+                  </sc-for>
+                  <span style="position:absolute;left:8px;bottom:6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">MAPLIBRE · PLACEHOLDER</span>
+                </div>
+              </div>
+              <div style="flex:0 0 auto;background:var(--hero-grad);border:1px solid var(--hero-bd);border-radius:10px;padding:12px 14px">
+                <div style="font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--live-tx);text-transform:uppercase">Contexto histórico</div>
+                <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;line-height:1.35;color:var(--tx);margin-top:8px;text-wrap:pretty">{{ dossier.context }}</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+                  <span onClick="{{ copyQuote }}" style="padding:5px 9px;border-radius:6px;background:var(--brand);border:1px solid var(--brand2);color:var(--on-brand);font-size:11px;cursor:pointer">⧉ {{ quoteLabel }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">{{ dossier.seal }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;opacity:.9">
+              <div style="font-size:10px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:8px">Carregando (skeleton)</div>
+              <div style="height:28px;width:52%;border-radius:5px;background:linear-gradient(90deg,var(--sk1),var(--sk2),var(--sk1));background-size:220px 100%;animation:shimmer 1.2s infinite linear"></div>
+              <div style="height:10px;width:74%;border-radius:4px;margin-top:9px;background:linear-gradient(90deg,var(--sk1),var(--sk2),var(--sk1));background-size:220px 100%;animation:shimmer 1.2s infinite linear"></div>
+              <div style="height:44px;width:100%;border-radius:5px;margin-top:9px;background:linear-gradient(90deg,var(--sk1),var(--sk2),var(--sk1));background-size:220px 100%;animation:shimmer 1.2s infinite linear"></div>
+            </div>
+            <div style="flex:1;background:var(--card);border:1px solid var(--warn-bd);border-radius:10px;padding:12px 14px">
+              <div style="font-size:10px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:8px">Fonte fora do ar</div>
+              <div style="display:flex;gap:7px;padding:8px 10px;border-radius:6px;background:var(--warn-bg);border:1px solid var(--warn-bd);font-size:11.5px;color:var(--warn-tx);line-height:1.4"><span>⚠</span><span>Alerta Rio não responde desde 14:02. Última leitura válida: 13:57 — 0,0 mm. Não estamos exibindo estimativa.</span></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3);margin-top:9px">TENTATIVA AUTOMÁTICA A CADA 60 S · <span style="color:var(--live-tx)">VER STATUS</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+  </div>
+  </sc-if>
+
+  <!-- ================= MOBILE ================= -->
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div style="height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg3);gap:24px;padding:16px;overflow:hidden">
+      <div style="flex:0 0 auto;transform:{{ phone.t }};transform-origin:center center;width:390px;height:844px;border:1px solid var(--bd);border-radius:26px;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);position:relative;box-shadow:var(--shadow)">
+        <div style="flex:0 0 auto;padding:10px 14px 8px;border-bottom:1px solid var(--bd)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:96px;height:20px;border:1px dashed var(--tx4);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-family:'JetBrains Mono',monospace;font-size:9px">marca</div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);font-size:11px;color:var(--tx);white-space:nowrap">{{ zoneLabel }} <span style="color:var(--tx3);font-size:9px">▾</span></div>
+            <div onClick="{{ toggleTheme }}" style="padding:4px 7px;border-radius:6px;border:1px solid var(--bd);font-size:11px;color:var(--tx2);cursor:pointer">{{ themeIcon }}</div>
+            <span style="width:7px;height:7px;border-radius:50%;background:var(--live);animation:pulse 2s infinite"></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:9px">
+            <span style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;border:1px solid {{ sev.c }};background:{{ sev.bg }};color:{{ sev.c }};font-size:12px;font-weight:600">{{ sev.i }} {{ sev.n }} {{ sev.l }}</span>
+          </div>
+          <div style="font-size:12px;color:var(--tx2);margin-top:7px;line-height:1.4">{{ headlineShort }}</div>
+        </div>
+        <div style="flex:0 0 26px;border-bottom:1px solid var(--bd);background:var(--bg2);overflow:hidden;display:flex;align-items:center">
+          <div style="display:flex;width:max-content;animation:tick 52s linear infinite">
+            <sc-for list="{{ tickerLoop }}" as="t" hint-placeholder-count="10">
+              <div style="display:flex;gap:6px;padding:0 11px;border-right:1px solid var(--bd2);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:9.5px">
+                <span style="color:var(--tx3)">{{ t.k }}</span><span style="color:var(--tx)">{{ t.v }}</span><span style="color:{{ t.dc }}">{{ t.d }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex:0 0 auto;display:flex;border-bottom:1px solid var(--bd)">
+          <div onClick="{{ mTabCards }}" style="flex:1;text-align:center;padding:9px 0;font-size:12px;font-weight:500;color:{{ mt.a.c }};border-bottom:2px solid {{ mt.a.b }};cursor:pointer">Cartões</div>
+          <div onClick="{{ mTabFeed }}" style="flex:1;text-align:center;padding:9px 0;font-size:12px;font-weight:500;color:{{ mt.f.c }};border-bottom:2px solid {{ mt.f.b }};cursor:pointer">Feed</div>
+        </div>
+        <div style="flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:10px;display:flex;flex-direction:column;gap:10px">
+          <sc-if value="{{ mobileCards }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ mobileList }}" as="c" hint-placeholder-count="6">
+              <div style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px">
+                <div style="display:flex;align-items:center;gap:7px">
+                  <span style="padding:1px 5px;border-radius:4px;border:1px solid {{ c.sev.c }};color:{{ c.sev.c }};font-family:'JetBrains Mono',monospace;font-size:9.5px">{{ c.sev.i }} {{ c.sev.n }}</span>
+                  <span style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--tx2);text-transform:uppercase">{{ c.t }}</span>
+                  <span style="margin-left:auto;color:var(--tx3);font-size:11px">⤢</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:6px;margin-top:8px">
+                  <span style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1;color:{{ c.hc }}">{{ c.v }}</span>
+                  <span style="font-size:11px;color:var(--tx2)">{{ c.u }}</span>
+                </div>
+                <div style="font-size:11.5px;color:var(--tx2);margin-top:6px;line-height:1.4">{{ c.sub }}</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:9px;border-top:1px solid var(--bd2);padding-top:7px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx3)">
+                  <span style="width:5px;height:5px;border-radius:50%;background:{{ c.dot }}"></span>{{ c.seal }}
+                </div>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ mobileFeed }}" hint-placeholder-val="{{ false }}">
+            <sc-for list="{{ feed }}" as="f" hint-placeholder-count="10">
+              <div style="display:flex;gap:9px;padding-bottom:9px;border-bottom:1px solid var(--bd3)">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx3);flex:0 0 34px;padding-top:1px">{{ f.h }}</span>
+                <span style="flex:0 0 auto;padding-top:1px;font-size:9px;color:{{ f.sev.c }}">{{ f.sev.i }}</span>
+                <span style="flex:1 1 auto;min-width:0;font-size:12px;color:var(--tx);line-height:1.4">{{ f.txt }}</span>
+              </div>
+            </sc-for>
+          </sc-if>
+        </div>
+        <div style="flex:0 0 auto;display:flex;border-top:1px solid var(--bd);background:var(--bg2);padding:8px 0 14px">
+          <div style="flex:1;text-align:center;font-size:11px;color:var(--live-tx)">Agora</div>
+          <div style="flex:1;text-align:center;font-size:11px;color:var(--tx3)">Mapa</div>
+          <div style="flex:1;text-align:center;font-size:11px;color:var(--tx3)">Status</div>
+        </div>
+      </div>
+      <div style="max-width:280px;font-size:12px;color:var(--tx2);line-height:1.6">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;color:var(--tx);margin-bottom:8px">Mobile · 390 px</div>
+        O cockpit vira pilha rolável. O cabeçalho de estado colapsa numa barra fixa, o ticker continua (uma linha), o feed vira aba dentro de “Agora”, e tocar num cartão abre o tema em tela cheia — o mesmo padrão de expansão do desktop.
+        <div onClick="{{ toggleDevice }}" style="margin-top:14px;display:inline-flex;padding:7px 12px;border-radius:6px;border:1px solid var(--bd);background:var(--card);color:var(--live-tx);cursor:pointer;white-space:nowrap">← voltar ao desktop</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showMobileBadge }}" hint-placeholder-val="{{ true }}">
+    <div onClick="{{ toggleDevice }}" style="position:fixed;right:16px;bottom:36px;z-index:70;padding:6px 10px;border-radius:6px;border:1px dashed var(--tx4);background:var(--card);color:var(--tx2);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;white-space:nowrap">VER MOBILE</div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tema&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;escuro&quot;,&quot;claro&quot;],&quot;default&quot;:&quot;escuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Aparência&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;calmo&quot;,&quot;crise&quot;],&quot;default&quot;:&quot;calmo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Estado do mock&quot;},&quot;zona&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;norte&quot;,&quot;sul&quot;,&quot;oeste&quot;,&quot;centro&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Estado do mock&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;mobile&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Estado do mock&quot;}}">
+const SEV = [null,
+  {n:1,l:'Normalidade',c:'var(--s1)',i:'●',bg:'var(--s1-bg)'},
+  {n:2,l:'Mobilização',c:'var(--s2)',i:'◆',bg:'var(--s2-bg)'},
+  {n:3,l:'Atenção',c:'var(--s3)',i:'▲',bg:'var(--s3-bg)'},
+  {n:4,l:'Alerta',c:'var(--s4)',i:'◼',bg:'var(--s4-bg)'},
+  {n:5,l:'Crise',c:'var(--s5)',i:'✦',bg:'var(--s5-bg)'}];
+const RAMP = ['#9bd7ec','#57b7dc','#2c96c4','#1d7cab','#166490','#114e75'];
+const rnd = (s) => { let x = Math.sin(s) * 10000; return x - Math.floor(x); };
+
+function poly(vals, w, h, max) {
+  const m = max || Math.max(1, ...vals);
+  return vals.map((v,i) => (i*(w/(vals.length-1))).toFixed(1) + ',' + (h - (v/m)*(h-3)).toFixed(1)).join(' ');
+}
+
+class Component extends DCLogic {
+  state = { theme:'escuro', mode:'calmo', zone:null, route:'home', dossier:null, onlyAbn:false, paused:false, copied:false, quoted:false, zonePicker:false, device:'desktop', mtab:'cards', period:'24h' };
+
+  componentDidMount() {
+    if (this.props.mode) this.setState({ mode:this.props.mode });
+    if (this.props.zona) this.setState({ zone:this.props.zona });
+    if (this.props.device) this.setState({ device:this.props.device });
+    this._t = setInterval(() => this.forceUpdate(), 30000);
+    this.applyTheme(this.props.tema || 'escuro');
+    this._r = () => this.setState({ vw: window.innerWidth, vh: window.innerHeight });
+    window.addEventListener('resize', this._r);
+    this._r();
+  }
+  componentWillUnmount() { clearInterval(this._t); window.removeEventListener('resize', this._r); }
+
+  applyTheme(t) {
+    document.documentElement.dataset.tema = t === 'claro' ? 'claro' : 'escuro';
+    this.setState({ theme: t });
+  }
+
+  flash(k) { this.setState({ [k]:true }); setTimeout(() => this.setState({ [k]:false }), 1400); }
+
+  renderVals() {
+    const s = this.state;
+    const crisis = s.mode === 'crise';
+    const zone = s.zone;
+    const zn = zone === 'norte';
+
+    const citySev = SEV[crisis ? 4 : 1];
+    const headline = crisis
+      ? 'Chuva forte na Zona Oeste e Jacarepaguá · 14 linhas de ônibus sem circular · risco de alagamento até 18h.'
+      : (zn ? 'A Zona Norte opera normalmente. Sem chuva nas últimas 24 h; 1.184 veículos em circulação.'
+            : 'A cidade opera normalmente. Sem chuva nas últimas 24h.');
+
+    // ---------- painéis ----------
+    const chuva = crisis ? {
+      sev:SEV[4], bd:'var(--s4-bd)', hero:'45,2', hc:'var(--s4)', count:'33 ESTAÇÕES',
+      sub:'máx. em Jacarepaguá · 12 estações acima de 20 mm/h',
+      rios:'Rios: Acari 210 cm ▲ transbordo · Faria-Timbó 178 cm ▲ · Tijuca 94 cm ▲',
+      spark:poly([0,0,1,2,6,14,22,31,38,45,42,40], 220, 34, 50),
+      echo1:'rgba(205,64,72,.55)', echo2:'rgba(29,124,171,.6)'
+    } : {
+      sev:SEV[1], bd:'var(--bd)', hero:'0,0', hc:'var(--tx)', count: zn ? '9 ESTAÇÕES' : '33 ESTAÇÕES',
+      sub: zn ? 'na última hora · 9 estações da Zona Norte' : 'na última hora · todas as 33 estações reportando',
+      rios: zn ? 'Rios: Acari 48 cm — estável · Faria-Timbó ok' : 'Rios: Tijuca 65 cm — estável · Acari, Maracanã, Faria-Timbó ok',
+      spark:poly([0,0,0,0,0,0,0,0,0,0,0,0], 220, 34, 10),
+      echo1:'rgba(63,169,107,.22)', echo2:'rgba(63,169,107,.16)'
+    };
+
+    const mob = crisis ? {
+      sev:SEV[3], bd:'var(--s3-bd)', hero:'3.108', count:'96 LINHAS',
+      sub:'2.702 ônibus + 406 BRT · 71% das linhas planejadas ativas',
+      warn:'14 linhas sem circular há 40+ min — concentradas em Jacarepaguá e Bangu',
+      warnBg:'var(--s3-bg)', warnBd:'var(--s3-bd)', warnC:'var(--s3-tx)',
+      m1:'var(--s1)', m2:'var(--s2)', m4:'var(--s1)', metro:'METRÔ: L2 COM LENTIDÃO'
+    } : {
+      sev:SEV[1], bd:'var(--bd)', hero: zn ? '1.184' : '4.212', count: zn ? '82 LINHAS' : '312 LINHAS',
+      sub: zn ? '1.021 ônibus + 163 BRT · 97% das linhas da zona ativas' : '3.642 ônibus + 558 BRT · 96% das linhas planejadas ativas',
+      warn: zn ? '1 linha sem circular há 40+ min: 232' : '3 linhas sem circular há 40+ min: 232, SV790, 863',
+      warnBg:'var(--s2-bg)', warnBd:'var(--warn-bd)', warnC:'var(--warn-tx)',
+      m1:'var(--s1)', m2:'var(--s1)', m4:'var(--s1)', metro:'METRÔ NORMAL'
+    };
+
+    const transito = {
+      sev: crisis ? SEV[3] : SEV[1], count: crisis ? '9 CORR' : '12 CORR',
+      hero: crisis ? '19' : (zn ? '28' : '31'),
+      sub: crisis ? 'fluxo livre 42 km/h · 4 corredores interditados' : 'fluxo livre 42 km/h · derivado da nossa frota + TomTom',
+      rows: crisis ? [
+        {n:'Linha Amarela', v:'8', d:'▼', dc:'var(--s4)'},
+        {n:'Av. Brasil', v:'11', d:'▼', dc:'var(--s4)'},
+        {n:'Av. das Américas', v:'14', d:'▼', dc:'var(--s4)'},
+        {n:'Aterro', v:'38', d:'▬', dc:'var(--tx2)'}
+      ] : [
+        {n:'Av. Brasil', v:'18', d:'▼', dc:'var(--s3)'},
+        {n:'Linha Amarela', v:'24', d:'▬', dc:'var(--tx2)'},
+        {n:'Av. das Américas', v:'27', d:'▬', dc:'var(--tx2)'},
+        {n:'Aterro', v:'51', d:'▲', dc:'var(--s1)'}
+      ]
+    };
+
+    const hours = [];
+    for (let i=0;i<12;i++){
+      const t = (14+i)%24;
+      const temp = crisis ? 22 + Math.round(rnd(i+7)*3) : 31 - Math.round(Math.abs(i-1)*0.9);
+      const rain = crisis ? 40 + Math.round(rnd(i+3)*45) : Math.round(rnd(i)*8);
+      hours.push({ t:String(t).padStart(2,'0'), h:temp + '°', bar: Math.round((temp-14)*2.2), rain: Math.max(2, Math.round(rain*0.28)) });
+    }
+    const previsao = {
+      sev: crisis ? SEV[3] : SEV[1],
+      hero: crisis ? '23 °C' : '31 °C',
+      heroSub: crisis ? 'chuva forte até 18h' : 'sem chuva à vista',
+      hours
+    };
+
+    const seguranca = {
+      sev: crisis ? SEV[2] : SEV[2], count: crisis ? '24H' : '24H',
+      hero: zn ? '2' : '3',
+      sub: zn ? 'todas na Zona Norte · nenhuma nas últimas 6 h' : 'Zona Norte 2 · Zona Oeste 1 · nenhuma nas últimas 6 h'
+    };
+
+    const ar = crisis ? {
+      sev:SEV[1], hero:'Boa', hc:'var(--s1)', heroSub:'PM2.5 máx 9,4 µg/m³ (chuva lavou o ar)', count:'28 EST',
+      rows:[{n:'Bangu',v:'9,4',p:24,c:'var(--s1)'},{n:'Irajá',v:'8,1',p:20,c:'var(--s1)'},{n:'Centro',v:'7,7',p:19,c:'var(--s1)'}]
+    } : {
+      sev:SEV[1], hero:'Boa', hc:'var(--s1)', heroSub: zn ? 'PM2.5 máx 14,1 µg/m³ (Irajá)' : 'PM2.5 máx 16,7 µg/m³ (Campinho)', count: zn ? '9 EST' : '28 EST',
+      rows: zn
+        ? [{n:'Irajá',v:'14,1',p:42,c:'#c08428'},{n:'Pilares',v:'12,8',p:38,c:'#149cc6'},{n:'Bonsucesso',v:'11,3',p:34,c:'#149cc6'}]
+        : [{n:'Campinho',v:'16,7',p:48,c:'#c08428'},{n:'Irajá',v:'13,3',p:39,c:'#149cc6'},{n:'Bangu',v:'12,1',p:35,c:'#149cc6'}]
+    };
+
+    const ceu = crisis
+      ? { sev:SEV[2], hero:'6', count:'SDU ✕', sdu:'0 (fechado)', sduC:'var(--s4)', gig:'9' }
+      : { sev:SEV[1], hero:'14', count:'2 AEROP', sdu:'12', sduC:'var(--tx)', gig:'21' };
+    const mar = crisis
+      ? { sev:SEV[3], hero:'2,8', hc:'var(--s3)', heroSub:'m · período 11 s · mar agitado', proprias:'6', improprias:'11', list:'Impróprias após a chuva: toda a orla da Zona Sul e Ramos' }
+      : { sev:SEV[1], hero:'1,4', hc:'var(--tx)', heroSub:'m · período 9 s · mar calmo', proprias:'14', improprias:'3', list:'Impróprias: Botafogo, Flamengo, Ramos' };
+
+    const memoria = crisis ? {
+      quote1:'Choveu em 3 horas', quoteHi:'mais que a média do mês inteiro',
+      quote2:'de agosto em Jacarepaguá.',
+      sub:'112 mm desde as 11h30 · média histórica de agosto: 36 mm (1997–2025)',
+      bars:[{h:44,c:'#1d7cab'},{h:70,c:'#1d7cab'},{h:32,c:'#1d7cab'},{h:56,c:'#1d7cab'},{h:88,c:'#1d7cab'},{h:24,c:'#1d7cab'},{h:60,c:'#1d7cab'},{h:38,c:'#1d7cab'},{h:52,c:'#1d7cab'},{h:100,c:'var(--live-tx)'}]
+    } : {
+      quote1:'Agosto até agora:', quoteHi:'12 mm de chuva',
+      quote2:'— 34% da média histórica do mês.',
+      sub: zn ? 'Zona Norte: 9 mm · 4º agosto mais seco desde 1997' : 'Terceiro agosto mais seco desde o início da série, em 1997.',
+      bars:[{h:64,c:'#1d7cab'},{h:88,c:'#1d7cab'},{h:52,c:'#1d7cab'},{h:76,c:'#1d7cab'},{h:44,c:'#1d7cab'},{h:92,c:'#1d7cab'},{h:58,c:'#1d7cab'},{h:70,c:'#1d7cab'},{h:40,c:'#1d7cab'},{h:18,c:'var(--live-tx)'}]
+    };
+
+    // ---------- layout (ordem por severidade) ----------
+    const lay = crisis ? {
+      chuva:{s:2,o:1}, mob:{s:2,o:2}, transito:{s:1,o:3},
+      previsao:{s:1,o:4}, seguranca:{s:1,o:5}, ar:{s:1,o:6}, mar:{s:1,o:7}, ceu:{s:1,o:8},
+      memoria:{s:2,o:9}, queimadas:{s:1,o:10}, cidade:{s:1,o:11}, navios:{s:1,o:12}
+    } : {
+      chuva:{s:2,o:1}, mob:{s:2,o:2}, transito:{s:1,o:3}, previsao:{s:1,o:4},
+      seguranca:{s:1,o:5}, ar:{s:1,o:6}, mar:{s:1,o:7}, ceu:{s:1,o:8},
+      memoria:{s:2,o:9}, queimadas:{s:1,o:10}, cidade:{s:1,o:11}, navios:{s:1,o:12}
+    };
+
+    // ---------- ticker ----------
+    const tick = crisis ? [
+      {k:'JACAREPAGUÁ',v:'45,2mm/h',d:'▲',dc:'var(--s4)'},{k:'ACARI',v:'210cm',d:'▲',dc:'var(--s4)'},
+      {k:'ESTÁGIO',v:'4 ALERTA',d:'▲',dc:'var(--s4)'},{k:'FROTA',v:'3.108',d:'▼',dc:'var(--s3)'},
+      {k:'LINHAS PARADAS',v:'14',d:'▲',dc:'var(--s3)'},{k:'PM2.5 IRAJÁ',v:'8,1',d:'▼',dc:'var(--s1)'},
+      {k:'ONDAS',v:'2,8m',d:'▲',dc:'var(--s3)'},{k:'SDU',v:'0 POUSOS/H',d:'▼',dc:'var(--s4)'},
+      {k:'METRÔ L2',v:'LENTIDÃO',d:'▬',dc:'var(--s2)'},{k:'VELOCIDADE',v:'19km/h',d:'▼',dc:'var(--s4)'}
+    ] : [
+      {k:'COPACABANA',v:'0,0mm',d:'▬',dc:'var(--tx2)'},{k:'PM2.5 IRAJÁ',v:'13,3',d:'▬',dc:'var(--tx2)'},
+      {k:'RIO TIJUCA',v:'65cm',d:'▬',dc:'var(--tx2)'},{k:'VEÍCULOS',v:'4.212',d:'▲',dc:'var(--s1)'},
+      {k:'ONDAS',v:'1,4m',d:'▬',dc:'var(--tx2)'},{k:'METRÔ L1',v:'NORMAL',d:'▬',dc:'var(--tx2)'},
+      {k:'SDU',v:'12 POUSOS/H',d:'▲',dc:'var(--s1)'},{k:'ESTÁGIO',v:'1',d:'▬',dc:'var(--s1)'},
+      {k:'PM10 BANGU',v:'27,8',d:'▲',dc:'var(--s2)'},{k:'TEMP CENTRO',v:'31,2°C',d:'▲',dc:'var(--tx2)'},
+      {k:'FOCOS INPE',v:'0',d:'▬',dc:'var(--tx2)'},{k:'PRAIAS PRÓPRIAS',v:'14/17',d:'▬',dc:'var(--tx2)'}
+    ];
+
+    // ---------- feed ----------
+    let feed = crisis ? [
+      {h:'14:31',sev:SEV[4],txt:'COR elevou a cidade para Estágio 4 — Alerta',src:'COR'},
+      {h:'14:26',sev:SEV[4],txt:'Acari transbordou em Pavuna — via interditada',src:'INEA'},
+      {h:'14:19',sev:SEV[3],txt:'14 linhas de ônibus sem circular há 40+ min',src:'SMTR'},
+      {h:'14:08',sev:SEV[3],txt:'45,2 mm/h em Jacarepaguá — recorde do mês',src:'Alerta Rio'},
+      {h:'13:55',sev:SEV[3],txt:'Linha Amarela a 8 km/h no sentido Fundão',src:'TomTom'},
+      {h:'13:40',sev:SEV[2],txt:'SDU suspendeu pousos por teto baixo',src:'adsb.lol'},
+      {h:'13:22',sev:SEV[2],txt:'COR: 9 bolsões d’água na Zona Oeste',src:'COR'},
+      {h:'12:58',sev:SEV[1],txt:'PM2.5 caiu para 8,1 em Irajá com a chuva',src:'OpenAQ'}
+    ] : [
+      {h:'14:28',sev:SEV[1],txt:'Linha 232 voltou a circular',src:'SMTR'},
+      {h:'14:11',sev:SEV[2],txt:'PM10 subiu para moderado em Bangu',src:'OpenAQ'},
+      {h:'13:47',sev:SEV[2],txt:'COR: bolsão d’água em Jacarepaguá — resolvido 14:20',src:'COR'},
+      {h:'13:12',sev:SEV[1],txt:'BRT Transoeste normalizou intervalo (7 min)',src:'SMTR'},
+      {h:'12:40',sev:SEV[1],txt:'2 focos de calor na Região Metropolitana (fora do município)',src:'INPE'},
+      {h:'12:03',sev:SEV[2],txt:'Linha SV790 sem GPS há 41 min',src:'SMTR'},
+      {h:'11:35',sev:SEV[1],txt:'Maré alta em Copacabana sem ressaca',src:'Marine'},
+      {h:'10:58',sev:SEV[2],txt:'Navios (AIS): fonte marcada como degradada',src:'Status'},
+      {h:'10:22',sev:SEV[1],txt:'Rio Tijuca estável em 65 cm há 6 h',src:'ANA'},
+      {h:'09:47',sev:SEV[1],txt:'28 de 28 estações de ar reportando',src:'OpenAQ'},
+      {h:'09:10',sev:SEV[1],txt:'COR manteve Estágio 1 após a passagem da frente',src:'COR'}
+    ];
+    if (zn) feed = feed.filter((f,i) => i % 3 !== 2);
+    const feedAll = feed;
+    if (s.onlyAbn) feed = feed.filter(f => f.sev.n >= 2);
+
+    // ---------- pontos ----------
+    const fleetDots = []; for (let i=0;i<46;i++) fleetDots.push({ x:(rnd(i)*88+4).toFixed(0), y:(rnd(i+40)*84+8).toFixed(0), c: rnd(i+9) > .88 ? 'var(--s3)' : '#149cc6' });
+    const hexes = []; for (let i=0;i<11;i++) hexes.push({ x:(rnd(i+3)*76+6).toFixed(0), y:(rnd(i+21)*70+10).toFixed(0), c: i < 2 ? 'rgba(205,64,72,.55)' : 'rgba(90,102,118,.28)' });
+    const mapFleet = []; for (let i=0;i<180;i++) mapFleet.push({ x:(rnd(i+2)*94+3).toFixed(1), y:(rnd(i+300)*88+6).toFixed(1) });
+    const mapIncidents = []; for (let i=0;i<7;i++) mapIncidents.push({ x:(rnd(i+55)*70+12).toFixed(0), y:(rnd(i+77)*64+14).toFixed(0), c: i<3 ? 'var(--s4)' : 'var(--s4-dim)' });
+
+    // ---------- mapa ----------
+    const presets = [
+      {key:'chuva', label:'Chuva agora', n:'3 CAMADAS', icon:'●', dot:'#149cc6'},
+      {key:'transporte', label:'Transporte', n:'3 CAMADAS', icon:'●', dot:'#149cc6'},
+      {key:'segxtrans', label:'Segurança × transporte', n:'2 CAMADAS', icon:'◆', dot:'var(--live-tx)'},
+      {key:'bairro', label:'Meu bairro', n:'TUDO ANORMAL', icon:'▲', dot:'var(--s3)'},
+      {key:'custom', label:'Personalizar', n:'', icon:'⚙', dot:'var(--tx3)'}
+    ];
+    const active = s.preset || 'segxtrans';
+    const mapPresets = presets.map(p => ({
+      label:p.label, n:p.n, icon:p.icon, dot:p.dot,
+      bd: p.key===active ? 'var(--brand2)' : 'var(--bd)',
+      bg: p.key===active ? 'var(--brand)' : 'var(--card)',
+      c: p.key===active ? 'var(--on-brand)' : 'var(--tx2)',
+      pick: () => this.setState({ preset:p.key })
+    }));
+    const layerDefs = [
+      ['Ocorrências de tiro (24 h)', 'FOGO CRUZADO · HÁ 12 MIN', true],
+      ['Frota em circulação', 'SMTR · AO VIVO', true],
+      ['Linhas sem circular', 'DETECTOR PLANEJADO×REALIZADO · 1 MIN', true],
+      ['Bairros', 'IPP · ESTÁTICO', true],
+      ['Radar de chuva', 'ALERTA RIO · HÁ 4 MIN', false],
+      ['Chuva por estação (33)', 'ALERTA RIO · HÁ 4 MIN', false],
+      ['Nível de rios', 'ANA · HÁ 9 MIN', false],
+      ['Qualidade do ar (28)', 'OPENAQ · HÁ 20 MIN', false],
+      ['Focos de calor', 'INPE · HÁ 8 MIN', false],
+      ['Aeronaves', 'ADSB.LOL · AO VIVO', false],
+      ['Navios (AIS)', 'DEGRADADA · HÁ 19 H', false]
+    ];
+    const layers = layerDefs.map((l,i) => ({
+      n:l[0], src:l[1], mark: l[2] ? '✓' : '',
+      bd: l[2] ? 'var(--live-tx)' : 'var(--tx4)', bg: l[2] ? 'var(--live-tx)' : 'transparent',
+      tc: l[2] ? 'var(--tx)' : 'var(--tx2)',
+      sc: l[1].indexOf('DEGRADADA') === 0 ? 'var(--s2)' : 'var(--tx3)',
+      toggle: () => {}
+    }));
+    const frames = []; for (let i=0;i<24;i++) frames.push({ h: 6 + Math.round(rnd(i+11)*12), c: i > 19 ? 'var(--live-tx)' : 'var(--bd4)' });
+
+    // ---------- status ----------
+    const srcDefs = [
+      ['Chuva — 33 pluviômetros','Alerta Rio / COR','online','há 4 min','99,8%'],
+      ['Radar meteorológico','Alerta Rio','online','há 4 min','99,1%'],
+      ['Estágio operacional','COR','online','há 3 min','100%'],
+      ['GPS da frota (ônibus + BRT)','SMTR','online','há 1 min','98,7%'],
+      ['Tabela de horários (GTFS)','SMTR','online','há 6 h','100%'],
+      ['Nível de rios','ANA / INEA','online','há 9 min','97,4%'],
+      ['Qualidade do ar — 28 estações','OpenAQ','online','há 20 min','96,9%'],
+      ['Focos de calor','INPE','online','há 8 min','99,9%'],
+      ['Previsão do tempo e do mar','Open-Meteo','online','há 31 min','100%'],
+      ['Balneabilidade','INEA','online','boletim 04/08','94,2%'],
+      ['Aeronaves','adsb.lol','online','ao vivo','99,5%'],
+      ['Navios (AIS)','aisstream.io','degradada','há 19 h','71,3%']
+    ];
+    const sources = srcDefs.map((d,i) => {
+      const deg = d[2] === 'degradada';
+      const bars = [];
+      for (let j=0;j<30;j++) {
+        const bad = deg ? (j > 26 ? 1 : (rnd(i*30+j) > .96 ? 1 : 0)) : (rnd(i*30+j) > .985 ? 1 : 0);
+        bars.push(bad ? (deg && j > 26 ? 'var(--s2)' : 'var(--s3)') : 'var(--up-ok)');
+      }
+      return { n:d[0], org:d[1], state: deg ? 'Degradada' : 'Online', i: deg ? '◆' : '●',
+        c: deg ? 'var(--s2)' : 'var(--s1)', age:d[3], agec: deg ? 'var(--s2)' : 'var(--tx2)', up:d[4], bars };
+    });
+
+    // ---------- dossiê ----------
+    let dossier = null;
+    if (s.route !== 'home' && s.route !== 'mapa' && s.route !== 'status') {
+      const rainSeries = crisis
+        ? [0,0,1,1,2,3,2,4,6,9,14,22,31,38,45,42,38,30,22,16,11,7,4,2]
+        : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+      const histSeries = [2,2,3,3,4,4,5,5,6,7,7,8,8,9,9,8,7,6,5,4,4,3,3,2];
+      const stations = ['Jacarepaguá','Bangu','Copacabana','Tijuca','Irajá','Santa Teresa','Grajaú','Ilha do Governador','Madureira','Guaratiba','Campo Grande','Barra/Riocentro','São Cristóvão','Anchieta','Grande Méier','Recreio','Laranjeiras','Saúde','Alto da Boa Vista','Vidigal','Rocinha','Piedade','Sepetiba','Cidade de Deus','Penha','Urca','Sumaré','Grota Funda','Realengo','Grumari','Pavuna','Riocentro','Barrinha'];
+      const rows = stations.map((n,i) => {
+        const v = crisis ? (45 - i*1.2 + rnd(i)*3) : 0;
+        const acc = crisis ? v*2.4 + rnd(i+5)*8 : rnd(i+5)*1.4;
+        return { a:n, b:(v).toFixed(1).replace('.',','), c:(acc).toFixed(1).replace('.',','),
+          d: crisis ? (12 + Math.round(rnd(i+2)*40)) + ' min' : '—',
+          e: crisis && i < 12 ? 'acima P95' : 'normal',
+          ec: crisis && i < 12 ? 'var(--s4)' : 'var(--tx2)' };
+      });
+      const mapDots = stations.slice(0,22).map((n,i) => ({ x:(rnd(i+13)*86+6).toFixed(0), y:(rnd(i+61)*78+10).toFixed(0),
+        c: crisis ? (i<8 ? 'var(--s4)' : (i<14 ? 'var(--s3)' : '#1d7cab')) : '#2c96c4' }));
+      dossier = {
+        sev: chuva.sev, title:'Chuva e água', route:'/chuva?' + ['periodo=' + s.period].concat(zone ? ['zona=' + zone] : []).join('&'),
+        kpis: crisis ? [
+          {l:'Acumulado 24 h (máx.)', v:'112', u:'mm · Jacarepaguá', c:'var(--s4)', d:'311% da média diária de agosto'},
+          {l:'Intensidade agora (máx.)', v:'45,2', u:'mm/h', c:'var(--s4)', d:'12 estações acima de 20 mm/h'},
+          {l:'Estações acima do P95', v:'12', u:'de 33', c:'var(--s3)', d:'percentil 95 de agosto = 8,4 mm/h'},
+          {l:'Rios em atenção', v:'3', u:'de 8 monitorados', c:'var(--s3)', d:'Acari transbordou às 14:26'}
+        ] : [
+          {l:'Chuva na última hora', v:'0,0', u:'mm (média das 33)', c:'var(--tx)', d:'nenhuma estação com registro'},
+          {l:'Acumulado em agosto', v:'12', u:'mm', c:'var(--tx)', d:'34% da média histórica do mês'},
+          {l:'Dias sem chuva', v:'11', u:'consecutivos', c:'var(--tx)', d:'maior sequência do ano até aqui'},
+          {l:'Rios monitorados', v:'8', u:'todos estáveis', c:'var(--s1)', d:'Tijuca 65 cm · variação < 3 cm em 6 h'}
+        ],
+        chartTitle:'Chuva por hora · últimas 24 h', s1:'chuva observada (mm)', s2:'média histórica de agosto',
+        series1: poly(rainSeries, 1000, 205, crisis ? 50 : 10),
+        series2: poly(histSeries, 1000, 205, crisis ? 50 : 10),
+        annX: crisis ? 560 : -10, annW: crisis ? 200 : 0,
+        annLeft: crisis ? 57 : -20, annLabel: crisis ? 'CIDADE EM ESTÁGIO 3 · 13:40' : '',
+        tipTime: crisis ? '13:00 · JACAREPAGUÁ' : '09:00 · MÉDIA DAS 33',
+        tip1: crisis ? '38,0 mm' : '0,0 mm', tip2: crisis ? 'média 5,0 mm' : 'média 3,0 mm',
+        axis:['14:00','17:00','20:00','23:00','02:00','05:00','08:00','11:00'],
+        tableTitle:'33 estações pluviométricas', sortBy:'INTENSIDADE',
+        cols:['Estação','mm/h','24 h','Duração','Contexto'], rows,
+        mapTitle:'Estações e radar', mapDots,
+        context: crisis
+          ? 'Em 3 horas choveu mais do que a média de todo o mês de agosto em Jacarepaguá — 112 mm contra 36 mm.'
+          : 'Agosto vai a 12 mm: percentil 5 da série 1997–2025. O agosto mais seco registrado teve 4 mm, em 2010.',
+        seal:'ALERTA RIO · SÉRIE 1997–2025 · HÁ 4 MIN'
+      };
+    }
+
+    const periods = ['24h','7d','30d'].map(p => ({
+      label:p, bd: s.period===p ? 'var(--brand2)' : 'var(--bd)', bg: s.period===p ? 'var(--brand)' : 'var(--card)',
+      c: s.period===p ? 'var(--on-brand)' : 'var(--tx2)', pick: () => this.setState({ period:p })
+    }));
+
+    const zoneNames = { norte:'Zona Norte', sul:'Zona Sul', oeste:'Zona Oeste', centro:'Centro' };
+    const zones = [
+      {k:null,label:'Cidade inteira',meta:'33 EST · 4.212 VEÍC'},
+      {k:'norte',label:'Zona Norte',meta:'9 EST · 1.184 VEÍC'},
+      {k:'sul',label:'Zona Sul',meta:'6 EST · 806 VEÍC'},
+      {k:'oeste',label:'Zona Oeste',meta:'11 EST · 1.402 VEÍC'},
+      {k:'centro',label:'Centro',meta:'4 EST · 620 VEÍC'},
+      {k:'norte',label:'Tijuca',meta:'BAIRRO · 2 EST'},
+      {k:'oeste',label:'Jacarepaguá',meta:'BAIRRO · 3 EST'}
+    ].map(z => ({ label:z.label, meta:z.meta, pick: () => this.setState({ zone:z.k, zonePicker:false }) }));
+
+    const nav = (r) => ({ c: s.route === r ? 'var(--on-brand)' : 'var(--tx2)', b: s.route === r ? 'var(--brand)' : 'transparent' });
+
+    const mobileList = [
+      {t:'Chuva e água', sev:chuva.sev, v:chuva.hero, u:'mm/h · última hora', sub:chuva.sub, hc:chuva.hc, seal:'ALERTA RIO · HÁ 4 MIN', dot:'var(--s1)'},
+      {t:'Mobilidade', sev:mob.sev, v:mob.hero, u:'veículos', sub:mob.sub, hc:'var(--tx)', seal:'SMTR · AO VIVO', dot:'var(--live-tx)'},
+      {t:'Segurança', sev:seguranca.sev, v:seguranca.hero, u:'tiros · 24 h', sub:seguranca.sub, hc:'var(--tx)', seal:'FOGO CRUZADO · HÁ 12 MIN', dot:'var(--s1)'},
+      {t:'Trânsito', sev:transito.sev, v:transito.hero, u:'km/h médios', sub:transito.sub, hc:'var(--tx)', seal:'SMTR/TOMTOM · HÁ 5 MIN', dot:'var(--s1)'},
+      {t:'Previsão', sev:previsao.sev, v:previsao.hero, u:previsao.heroSub, sub:'umidade 58% · vento 18 km/h SE', hc:'var(--tx)', seal:'OPEN-METEO · 14H', dot:'var(--s1)'},
+      {t:'Qualidade do ar', sev:ar.sev, v:ar.hero, u:ar.heroSub, sub:'28 estações reportando', hc:'var(--s1)', seal:'OPENAQ · HÁ 20 MIN', dot:'var(--s1)'},
+      {t:'Navios (AIS)', sev:SEV[2], v:'38', u:'embarcações · leitura de há 19 h', sub:'Fonte degradada desde 05/08 — exibindo a última leitura válida.', hc:'var(--tx2)', seal:'AISSTREAM · DEGRADADA', dot:'var(--s2)'}
+    ];
+
+    const open = (r) => () => this.setState({ route:r, dossier:r });
+
+    // cockpit com largura de projeto fixa: abaixo de 1440 px escala pra caber, nunca compacta as células
+    const DESIGN_W = 1440;
+    const vw = s.vw || 1440, vh = s.vh || 900;
+    const k = vw >= DESIGN_W ? 1 : vw / DESIGN_W;
+    const stage = { w: Math.round(vw / k), h: Math.round(vh / k), t: k === 1 ? 'none' : 'scale(' + k.toFixed(4) + ')' };
+
+    const pk = Math.min(1, (vh - 32) / 844);
+    const phone = { t: pk >= 1 ? 'none' : 'scale(' + pk.toFixed(4) + ')' };
+
+    return {
+      stage, phone,
+      themeIcon: s.theme === 'claro' ? '☀' : '☾',
+      themeLabel: s.theme === 'claro' ? 'CLARO' : 'ESCURO',
+      toggleTheme: () => this.applyTheme(s.theme === 'claro' ? 'escuro' : 'claro'),
+      showMobileBadge: s.device === 'desktop' && !dossier,
+      isDesktop: s.device === 'desktop', isMobile: s.device === 'mobile',
+      toggleDevice: () => this.setState({ device: s.device === 'desktop' ? 'mobile' : 'desktop' }),
+      sev:citySev, headline,
+      headlineShort: crisis ? 'Chuva forte na Zona Oeste · 14 linhas paradas.' : 'A cidade opera normalmente. Sem chuva nas últimas 24 h.',
+      zoneLabel: zone ? zoneNames[zone] : 'Cidade inteira',
+      zoneChip: zone ? zoneNames[zone] : null,
+      clearZone: (e) => { e.stopPropagation(); this.setState({ zone:null }); },
+      zonePickerOpen: s.zonePicker, zones,
+      toggleZonePicker: () => this.setState({ zonePicker: !s.zonePicker }),
+      modeLabel: crisis ? 'DIA DE CRISE' : 'DIA CALMO',
+      toggleMode: () => this.setState({ mode: crisis ? 'calmo' : 'crise' }),
+      copyLabel: s.copied ? 'link copiado' : 'copiar link deste recorte',
+      copyLink: () => this.flash('copied'),
+      quoteLabel: s.quoted ? 'dado copiado' : 'copiar dado citável',
+      copyQuote: () => this.flash('quoted'),
+      navA:nav('home'), navM:nav('mapa'), navS:nav('status'),
+      goHome: () => this.setState({ route:'home', dossier:null }),
+      goMapa: () => this.setState({ route:'mapa', dossier:null }),
+      goStatus: () => this.setState({ route:'status', dossier:null }),
+      isHome: s.route === 'home', isMapa: s.route === 'mapa', isStatus: s.route === 'status',
+      tickerLoop: tick.concat(tick), tickerState: s.paused ? 'paused' : 'running',
+      pauseTicker: () => this.setState({ paused:true }), resumeTicker: () => this.setState({ paused:false }),
+      chuva, mob, transito, previsao, seguranca, ar, ceu, mar, memoria, lay, ramp:RAMP,
+      fleetDots, hexes, mapFleet, mapIncidents, mapPresets, layers, frames, sources,
+      feed, feedCount: feedAll.length + ' EVENTOS · 24H',
+      abn: { track: s.onlyAbn ? 'var(--brand)' : 'var(--bd4)', x: s.onlyAbn ? 14 : 2, c: s.onlyAbn ? 'var(--live-tx)' : 'var(--tx2)' },
+      toggleAbnormal: () => this.setState({ onlyAbn: !s.onlyAbn }),
+      openChuva: open('chuva'), openMob: open('mobilidade'), openTransito: open('transito'),
+      openPrevisao: open('previsao'), openSeguranca: open('seguranca'), openAr: open('ar'),
+      openMar: open('mar'), openCeu: open('ceu'), openQueimadas: open('queimadas'),
+      openCidade: open('cidade'), openNavios: open('navios'),
+      dossier, closeDossier: () => this.setState({ route:'home', dossier:null }),
+      periods, gridY:[24,66,108,150,192],
+      mobileCards: s.mtab === 'cards', mobileFeed: s.mtab === 'feed', mobileList,
+      mTabCards: () => this.setState({ mtab:'cards' }), mTabFeed: () => this.setState({ mtab:'feed' }),
+      mt: { a: { c: s.mtab==='cards' ? 'var(--live-tx)' : 'var(--tx2)', b: s.mtab==='cards' ? 'var(--live-tx)' : 'transparent' },
+            f: { c: s.mtab==='feed' ? 'var(--live-tx)' : 'var(--tx2)', b: s.mtab==='feed' ? 'var(--live-tx)' : 'transparent' } }
+    };
+  }
+}
+</script>
+</body>
+</html>

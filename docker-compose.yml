@@ -1,0 +1,83 @@
+name: riolive
+
+services:
+  db:
+    image: timescale/timescaledb-ha:pg16
+    environment:
+      POSTGRES_USER: riolive
+      POSTGRES_PASSWORD: riolive
+      POSTGRES_DB: riolive
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_dados:/home/postgres/pgdata/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U riolive -d riolive"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build: .
+    command: uvicorn riolive.api.aplicacao:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      RIOLIVE_DATABASE_URL: postgresql+psycopg://riolive:riolive@db:5432/riolive
+      RIOLIVE_REDIS_URL: redis://redis:6379/0
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      db:
+        condition: service_healthy
+
+  dagster-webserver:
+    build: .
+    command: dagster-webserver -h 0.0.0.0 -p 3000 -w workspace.yaml
+    ports:
+      # 3300 no host: a porta 3000 costuma estar ocupada por outros apps locais
+      - "3300:3000"
+    environment: &app_env
+      RIOLIVE_DATABASE_URL: postgresql+psycopg://riolive:riolive@db:5432/riolive
+      RIOLIVE_REDIS_URL: redis://redis:6379/0
+      DAGSTER_HOME: /app/.dagster_home
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./docker/dagster.yaml:/app/.dagster_home/dagster.yaml:ro
+      - ./dados:/app/dados
+    depends_on:
+      db:
+        condition: service_healthy
+
+  dagster-daemon:
+    build: .
+    command: dagster-daemon run -w workspace.yaml
+    environment: *app_env
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./docker/dagster.yaml:/app/.dagster_home/dagster.yaml:ro
+      - ./dados:/app/dados
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  db_dados:

@@ -1,0 +1,34 @@
+# Segredos — chaves de API ficam SÓ no .env, nunca no repo
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Ferramentas
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Dagster
+.dagster_home/
+tmp*/
+
+# Dados locais
+dados/
+*.dump
+
+# intermediários da conversão do handoff (deriváveis)
+painel/rascunho/
+painel/node_modules/
+painel/dist/
+
+painel/public/rio.pmtiles
