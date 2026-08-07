@@ -49,10 +49,10 @@ const quando = (iso: string) => {
 
 /* /eventos devolve lista com lat/lon soltos; o mapa quer GeoJSON. Evento sem
    pino é descartado: ponto em (0,0) cairia no Atlântico. */
-function eventosParaGeoJson(eventos: any[]): FeatureCollection {
+function eventosParaGeoJson(eventos: unknown): FeatureCollection {
   return {
     type: 'FeatureCollection',
-    features: (eventos ?? [])
+    features: (Array.isArray(eventos) ? eventos : [])
       .filter((e) => e.lat != null && e.lon != null)
       .map((e) => ({
         type: 'Feature' as const,
@@ -70,7 +70,7 @@ function eventosParaGeoJson(eventos: any[]): FeatureCollection {
 function locaisParaGeoJson(colecao: any): FeatureCollection {
   return {
     type: 'FeatureCollection',
-    features: (colecao?.features ?? []).map((f: any) => ({
+    features: (Array.isArray(colecao?.features) ? colecao.features : []).map((f: any) => ({
       ...f,
       properties: {
         titulo: f.properties?.nome ?? 'Estação',
@@ -300,8 +300,8 @@ export function MapaReal({ camadas }: { camadas: string[] }) {
   }, [camadas, radar.data, radar.dataUpdatedAt, quadroIdx])
 
   const nFrota = posicoes.data?.features?.length ?? 0
-  const nTiros = (tiroteios.data ?? []).filter((e: any) => e.lat != null).length
-  const nFocos = (focos.data ?? []).filter((e: any) => e.lat != null).length
+  const nTiros = (Array.isArray(tiroteios.data) ? tiroteios.data : []).filter((e: any) => e.lat != null).length
+  const nFocos = (Array.isArray(focos.data) ? focos.data : []).filter((e: any) => e.lat != null).length
 
   return (
     <>

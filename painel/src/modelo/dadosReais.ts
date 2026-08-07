@@ -88,6 +88,12 @@ export function useDadosReais(ui: EstadoUi) {
   return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, mar, estacoesAr, focos, ui, ativo }
 }
 
+/* A API pode responder com objeto de erro ({"detail": ...}) em vez de lista —
+   404, 500, rota que ainda não subiu. Tratar isso como lista estoura `.filter` e
+   derruba o painel inteiro, que é o pior desfecho possível num produto cujo tema
+   é justamente fonte caindo. Aqui a resposta inesperada vira lista vazia. */
+const lista = (valor: unknown): any[] => (Array.isArray(valor) ? valor : [])
+
 const hhmm = (iso: string) => {
   const d = new Date(iso)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
@@ -216,7 +222,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
   // cartão Mobilidade: planejado × realizado real
   const mo = d.mobilidade.data
   if (mo) {
-    const paradas: any[] = mo.linhas_paradas ?? []
+    const paradas = lista(mo.linhas_paradas)
     const warn = !mo.gps_saudavel
       ? 'GPS da frota fora do ar — detector de linha parada em espera'
       : paradas.length
@@ -236,9 +242,9 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
 
   // dossiê de Mobilidade real
   if (d.ui.dossier === 'mobilidade' && saida.dossier && mo) {
-    const paradas: any[] = mo.linhas_paradas ?? []
-    const linhas: any[] = mo.linhas ?? []
-    const serie: any[] = mo.serie_veiculos_15min ?? []
+    const paradas = lista(mo.linhas_paradas)
+    const linhas = lista(mo.linhas)
+    const serie = lista(mo.serie_veiculos_15min)
     const dossie: any = { ...saida.dossier, title: 'Mobilidade', route: '/mobilidade' }
     dossie.sev = !mo.gps_saudavel ? SEV[2] : paradas.length > 5 ? SEV[3] : SEV[1]
     dossie.kpis = [
@@ -398,9 +404,9 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
   // dossiê de Segurança real — o histórico do Fogo Cruzado é o material mais denso do banco
   const sg = d.seguranca.data
   if (d.ui.dossier === 'seguranca' && saida.dossier && sg) {
-    const serie: any[] = sg.serie ?? []
-    const bairros: any[] = sg.bairros ?? []
-    const anos: any[] = sg.por_ano ?? []
+    const serie = lista(sg.serie)
+    const bairros = lista(sg.bairros)
+    const anos = lista(sg.por_ano)
     const rotuloJanela = d.ui.period === '24h' ? 'últimas 24 h' : d.ui.period === '7d' ? 'últimos 7 dias' : 'últimos 30 dias'
     const dossie: any = { ...saida.dossier, title: 'Segurança', route: '/seguranca' }
     dossie.sev = sg.mortos > 0 ? SEV[3] : sg.ocorrencias > 0 ? SEV[2] : SEV[1]
@@ -472,7 +478,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
   }
 
   // Ar: estações reais, ordenadas pela pior leitura de PM2.5
-  const arEstacoes: any[] = d.estacoesAr.data ?? []
+  const arEstacoes = lista(d.estacoesAr.data)
   const comPm25 = arEstacoes.filter((e) => e.leituras?.pm25 != null).sort((a, b) => b.leituras.pm25 - a.leituras.pm25)
   if (comPm25.length) {
     const pior = comPm25[0]
@@ -496,7 +502,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
 
   // Queimadas: o texto era um parágrafo fixo no JSX afirmando focos que podiam
   // não existir. Agora sai do dado ou diz que não há foco.
-  const focosLista: any[] = d.focos.data ?? []
+  const focosLista = lista(d.focos.data)
   if (d.focos.data) {
     const porBairro = new Map<string, number>()
     for (const f of focosLista) {
@@ -513,7 +519,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
 
   // Segurança real: ocorrências do Fogo Cruzado nas 24 h + contexto mensal do ISP
   if (d.eventos.data) {
-    const tiros = d.eventos.data.filter((e: any) => e.tipo === 'tiroteio')
+    const tiros = lista(d.eventos.data).filter((e: any) => e.tipo === 'tiroteio')
     if (tiros.length || d.eventos.data.length) {
       const mortos = tiros.reduce((s: number, e: any) => s + (e.titulo.includes('morto') ? 1 : 0), 0)
       const ultimo = tiros[0]
@@ -527,7 +533,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       }
     }
   }
-  const ispPontos: any[] = d.ispMensal.data?.pontos ?? []
+  const ispPontos = lista(d.ispMensal.data?.pontos)
   if (ispPontos.length) {
     const ult = ispPontos.at(-1)
     const mesesPt = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']
