@@ -1,6 +1,6 @@
 # Fase sem domínio: serve por IP na porta 80.
-# Quando o domínio existir (Pulso Rio), trocar :80 pelo hostname — o Caddy
-# emite TLS sozinho — e colocar o Cloudflare na frente conforme a DEC de stack.
+# Quando o domínio existir (nome ainda em aberto), trocar :80 pelo hostname — o Caddy
+# emite TLS sozinho — e colocar o Cloudflare na frente conforme a `[[DEC - Stack de backend e infraestrutura]]`.
 
 :80 {
 	encode zstd gzip
