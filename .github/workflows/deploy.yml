@@ -1,0 +1,101 @@
+name: Deploy em produção
+
+# Push na main entra em produção — mas só depois do gate (lint, tipos, testes)
+# e do build do painel passarem. Migrations NÃO são aplicadas automaticamente
+# (decisão de 2026-08-06); o deploy avisa quando há pendente.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: producao
+  cancel-in-progress: false
+
+env:
+  SERVIDOR: 169.58.140.118
+
+jobs:
+  verificar:
+    name: Gate (ruff, mypy, pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run mypy
+      # Sem Postgres no runner: os testes de API pulam sozinhos (10 skips).
+      - run: uv run pytest -q
+
+  painel:
+    name: Build do painel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: painel/package-lock.json
+      - run: npm ci
+        working-directory: painel
+      - run: npm run build
+        working-directory: painel
+        env:
+          # Mesma origem do Caddy — o painel chama /api, sem CORS.
+          VITE_API_URL: /api
+      - uses: actions/upload-artifact@v4
+        with:
+          name: painel-dist
+          path: painel/dist
+          retention-days: 3
+
+  entregar:
+    name: Entregar no servidor
+    needs: [verificar, painel]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: painel-dist
+          path: painel/dist
+
+      - name: Preparar chave SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Host key fixado: sem isso o runner aceitaria qualquer servidor.
+          echo "${{ env.SERVIDOR }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE6hxpjJsnKFwiwYpN+g6vd4ARi/i+ZGDLM0ljkH4WoG" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Enviar código
+        # --delete deixa o servidor espelhando o repo. O .env e o dados/ ficam
+        # de fora (vivem só no servidor) e por isso não são apagados.
+        run: |
+          rsync -az --delete \
+            --exclude '.git' --exclude '.github' --exclude '.venv' \
+            --exclude '__pycache__' --exclude '.pytest_cache' \
+            --exclude '.mypy_cache' --exclude '.ruff_cache' --exclude '.dagster_home' \
+            --exclude 'painel/node_modules' --exclude 'painel/dist' \
+            --exclude 'dados' --exclude '.env' --exclude 'VERSAO' \
+            ./ root@${{ env.SERVIDOR }}:/srv/riolive/
+
+      - name: Enviar painel buildado
+        run: |
+          rsync -az --delete painel/dist/ root@${{ env.SERVIDOR }}:/srv/riolive/painel/dist/
+
+      - name: Subir e checar
+        id: subir
+        run: |
+          ssh root@${{ env.SERVIDOR }} \
+            "bash /srv/riolive/deploy/deploy.sh ${{ github.sha }}" | tee saida.log
+          if grep -q MIGRACAO_PENDENTE saida.log; then
+            echo "::warning title=Migration pendente::O código tem migration que o banco não tem. Aplicar à mão (ver deploy/README.md)."
+          fi

@@ -26,7 +26,34 @@ Console de emergência (se o SSH quebrar): painel da Contabo → VNC.
 - Firewall UFW: só 22/80/443. fail2ban no sshd. unattended-upgrades ativo.
 - Apps futuros: compose próprio em `/srv/<app>`, bloco novo no Caddyfile.
 
-## Atualizar o código
+## Deploy automático (push na `main`)
+
+`.github/workflows/deploy.yml` roda a cada push na `main` (ou à mão, pelo
+"Run workflow"). Três etapas: **gate** (`ruff format --check`, `ruff check`,
+`mypy`, `pytest` — os testes de API pulam sozinhos por não haver Postgres no
+runner), **build do painel** (`VITE_API_URL=/api`) e **entrega** (rsync do
+código + do `dist/`, depois `deploy/deploy.sh` no servidor). Se o gate falhar,
+nada chega em produção.
+
+**Migrations não são aplicadas automaticamente** (decisão de 2026-08-06:
+migration em hypertable do Timescale é dolorosa de desfazer). O `deploy.sh`
+compara `alembic current` com `alembic heads` e, havendo diferença, o workflow
+marca um aviso amarelo na execução. Aplicar à mão:
+
+```bash
+ssh root@169.58.140.118 'cd /srv/riolive && docker compose exec -T api alembic upgrade head'
+```
+
+Como o deploy reinicia a stack, cada push custa ~30–60 s sem coleta. Com GPS
+sem backfill, isso é um micro-buraco na série — motivo pra agrupar pushes.
+
+Segredo necessário no repo (Settings → Secrets → Actions): **`SSH_DEPLOY_KEY`**,
+a chave privada dedicada (`github-actions-deploy-riolive`) cuja pública está no
+`authorized_keys` do root com a opção `restrict`. O host key do servidor está
+fixado no workflow — se a máquina for reinstalada, atualizar aquela linha.
+O `.env` nunca passa pelo CI. Última entrega fica registrada em `/srv/riolive/VERSAO`.
+
+## Atualizar o código à mão (fallback)
 
 ```bash
 # do WSL, na raiz do worktree com o código desejado:
