@@ -121,6 +121,19 @@ def test_ar_estacoes_lista_todas_mesmo_sem_leitura(cliente: TestClient) -> None:
     assert all("leituras" in e and "lat" in e and "lon" in e for e in corpo)
 
 
+def test_mobilidade_marca_parada_com_o_criterio_do_detector(cliente: TestClient) -> None:
+    # Duas definições de "parada" no mesmo payload é como o card e o dossiê se
+    # contradiziam: o card lia o detector, a tabela recalculava sem o filtro de
+    # frequência. `parada` e `linhas_paradas` têm que ser o mesmo conjunto.
+    corpo = cliente.get("/mobilidade/linhas").json()
+    marcadas = {li["linha"] for li in corpo["linhas"] if li["parada"]}
+    assert marcadas == {p["linha"] for p in corpo["linhas_paradas"]}
+    for li in corpo["linhas"]:
+        if li["parada"]:
+            assert li["headway_min"] <= 30, "linha de frequência longa não é parada"
+            assert li["veiculos"] == 0
+
+
 def test_eventos_trazem_nome_do_bairro(cliente: TestClient) -> None:
     # Sem o nome, quem consome usa o título pra dizer "onde" — e título de foco de
     # calor é o nome do satélite. O campo existe mesmo quando o evento não tem pino.
