@@ -199,33 +199,60 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       {key:'custom', label:'Personalizar', n:'', icon:'⚙', dot:'var(--tx3)'}
     ];
     const active = s.preset || 'segxtrans';
+    // Cada preset é um conjunto de camadas — é isso que faz o preset "funcionar"
+    const camadasDoPreset = {
+      chuva: ['radar','chuva_estacoes','rios'],
+      transporte: ['frota','aeronaves'],
+      segxtrans: ['tiroteios','frota'],
+      bairro: ['tiroteios','focos','frota'],
+      custom: ['tiroteios','frota'],
+    };
     const mapPresets = presets.map(p => ({
-      label:p.label, n:p.n, icon:p.icon, dot:p.dot,
+      label:p.label,
+      // contagem real, não rótulo fixo: preset que diz "3 CAMADAS" e liga 2 mente
+      n: p.key === 'custom' ? '' : `${(camadasDoPreset[p.key] ?? []).length} CAMADAS`,
+      icon:p.icon, dot:p.dot,
       bd: p.key===active ? 'var(--brand2)' : 'var(--bd)',
       bg: p.key===active ? 'var(--brand)' : 'var(--card)',
       c: p.key===active ? 'var(--on-brand)' : 'var(--tx2)',
-      pick: () => defina({ preset:p.key })
+      // escolher preset descarta a seleção manual — é o sentido de um preset
+      pick: () => defina({ preset:p.key, camadas:null })
     }));
+    // `pronta` = temos dado real pra desenhar. As demais ficam visíveis e
+    // desabilitadas: esconder daria a impressão de que a camada não existe, e
+    // mentir marcando como ativa é pior ainda.
     const layerDefs = [
-      ['Ocorrências de tiro (24 h)', 'FOGO CRUZADO · HÁ 12 MIN', true],
-      ['Frota em circulação', 'SMTR · AO VIVO', true],
-      ['Linhas sem circular', 'DETECTOR PLANEJADO×REALIZADO · 1 MIN', true],
-      ['Bairros', 'IPP · ESTÁTICO', true],
-      ['Radar de chuva', 'ALERTA RIO · HÁ 4 MIN', false],
-      ['Chuva por estação (33)', 'ALERTA RIO · HÁ 4 MIN', false],
-      ['Nível de rios', 'ANA · HÁ 9 MIN', false],
-      ['Qualidade do ar (28)', 'OPENAQ · HÁ 20 MIN', false],
-      ['Focos de calor', 'INPE · HÁ 8 MIN', false],
-      ['Aeronaves', 'ADSB.LOL · AO VIVO', false],
-      ['Navios (AIS)', 'DEGRADADA · HÁ 19 H', false]
+      {k:'tiroteios', n:'Ocorrências de tiro (24 h)', src:'FOGO CRUZADO · AO VIVO', pronta:true},
+      {k:'frota', n:'Frota em circulação', src:'SMTR · AO VIVO', pronta:true},
+      {k:'focos', n:'Focos de calor', src:'INPE · A CADA 10 MIN', pronta:true},
+      {k:'aeronaves', n:'Aeronaves', src:'ADSB.LOL · AO VIVO', pronta:true},
+      {k:'radar', n:'Radar de chuva', src:'ALERTA RIO · A CADA 5 MIN', pronta:true},
+      {k:'chuva_estacoes', n:'Chuva por estação (33)', src:'ALERTA RIO · A CADA 5 MIN', pronta:true},
+      {k:'rios', n:'Nível de rios', src:'ANA · A CADA 15 MIN', pronta:true},
+      {k:'ar', n:'Qualidade do ar', src:'OPENAQ · A CADA 30 MIN', pronta:true},
+      {k:'linhas_paradas', n:'Linhas sem circular', src:'SEM GEOMETRIA POR LINHA AINDA', pronta:false},
+      {k:'bairros', n:'Bairros', src:'POLÍGONOS NÃO EXPOSTOS NA API', pronta:false},
+      {k:'navios', n:'Navios (AIS)', src:'FONTE MUDA DESDE 05/08', pronta:false},
     ];
-    const layers = layerDefs.map((l,i) => ({
-      n:l[0], src:l[1], mark: l[2] ? '✓' : '',
-      bd: l[2] ? 'var(--live-tx)' : 'var(--tx4)', bg: l[2] ? 'var(--live-tx)' : 'transparent',
-      tc: l[2] ? 'var(--tx)' : 'var(--tx2)',
-      sc: l[1].indexOf('DEGRADADA') === 0 ? 'var(--s2)' : 'var(--tx3)',
-      toggle: () => {}
-    }));
+    const ativas = s.camadas ?? camadasDoPreset[active] ?? [];
+    const alternar = (k) => () => {
+      const atual = s.camadas ?? camadasDoPreset[active] ?? [];
+      const nova = atual.includes(k) ? atual.filter(x => x !== k) : atual.concat(k);
+      // mexeu na mão: o preset deixa de mandar
+      defina({ camadas: nova, preset: 'custom' });
+    };
+    const layers = layerDefs.map(l => {
+      const on = l.pronta && ativas.includes(l.k);
+      return {
+        k: l.k, n: l.n, src: l.src, mark: on ? '✓' : '', pronta: l.pronta,
+        bd: on ? 'var(--live-tx)' : 'var(--tx4)', bg: on ? 'var(--live-tx)' : 'transparent',
+        tc: !l.pronta ? 'var(--tx3)' : on ? 'var(--tx)' : 'var(--tx2)',
+        sc: l.pronta ? 'var(--tx3)' : 'var(--s2)',
+        toggle: l.pronta ? alternar(l.k) : () => {},
+      };
+    });
+    const camadasAtivas = layers.filter(l => l.mark).length;
+    const contagemCamadas = `${camadasAtivas}/${layerDefs.filter(l => l.pronta).length} ATIVAS`;
     const frames = []; for (let i=0;i<24;i++) frames.push({ h: 6 + Math.round(rnd(i+11)*12), c: i > 19 ? 'var(--live-tx)' : 'var(--bd4)' });
 
     // ---------- status ----------
@@ -256,7 +283,7 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
 
     // ---------- dossiê ----------
     let dossier = null;
-    if (s.route !== 'home' && s.route !== 'mapa' && s.route !== 'status') {
+    if (s.route !== 'home' && s.route !== 'mapa' && s.route !== 'status' && s.route !== 'nerds') {
       const rainSeries = crisis
         ? [0,0,1,1,2,3,2,4,6,9,14,22,31,38,45,42,38,30,22,16,11,7,4,2]
         : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -363,11 +390,13 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       copyLink: () => acoes.piscar('copied'),
       quoteLabel: s.quoted ? 'dado copiado' : 'copiar dado citável',
       copyQuote: () => acoes.piscar('quoted'),
-      navA:nav('home'), navM:nav('mapa'), navS:nav('status'),
+      navA:nav('home'), navM:nav('mapa'), navS:nav('status'), navN:nav('nerds'),
       goHome: () => defina({ route:'home', dossier:null }),
       goMapa: () => defina({ route:'mapa', dossier:null }),
       goStatus: () => defina({ route:'status', dossier:null }),
+      goNerds: () => defina({ route:'nerds', dossier:null }),
       isHome: s.route === 'home', isMapa: s.route === 'mapa', isStatus: s.route === 'status',
+      isNerds: s.route === 'nerds',
       tickerLoop: tick.concat(tick), tickerState: s.paused ? 'paused' : 'running',
       pauseTicker: () => defina({ paused:true }), resumeTicker: () => defina({ paused:false }),
       chuva, mob, transito, previsao, seguranca, ar, ceu, mar, memoria, lay, ramp:RAMP,
@@ -377,6 +406,7 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
         { quando:'DOM 07:00', cor:null, titulo:'Aterro do Flamengo fechado para lazer', sub:null },
       ],
       fleetDots, hexes, mapFleet, mapIncidents, mapPresets, layers, frames, sources, presetAtivo: active,
+      camadasAtivas: ativas, contagemCamadas,
       feed, feedCount: feedAll.length + ' EVENTOS · 24H',
       abn: { track: s.onlyAbn ? 'var(--brand)' : 'var(--bd4)', x: s.onlyAbn ? 14 : 2, c: s.onlyAbn ? 'var(--live-tx)' : 'var(--tx2)' },
       toggleAbnormal: () => defina({ onlyAbn: !s.onlyAbn }),

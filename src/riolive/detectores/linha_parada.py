@@ -4,6 +4,13 @@ A cada rodada (5 min): linhas planejadas AGORA (GTFS) sem nenhum veículo há 40
 min viram `evento` tipo `linha_parada` (vigente, um por linha); quando a linha
 volta a circular, o evento é fechado. Com o GPS fora do ar o detector não abre
 nem fecha nada — a máquina de saúde é a trava contra falso positivo em massa.
+
+O detector também **reporta a própria saúde**, porque aparece na página pública
+de status como qualquer fonte. Sem isso ele ficava `desconhecido` pra sempre,
+inclusive rodando bem (visto em 2026-08-07). Esperando o GPS ficar confiável é
+`degradada` — o detector está de pé, quem não está é a entrada dele; e como isso
+não é falha de rede, schema nem frescor, vai sem classe de falha. Não dispara
+alerta: espera por GPS é estado normal, não incidente.
 """
 
 import logging
@@ -14,7 +21,8 @@ from sqlalchemy import select, text, update
 
 from riolive.db import sessao
 from riolive.mobilidade import detectar_paradas, gps_confiavel, linhas_agora
-from riolive.modelos import Evento
+from riolive.modelos import Evento, SaudeFonte
+from riolive.saude.controle import ControleSaude
 
 logger = logging.getLogger(__name__)
 
@@ -35,16 +43,37 @@ def _garantir_fonte(s: Any) -> int:
     return int(linha.scalar_one())
 
 
+def _registrar_saude(s: Any, fonte_id: int, agora: datetime, estado: str, detalhe: str) -> None:
+    """Grava transição de estado do detector (só quando muda, como o executor faz)."""
+    controle = ControleSaude(SLUG_FONTE)
+    if controle.estado_anterior() == estado:
+        return
+    s.add(
+        SaudeFonte(
+            ts=agora,
+            fonte_id=fonte_id,
+            estado=estado,
+            classe_falha=None,  # espera por dependência não é rede/schema/frescor
+            latencia_ms=None,
+            detalhe=detalhe,
+        )
+    )
+    controle.gravar_estado(estado)
+    logger.info("detector linha_parada: estado %s (%s)", estado, detalhe)
+
+
 def rodar() -> dict[str, int]:
     """Executa uma rodada; retorna contadores (abertos, fechados, vigentes)."""
     agora = datetime.now(tz=UTC)
     with sessao() as s:
+        # Antes da trava: a fonte precisa existir pra aparecer no status mesmo em espera
+        fonte_id = _garantir_fonte(s)
         confiavel, motivo = gps_confiavel(s)
         if not confiavel:
             logger.warning("detector em espera: %s", motivo)
+            _registrar_saude(s, fonte_id, agora, "degradada", f"em espera: {motivo}")
             return {"abertos": 0, "fechados": 0, "vigentes": -1}
 
-        fonte_id = _garantir_fonte(s)
         linhas = linhas_agora(s)
         paradas = {p.linha: p for p in detectar_paradas(linhas)}
         rodando = {li.linha for li in linhas if li.veiculos > 0}
@@ -91,5 +120,12 @@ def rodar() -> dict[str, int]:
             abertos += 1
 
         vigentes = len(por_linha) - fechados + abertos
+        _registrar_saude(
+            s,
+            fonte_id,
+            agora,
+            "online",
+            f"{len(linhas)} linhas planejadas agora, {vigentes} sem circular",
+        )
     logger.info("linha_parada: %s abertos, %s fechados, %s vigentes", abertos, fechados, vigentes)
     return {"abertos": abertos, "fechados": fechados, "vigentes": vigentes}

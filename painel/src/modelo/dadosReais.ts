@@ -2,7 +2,10 @@
 
    Regra: só sobrepõe no modo calmo sem recorte de zona (os modos crise/zona são
    demonstrações visuais do protótipo). Painéis cuja fonte ainda não existe
-   (segurança, trânsito, céu, mar, cidade viva) permanecem com o mock do design. */
+   (céu, mar, cidade viva) permanecem com o mock do design.
+
+   Dossiês com dado real: chuva, mobilidade, trânsito e segurança. Os demais ainda
+   caem no template de chuva do protótipo — isso engana e é dívida conhecida. */
 
 import { useQuery } from '@tanstack/react-query'
 import type { EstadoUi, Modelo } from './tipos'
@@ -59,12 +62,47 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: ativo, refetchInterval: 60_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, ui, ativo }
+  const mar = useQuery({
+    queryKey: ['previsao-mar'],
+    queryFn: () => api.previsao('mar_copacabana'),
+    enabled: ativo, refetchInterval: 600_000, retry: 1,
+  })
+  const estacoesAr = useQuery({
+    queryKey: ['ar-estacoes'],
+    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/ar/estacoes`).then((r) => r.json()),
+    enabled: ativo, refetchInterval: 600_000, retry: 1,
+  })
+  const focos = useQuery({
+    queryKey: ['focos-calor'],
+    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/eventos?tipo=foco_calor&horas=24&limite=200`).then((r) => r.json()),
+    enabled: ativo, refetchInterval: 600_000, retry: 1,
+  })
+
+  // dossiê de Segurança: só busca quando aberto — a janela de 30 d varre 10 anos de base
+  const seguranca = useQuery({
+    queryKey: ['seguranca-resumo', ui.period],
+    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/seguranca/resumo?horas=${horas}`).then((r) => r.json()),
+    enabled: ativo && ui.dossier === 'seguranca', refetchInterval: 300_000, retry: 1,
+  })
+
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, mar, estacoesAr, focos, ui, ativo }
 }
+
+/* A API pode responder com objeto de erro ({"detail": ...}) em vez de lista —
+   404, 500, rota que ainda não subiu. Tratar isso como lista estoura `.filter` e
+   derruba o painel inteiro, que é o pior desfecho possível num produto cujo tema
+   é justamente fonte caindo. Aqui a resposta inesperada vira lista vazia. */
+const lista = (valor: unknown): any[] => (Array.isArray(valor) ? valor : [])
 
 const hhmm = (iso: string) => {
   const d = new Date(iso)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+/* Janelas de 7 e 30 dias vêm em balde diário — hora não diz nada ali. */
+const ddmm = (iso: string) => {
+  const d = new Date(iso)
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
 export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>): Modelo {
@@ -184,7 +222,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
   // cartão Mobilidade: planejado × realizado real
   const mo = d.mobilidade.data
   if (mo) {
-    const paradas: any[] = mo.linhas_paradas ?? []
+    const paradas = lista(mo.linhas_paradas)
     const warn = !mo.gps_saudavel
       ? 'GPS da frota fora do ar — detector de linha parada em espera'
       : paradas.length
@@ -204,9 +242,9 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
 
   // dossiê de Mobilidade real
   if (d.ui.dossier === 'mobilidade' && saida.dossier && mo) {
-    const paradas: any[] = mo.linhas_paradas ?? []
-    const linhas: any[] = mo.linhas ?? []
-    const serie: any[] = mo.serie_veiculos_15min ?? []
+    const paradas = lista(mo.linhas_paradas)
+    const linhas = lista(mo.linhas)
+    const serie = lista(mo.serie_veiculos_15min)
     const dossie: any = { ...saida.dossier, title: 'Mobilidade', route: '/mobilidade' }
     dossie.sev = !mo.gps_saudavel ? SEV[2] : paradas.length > 5 ? SEV[3] : SEV[1]
     dossie.kpis = [
@@ -363,9 +401,125 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     saida.dossier = dossie
   }
 
+  // dossiê de Segurança real — o histórico do Fogo Cruzado é o material mais denso do banco
+  const sg = d.seguranca.data
+  if (d.ui.dossier === 'seguranca' && saida.dossier && sg) {
+    const serie = lista(sg.serie)
+    const bairros = lista(sg.bairros)
+    const anos = lista(sg.por_ano)
+    const rotuloJanela = d.ui.period === '24h' ? 'últimas 24 h' : d.ui.period === '7d' ? 'últimos 7 dias' : 'últimos 30 dias'
+    const dossie: any = { ...saida.dossier, title: 'Segurança', route: '/seguranca' }
+    dossie.sev = sg.mortos > 0 ? SEV[3] : sg.ocorrencias > 0 ? SEV[2] : SEV[1]
+    const pctPolicial = sg.ocorrencias ? Math.round((sg.acao_policial / sg.ocorrencias) * 100) : 0
+    dossie.kpis = [
+      { l: `Tiroteios · ${rotuloJanela}`, v: String(sg.ocorrencias ?? '—'), u: 'ocorrências', c: 'var(--tx)', d: 'registro do Fogo Cruzado, pino exato e sem atraso' },
+      { l: 'Mortos', v: String(sg.mortos ?? '—'), u: 'na janela', c: sg.mortos ? 'var(--s4)' : 'var(--s1)', d: 'somados como vieram da fonte, sem reinterpretação' },
+      { l: 'Feridos', v: String(sg.feridos ?? '—'), u: 'na janela', c: sg.feridos ? 'var(--s3)' : 'var(--s1)', d: 'inclui vítimas que sobreviveram ao disparo' },
+      { l: 'Com ação policial', v: String(sg.acao_policial ?? '—'), u: sg.ocorrencias ? `${pctPolicial}% do total` : '', c: 'var(--tx)', d: 'classificação da própria fonte, não nossa' },
+    ]
+    if (serie.length >= 2) {
+      const ocorrencias = serie.map((p) => p.ocorrencias)
+      const mortos = serie.map((p) => p.mortos)
+      const teto = Math.max(1, ...ocorrencias)
+      dossie.series1 = poly(ocorrencias, 1000, 205, teto)
+      dossie.series2 = poly(mortos, 1000, 205, teto)
+      dossie.s1 = 'tiroteios'
+      dossie.s2 = 'com morte'
+      dossie.annW = 0; dossie.annX = -10; dossie.annLabel = ''
+      dossie.chartTitle = `Tiroteios · ${rotuloJanela}`
+      const passoN = Math.max(1, Math.floor(serie.length / 8))
+      dossie.axis = serie.filter((_: any, i: number) => i % passoN === 0).slice(0, 8).map((p) => (sg.passo === 'hour' ? hhmm(p.ts) : ddmm(p.ts)))
+      const ult = serie.at(-1)
+      dossie.tipTime = `${sg.passo === 'hour' ? hhmm(ult.ts) : ddmm(ult.ts)} · TIROTEIOS`
+      dossie.tip1 = `${ult.ocorrencias} ocorrências`
+      dossie.tip2 = ult.mortos ? `${ult.mortos} com morte` : ''
+    }
+    dossie.rows = bairros.map((b) => ({
+      a: b.nome,
+      b: String(b.ocorrencias),
+      c: String(b.mortos),
+      d: sg.ocorrencias ? `${Math.round((b.ocorrencias / sg.ocorrencias) * 100)}%` : '—',
+      e: b.mortos > 0 ? 'COM MORTE' : 'sem morte',
+      ec: b.mortos > 0 ? 'var(--s4)' : 'var(--tx2)',
+    }))
+    dossie.cols = ['Bairro', 'Tiroteios', 'Mortos', '% da janela', 'Situação']
+    dossie.tableTitle = `Bairros mais atingidos · ${rotuloJanela}`
+    dossie.sortBy = 'MAIS TIROTEIOS'
+    dossie.mapTitle = 'Ocorrências no mapa'
+    dossie.mapDots = []
+    // O contexto é a memória: a janela curta sozinha não diz se é muito ou pouco
+    const pico = anos.reduce((a: any, b: any) => (b.ocorrencias > (a?.ocorrencias ?? -1) ? b : a), null)
+    const total = anos.reduce((s: number, a: any) => s + a.ocorrencias, 0)
+    dossie.context = pico
+      ? `A base tem ${total.toLocaleString('pt-BR')} tiroteios mapeados desde ${anos[0].ano}. O pior ano foi ${pico.ano}, com ${pico.ocorrencias.toLocaleString('pt-BR')} — o ano da intervenção federal. Este recorte é ${rotuloJanela}; o pino é exato e não há atraso na publicação, por decisão de produto.`
+      : 'Registro do Fogo Cruzado com pino exato e sem atraso, por decisão de produto.'
+    dossie.seal = 'FOGO CRUZADO · USO AUTORIZADO'
+    saida.dossier = dossie
+  }
+
+  // Mar: ondas são reais (Open-Meteo Marine). Balneabilidade NÃO é — o boletim do
+  // INEA é PDF e o parsing está adiado, então os contadores de praia saem de cena
+  // em vez de continuarem exibindo número inventado como se fosse leitura.
+  const ondas = d.mar.data?.metricas
+  if (ondas?.onda_altura_m?.length) {
+    const altura = ondas.onda_altura_m[0]?.valor
+    const periodo = ondas.onda_periodo_s?.[0]?.valor
+    const estado = altura >= 2.5 ? 'mar agitado' : altura >= 1.5 ? 'mar moderado' : 'mar calmo'
+    saida.mar = {
+      ...m.mar,
+      sev: altura >= 2.5 ? SEV[3] : altura >= 1.5 ? SEV[2] : SEV[1],
+      hero: altura.toFixed(1).replace('.', ','),
+      hc: altura >= 2.5 ? 'var(--s3)' : 'var(--tx)',
+      heroSub: `m · ${periodo ? `período ${Math.round(periodo)} s · ` : ''}${estado}`,
+      proprias: '—',
+      improprias: '—',
+      list: 'Balneabilidade do INEA ainda não integrada — o boletim é PDF e o parsing está pendente. As ondas acima são leitura real de Copacabana.',
+    }
+  }
+
+  // Ar: estações reais, ordenadas pela pior leitura de PM2.5
+  const arEstacoes = lista(d.estacoesAr.data)
+  const comPm25 = arEstacoes.filter((e) => e.leituras?.pm25 != null).sort((a, b) => b.leituras.pm25 - a.leituras.pm25)
+  if (comPm25.length) {
+    const pior = comPm25[0]
+    const teto = Math.max(25, pior.leituras.pm25)
+    saida.ar = {
+      ...m.ar,
+      // OMS 2021: 15 µg/m³ como média de 24 h é o limite recomendado
+      sev: pior.leituras.pm25 >= 25 ? SEV[3] : pior.leituras.pm25 >= 15 ? SEV[2] : SEV[1],
+      hero: pior.leituras.pm25 >= 25 ? 'Ruim' : pior.leituras.pm25 >= 15 ? 'Moderada' : 'Boa',
+      hc: pior.leituras.pm25 >= 25 ? 'var(--s3)' : pior.leituras.pm25 >= 15 ? 'var(--s2)' : 'var(--s1)',
+      heroSub: `PM2.5 máx ${pior.leituras.pm25.toFixed(1).replace('.', ',')} µg/m³ (${pior.nome})`,
+      count: `${comPm25.length} EST`,
+      rows: comPm25.slice(0, 3).map((e) => ({
+        n: e.bairro ?? e.nome,
+        v: e.leituras.pm25.toFixed(1).replace('.', ','),
+        p: Math.min(100, Math.round((e.leituras.pm25 / teto) * 100)),
+        c: e.leituras.pm25 >= 25 ? 'var(--s3)' : e.leituras.pm25 >= 15 ? '#c08428' : '#149cc6',
+      })),
+    }
+  }
+
+  // Queimadas: o texto era um parágrafo fixo no JSX afirmando focos que podiam
+  // não existir. Agora sai do dado ou diz que não há foco.
+  const focosLista = lista(d.focos.data)
+  if (d.focos.data) {
+    const porBairro = new Map<string, number>()
+    for (const f of focosLista) {
+      const onde = (f.descricao || f.titulo || 'sem localização').split('—')[0].trim()
+      porBairro.set(onde, (porBairro.get(onde) ?? 0) + 1)
+    }
+    const maiores = [...porBairro.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+    saida.queimadasHero = String(focosLista.length)
+    saida.queimadasSub = 'focos detectados · 24 h'
+    saida.queimadasTexto = focosLista.length
+      ? `${maiores.map(([onde, n]) => `${onde}${n > 1 ? ` (${n})` : ''}`).join(', ')}. Detecção por satélite do INPE; foco não é sinônimo de incêndio confirmado.`
+      : 'Nenhum foco de calor detectado pelo INPE nas últimas 24 h no recorte monitorado.'
+  }
+
   // Segurança real: ocorrências do Fogo Cruzado nas 24 h + contexto mensal do ISP
   if (d.eventos.data) {
-    const tiros = d.eventos.data.filter((e: any) => e.tipo === 'tiroteio')
+    const tiros = lista(d.eventos.data).filter((e: any) => e.tipo === 'tiroteio')
     if (tiros.length || d.eventos.data.length) {
       const mortos = tiros.reduce((s: number, e: any) => s + (e.titulo.includes('morto') ? 1 : 0), 0)
       const ultimo = tiros[0]
@@ -379,7 +533,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       }
     }
   }
-  const ispPontos: any[] = d.ispMensal.data?.pontos ?? []
+  const ispPontos = lista(d.ispMensal.data?.pontos)
   if (ispPontos.length) {
     const ult = ispPontos.at(-1)
     const mesesPt = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']

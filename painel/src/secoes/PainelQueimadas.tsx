@@ -4,7 +4,7 @@ import React from 'react'
 import type { Modelo } from '../modelo/tipos'
 
 export function PainelQueimadas({ m }: { m: Modelo }) {
-  const { lay, openQueimadas, queimadasHero, queimadasSub } = m
+  const { lay, openQueimadas, queimadasHero, queimadasSub, queimadasTexto } = m
   return (
     <>
 {/* QUEIMADAS */}
@@ -19,7 +19,7 @@ export function PainelQueimadas({ m }: { m: Modelo }) {
               <span style={{fontFamily: "'Space Grotesk',sans-serif", fontSize: '30px', fontWeight: '600', letterSpacing: '-.02em', lineHeight: '1'}}>{queimadasHero ?? '0'}</span>
               <span style={{fontSize: '11px', color: 'var(--tx2)'}}>{queimadasSub ?? 'focos no município · 3 h'}</span>
             </div>
-            <div style={{flex: '1 1 auto', minHeight: '0', fontSize: '11px', color: 'var(--tx2)', lineHeight: '1.45'}}>3 focos na Região Metropolitana nas últimas 24 h — Duque de Caxias (2), Itaboraí (1). Nenhum dentro do limite municipal.</div>
+            <div style={{flex: '1 1 auto', minHeight: '0', fontSize: '11px', color: 'var(--tx2)', lineHeight: '1.45'}}>{queimadasTexto ?? 'Detecção por satélite do INPE, atualizada a cada 10 minutos.'}</div>
             <div style={{display: 'flex', alignItems: 'center', gap: '6px', borderTop: '1px solid var(--bd2)', paddingTop: '7px', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx3)', letterSpacing: '.05em'}}>
               <span style={{width: '5px', height: '5px', borderRadius: '50%', background: 'var(--s1)'}}></span>FONTE: INPE · HÁ 8 MIN
             </div>

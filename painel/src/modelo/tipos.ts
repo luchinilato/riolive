@@ -18,6 +18,8 @@ export interface EstadoUi {
   mtab: 'cards' | 'feed'
   period: '24h' | '7d' | '30d'
   preset?: string
+  /* Camadas ligadas no mapa. null = ainda não mexeram, vale o preset. */
+  camadas?: string[] | null
   vw?: number
   vh?: number
 }

@@ -5,7 +5,7 @@ import React, { Suspense } from 'react'
 const MapaReal = React.lazy(() => import('./MapaReal').then((m) => ({ default: m.MapaReal })))
 
 export function VistaMapa({ m }: { m: Modelo }) {
-  const { copyLabel, copyLink, frames, isMapa, layers, mapPresets, presetAtivo } = m
+  const { camadasAtivas, contagemCamadas, copyLabel, copyLink, frames, isMapa, layers, mapPresets } = m
   return (
     <>
 {/* ================= MAPA ================= */}
@@ -26,17 +26,17 @@ export function VistaMapa({ m }: { m: Modelo }) {
 
         <div style={{flex: '1 1 auto', minHeight: '0', display: 'flex', gap: '12px'}}>
           <div style={{flex: '1 1 auto', minWidth: '0', position: 'relative', border: '1px solid var(--bd)', borderRadius: '10px', overflow: 'hidden', background: 'var(--bg2)', backgroundImage: 'linear-gradient(var(--map-grid) 1px,transparent 1px),linear-gradient(90deg,var(--map-grid) 1px,transparent 1px),linear-gradient(115deg,var(--map-grid2) 1px,transparent 1px)', backgroundSize: '46px 46px,46px 46px,90px 90px'}}>
-            <Suspense fallback={<div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', letterSpacing: '.08em' }}>CARREGANDO MAPA…</div>}><MapaReal preset={presetAtivo} /></Suspense>
+            <Suspense fallback={<div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', letterSpacing: '.08em' }}>CARREGANDO MAPA…</div>}><MapaReal camadas={camadasAtivas} /></Suspense>
           </div>
 
           <div style={{flex: '0 0 268px', background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: '10px', display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
             <div style={{padding: '10px 12px', borderBottom: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase'}}>Camadas</span>
-              <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>4/11 ATIVAS</span>
+              <span style={{flex: '0 0 auto', marginLeft: 'auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>{contagemCamadas}</span>
             </div>
             <div style={{flex: '1 1 auto', overflow: 'auto'}}>
               {(layers as any[]).map((l: any, lI: number) => (<React.Fragment key={lI}>
-                <div onClick={l.toggle} style={{display: 'flex', gap: '9px', alignItems: 'flex-start', padding: '9px 12px', borderBottom: '1px solid var(--bd3)', cursor: 'pointer'}}>
+                <div onClick={l.toggle} style={{display: 'flex', gap: '9px', alignItems: 'flex-start', padding: '9px 12px', borderBottom: '1px solid var(--bd3)', cursor: l.pronta ? 'pointer' : 'not-allowed', opacity: l.pronta ? 1 : 0.55}}>
                   <span style={{flex: '0 0 auto', marginTop: '1px', width: '13px', height: '13px', borderRadius: '3px', border: `1px solid ${l.bd}`, background: `${l.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', color: 'var(--bg)'}}>{l.mark}</span>
                   <span style={{flex: '1 1 auto', minWidth: '0'}}>
                     <span style={{display: 'block', fontSize: '11.5px', color: `${l.tc}`}}>{l.n}</span>

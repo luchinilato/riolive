@@ -22,6 +22,7 @@ import { PainelNavios } from './secoes/PainelNavios'
 import { Feed } from './secoes/Feed'
 import { VistaMapa } from './secoes/VistaMapa'
 import { VistaStatus } from './secoes/VistaStatus'
+import { VistaNerds } from './secoes/VistaNerds'
 import { VistaMobile } from './secoes/VistaMobile'
 import { Rodape } from './secoes/Rodape'
 import { Dossie } from './secoes/Dossie'
@@ -95,6 +96,8 @@ export default function App() {
             <VistaMapa m={m} />
           ) : m.isStatus ? (
             <VistaStatus m={m} />
+          ) : m.isNerds ? (
+            <VistaNerds m={m} />
           ) : (
             <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', gap: '12px', padding: '12px 16px' }}>
               <div style={{ flex: '1 1 auto', minWidth: 0, display: 'grid',
