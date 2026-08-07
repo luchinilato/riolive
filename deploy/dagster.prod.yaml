@@ -1,0 +1,15 @@
+# Instância do Dagster em produção — igual ao docker/dagster.yaml, mas a URL
+# do storage vem do ambiente (a senha do Postgres não fica em arquivo versionado).
+storage:
+  postgres:
+    postgres_url:
+      env: DAGSTER_PG_URL
+
+retention:
+  schedule:
+    purge_after_days: 7
+  sensor:
+    purge_after_days: 7
+
+telemetry:
+  enabled: false
