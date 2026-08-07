@@ -34,6 +34,10 @@ def planejado_realizado() -> dict[str, Any]:
             {"linha": p.linha, "nome": p.nome, "minutos_sem_gps": p.minutos_sem_gps}
             for p in paradas
         ],
+        # `parada` sai do MESMO detector que abre o evento. Sem esse campo, quem
+        # consome recalcula por conta própria e erra: o painel marcava linha de
+        # frequência longa como PARADA (40 min sem veículo é normal quando o
+        # intervalo planejado é de 1 h) enquanto o card dizia que não havia nenhuma.
         "linhas": [
             {
                 "linha": li.linha,
@@ -41,6 +45,7 @@ def planejado_realizado() -> dict[str, Any]:
                 "headway_min": round(li.headway_seg / 60),
                 "veiculos": li.veiculos,
                 "minutos_sem_gps": li.minutos_sem_gps,
+                "parada": li.linha in {p.linha for p in paradas},
             }
             for li in linhas
         ],

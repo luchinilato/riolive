@@ -339,11 +339,17 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       a: `${li.linha}`,
       b: `${li.headway_min} min`,
       c: String(li.veiculos),
-      d: li.minutos_sem_gps == null ? 'sem GPS hoje' : li.minutos_sem_gps <= 15 ? 'agora' : `há ${li.minutos_sem_gps} min`,
-      e: li.veiculos > 0 ? 'circulando' : mo.gps_saudavel && li.minutos_sem_gps != null && li.minutos_sem_gps >= 40 ? 'PARADA' : 'sem sinal',
-      ec: li.veiculos > 0 ? 'var(--tx2)' : 'var(--s3)',
+      d: li.minutos_sem_gps == null ? 'não iniciou' : li.minutos_sem_gps <= 15 ? 'agora' : `há ${li.minutos_sem_gps} min`,
+      /* A situação vem do detector (campo `parada`), não de conta refeita aqui:
+         recalcular sem o filtro de frequência marcava linha de intervalo longo
+         como PARADA enquanto o card, lendo o detector, dizia que não havia nenhuma. */
+      e: li.veiculos > 0 ? 'circulando'
+        : li.parada ? 'PARADA'
+        : li.minutos_sem_gps != null ? 'sem veículo agora'
+        : 'não iniciou a operação',
+      ec: li.veiculos > 0 ? 'var(--tx2)' : li.parada ? 'var(--s3)' : 'var(--tx3)',
     }))
-    dossie.cols = ['Linha', 'Freq. plan.', 'Veículos', 'Último GPS', 'Situação']
+    dossie.cols = ['Linha', 'Freq. plan.', 'Veículos', 'GPS na janela', 'Situação']
     dossie.tableTitle = `${linhas.length} linhas planejadas pra agora — piores primeiro`
     dossie.sortBy = 'MENOS VEÍCULOS'
     dossie.mapTitle = 'Frota no mapa'
