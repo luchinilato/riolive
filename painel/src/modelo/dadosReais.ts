@@ -1,15 +1,27 @@
 /* Sobrepõe dados reais da API ao modelo demo do handoff.
 
    Regra: só sobrepõe no modo calmo sem recorte de zona (os modos crise/zona são
-   demonstrações visuais do protótipo). Painéis cuja fonte ainda não existe
-   (céu, mar, cidade viva) permanecem com o mock do design.
+   demonstrações visuais do protótipo).
 
-   Dossiês com dado real: chuva, mobilidade, trânsito e segurança. Os demais ainda
-   caem no template de chuva do protótipo — isso engana e é dívida conhecida. */
+   Todos os onze dossiês são montados com dado real (chuva, mobilidade, trânsito e
+   segurança aqui; os outros sete em `dossies.ts`). Nenhum tema herda mais o
+   dossiê de chuva do protótipo, e o que não temos é declarado como ausência. */
 
 import { useQuery } from '@tanstack/react-query'
 import type { EstadoUi, Modelo } from './tipos'
 import { SEV, poly } from './base'
+import {
+  dossieAr,
+  dossieCeu,
+  dossieCidade,
+  dossieMar,
+  dossieNavios,
+  dossiePrevisao,
+  dossieQueimadas,
+  eixo,
+  lista,
+  posicaoTip,
+} from './dossies'
 
 const A_CADA_30S = { refetchInterval: 30_000, staleTime: 15_000, retry: 1 }
 
@@ -34,19 +46,19 @@ export function useDadosReais(ui: EstadoUi) {
   })
   const estacoesChuva = useQuery({
     queryKey: ['estacoes-chuva'],
-    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/chuva/estacoes`).then((r) => r.json()),
+    queryFn: api.estacoesChuva,
     enabled: noDossieChuva, refetchInterval: 60_000, retry: 1,
   })
 
   const radarMapa = useQuery({
     queryKey: ['radar-mapa'],
-    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/radar?quadros=12`).then((r) => r.json()),
+    queryFn: () => api.radar(12),
     enabled: ativo && ui.route === 'mapa', refetchInterval: 120_000, retry: 1,
   })
 
   const transitoCorredores = useQuery({
     queryKey: ['transito-corredores'],
-    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/transito/corredores`).then((r) => r.json()),
+    queryFn: api.corredores,
     enabled: ativo, refetchInterval: 300_000, retry: 1,
   })
 
@@ -58,7 +70,7 @@ export function useDadosReais(ui: EstadoUi) {
 
   const mobilidade = useQuery({
     queryKey: ['mobilidade-linhas'],
-    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/mobilidade/linhas`).then((r) => r.json()),
+    queryFn: api.mobilidade,
     enabled: ativo, refetchInterval: 60_000, retry: 1,
   })
 
@@ -69,30 +81,81 @@ export function useDadosReais(ui: EstadoUi) {
   })
   const estacoesAr = useQuery({
     queryKey: ['ar-estacoes'],
-    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/ar/estacoes`).then((r) => r.json()),
+    queryFn: api.estacoesAr,
     enabled: ativo, refetchInterval: 600_000, retry: 1,
   })
   const focos = useQuery({
     queryKey: ['focos-calor'],
-    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/eventos?tipo=foco_calor&horas=24&limite=200`).then((r) => r.json()),
+    queryFn: () => api.eventosDoTipo('foco_calor', 24, 200),
     enabled: ativo, refetchInterval: 600_000, retry: 1,
   })
 
   // dossiê de Segurança: só busca quando aberto — a janela de 30 d varre 10 anos de base
   const seguranca = useQuery({
     queryKey: ['seguranca-resumo', ui.period],
-    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/seguranca/resumo?horas=${horas}`).then((r) => r.json()),
+    queryFn: () => api.seguranca(horas),
     enabled: ativo && ui.dossier === 'seguranca', refetchInterval: 300_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, mar, estacoesAr, focos, ui, ativo }
-}
+  /* Os dossiês temáticos só consultam quando abertos: são consultas pesadas
+     perto do cockpit, e ninguém paga por dossiê que não abriu. */
+  const aberto = (tema: string) => ativo && ui.dossier === tema
 
-/* A API pode responder com objeto de erro ({"detail": ...}) em vez de lista —
-   404, 500, rota que ainda não subiu. Tratar isso como lista estoura `.filter` e
-   derruba o painel inteiro, que é o pior desfecho possível num produto cujo tema
-   é justamente fonte caindo. Aqui a resposta inesperada vira lista vazia. */
-const lista = (valor: unknown): any[] => (Array.isArray(valor) ? valor : [])
+  // previsão em todos os pontos: /locais dá as coordenadas, uma chamada por ponto
+  const previsaoPontos = useQuery({
+    queryKey: ['previsao-pontos'],
+    queryFn: async () => {
+      const locais = await api.locais('tipo=ponto_previsao')
+      const pontos = lista(locais?.features).map((f: any) => ({
+        codigo: f.properties.codigo, nome: f.properties.nome,
+        lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1],
+      }))
+      const previsoes = await Promise.all(pontos.map((p) => api.previsao(p.codigo, 48)))
+      return pontos.map((p, i) => ({ ...p, ...previsoes[i] }))
+    },
+    enabled: aberto('previsao'), refetchInterval: 600_000, retry: 1,
+  })
+
+  const marPontos = useQuery({
+    queryKey: ['mar-pontos'],
+    queryFn: async () => {
+      const locais = await api.locais('tipo=ponto_previsao_mar')
+      const pontos = lista(locais?.features).map((f: any) => ({
+        codigo: f.properties.codigo, nome: f.properties.nome,
+        lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1],
+      }))
+      const previsoes = await Promise.all(pontos.map((p) => api.previsao(p.codigo, 48)))
+      return pontos.map((p, i) => ({ ...p, ...previsoes[i] }))
+    },
+    enabled: aberto('mar'), refetchInterval: 600_000, retry: 1,
+  })
+
+  const serieAr = useQuery({
+    queryKey: ['serie-pm25', ui.period],
+    queryFn: () => api.serie('pm25', passo, horas),
+    enabled: aberto('ar'), refetchInterval: 600_000, retry: 1,
+  })
+
+  const aeronaves = useQuery({
+    queryKey: ['ceu-aeronaves'],
+    queryFn: () => api.aeronaves(10, 24),
+    enabled: aberto('ceu'), refetchInterval: 60_000, retry: 1,
+  })
+
+  const queimadas = useQuery({
+    queryKey: ['queimadas-resumo', ui.period],
+    queryFn: () => api.queimadas(horas),
+    enabled: aberto('queimadas'), refetchInterval: 300_000, retry: 1,
+  })
+
+  const agenda = useQuery({
+    queryKey: ['cidade-agenda', ui.period],
+    queryFn: () => api.eventos(horas, 200),
+    enabled: aberto('cidade'), refetchInterval: 600_000, retry: 1,
+  })
+
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, mar, estacoesAr, focos, previsaoPontos, marPontos, serieAr, aeronaves, queimadas, agenda, ui, ativo }
+}
 
 const hhmm = (iso: string) => {
   const d = new Date(iso)
@@ -200,6 +263,8 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     const online = porEstado.online ?? 0
     const total = d.fontes.data.length
     saida.rodapeFontes = `${online} DE ${total} FONTES OPERANDO NORMALMENTE`
+    const carimbo = d.agora.data?.snapshot?.ts
+    if (carimbo) saida.atualizadoEm = new Date(carimbo).toLocaleTimeString('pt-BR', { hour12: false })
     saida.sources = d.fontes.data.map((f: any) => {
       const deg = f.estado !== 'online'
       return {
@@ -245,7 +310,8 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     const paradas = lista(mo.linhas_paradas)
     const linhas = lista(mo.linhas)
     const serie = lista(mo.serie_veiculos_15min)
-    const dossie: any = { ...saida.dossier, title: 'Mobilidade', route: '/mobilidade' }
+    // ausencia: null — o esqueleto do base.ts se declara sem resposta; aqui a resposta veio
+    const dossie: any = { ...saida.dossier, ausencia: null, title: 'Mobilidade', route: '/mobilidade' }
     dossie.sev = !mo.gps_saudavel ? SEV[2] : paradas.length > 5 ? SEV[3] : SEV[1]
     dossie.kpis = [
       { l: 'Linhas planejadas agora', v: String(mo.linhas_planejadas_agora ?? '—'), u: 'com frequência no GTFS', c: 'var(--tx)', d: 'calendário e janelas vigentes neste instante' },
@@ -261,12 +327,12 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       dossie.s2 = 'planejado por faixa horária · em breve'
       dossie.annW = 0; dossie.annX = -10; dossie.annLabel = ''
       dossie.chartTitle = 'Frota ativa · últimas 24 h'
-      const passoN = Math.max(1, Math.floor(serie.length / 8))
-      dossie.axis = serie.filter((_: any, i: number) => i % passoN === 0).slice(0, 8).map((p) => hhmm(p.ts))
+      dossie.axis = eixo(serie, hhmm)
       const ult = serie.at(-1)
       dossie.tipTime = `${hhmm(ult.ts)} · FROTA`
       dossie.tip1 = `${ult.veiculos} veículos`
       dossie.tip2 = ''
+      Object.assign(dossie, posicaoTip(serie.length - 1, serie.length, ult.veiculos, Math.max(...valores)))
     }
     const piores = [...linhas].slice(0, 40)
     dossie.rows = piores.map((li) => ({
@@ -353,7 +419,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
   }
 
   if (d.ui.dossier === 'transito' && saida.dossier && tc) {
-    const dossie: any = { ...saida.dossier, title: 'Trânsito', route: '/transito' }
+    const dossie: any = { ...saida.dossier, ausencia: null, title: 'Trânsito', route: '/transito' }
     dossie.sev = tc.congestionados >= 3 ? SEV[3] : tc.congestionados >= 1 ? SEV[2] : SEV[1]
     const pior = tc.corredores[0]
     dossie.kpis = [
@@ -371,12 +437,12 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       dossie.s2 = ''
       dossie.annW = 0; dossie.annX = -10; dossie.annLabel = ''
       dossie.chartTitle = 'Velocidade média · últimas 24 h'
-      const passoN = Math.max(1, Math.floor(serie.length / 8))
-      dossie.axis = serie.filter((_: any, i: number) => i % passoN === 0).slice(0, 8).map((p) => hhmm(p.ts))
+      dossie.axis = eixo(serie, hhmm)
       const ult = serie.at(-1)
       dossie.tipTime = `${hhmm(ult.ts)} · MÉDIA`
       dossie.tip1 = `${ult.vel} km/h`
       dossie.tip2 = ''
+      Object.assign(dossie, posicaoTip(serie.length - 1, serie.length, ult.vel, Math.max(...valores)))
     } else {
       dossie.chartTitle = 'Velocidade média · série em construção (agregado horário materializa ao longo do dia)'
       dossie.series1 = ''; dossie.series2 = ''; dossie.annW = 0; dossie.annLabel = ''
@@ -408,7 +474,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     const bairros = lista(sg.bairros)
     const anos = lista(sg.por_ano)
     const rotuloJanela = d.ui.period === '24h' ? 'últimas 24 h' : d.ui.period === '7d' ? 'últimos 7 dias' : 'últimos 30 dias'
-    const dossie: any = { ...saida.dossier, title: 'Segurança', route: '/seguranca' }
+    const dossie: any = { ...saida.dossier, ausencia: null, title: 'Segurança', route: '/seguranca' }
     dossie.sev = sg.mortos > 0 ? SEV[3] : sg.ocorrencias > 0 ? SEV[2] : SEV[1]
     const pctPolicial = sg.ocorrencias ? Math.round((sg.acao_policial / sg.ocorrencias) * 100) : 0
     dossie.kpis = [
@@ -427,12 +493,12 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       dossie.s2 = 'com morte'
       dossie.annW = 0; dossie.annX = -10; dossie.annLabel = ''
       dossie.chartTitle = `Tiroteios · ${rotuloJanela}`
-      const passoN = Math.max(1, Math.floor(serie.length / 8))
-      dossie.axis = serie.filter((_: any, i: number) => i % passoN === 0).slice(0, 8).map((p) => (sg.passo === 'hour' ? hhmm(p.ts) : ddmm(p.ts)))
+      dossie.axis = eixo(serie, sg.passo === 'hour' ? hhmm : ddmm)
       const ult = serie.at(-1)
       dossie.tipTime = `${sg.passo === 'hour' ? hhmm(ult.ts) : ddmm(ult.ts)} · TIROTEIOS`
       dossie.tip1 = `${ult.ocorrencias} ocorrências`
       dossie.tip2 = ult.mortos ? `${ult.mortos} com morte` : ''
+      Object.assign(dossie, posicaoTip(serie.length - 1, serie.length, ult.ocorrencias, teto))
     }
     dossie.rows = bairros.map((b) => ({
       a: b.nome,
@@ -504,17 +570,22 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
   // não existir. Agora sai do dado ou diz que não há foco.
   const focosLista = lista(d.focos.data)
   if (d.focos.data) {
+    // o "onde" é o bairro do evento; usar o título aqui rendia "Foco de calor (NPP-375D)"
     const porBairro = new Map<string, number>()
     for (const f of focosLista) {
-      const onde = (f.descricao || f.titulo || 'sem localização').split('—')[0].trim()
+      const onde = f.bairro ?? 'fora dos bairros mapeados'
       porBairro.set(onde, (porBairro.get(onde) ?? 0) + 1)
     }
     const maiores = [...porBairro.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+    // API antiga (deploy anterior) não manda `bairro`: sem ele, o card cita só a contagem
+    const temBairro = focosLista.some((f) => 'bairro' in f)
     saida.queimadasHero = String(focosLista.length)
     saida.queimadasSub = 'focos detectados · 24 h'
-    saida.queimadasTexto = focosLista.length
-      ? `${maiores.map(([onde, n]) => `${onde}${n > 1 ? ` (${n})` : ''}`).join(', ')}. Detecção por satélite do INPE; foco não é sinônimo de incêndio confirmado.`
-      : 'Nenhum foco de calor detectado pelo INPE nas últimas 24 h no recorte monitorado.'
+    saida.queimadasTexto = !focosLista.length
+      ? 'Nenhum foco de calor detectado pelo INPE nas últimas 24 h no recorte monitorado.'
+      : temBairro
+        ? `${maiores.map(([onde, n]) => `${onde}${n > 1 ? ` (${n})` : ''}`).join(', ')}. Detecção por satélite do INPE; foco não é sinônimo de incêndio confirmado.`
+        : 'Detecção por satélite do INPE; foco não é sinônimo de incêndio confirmado.'
   }
 
   // Segurança real: ocorrências do Fogo Cruzado nas 24 h + contexto mensal do ISP
@@ -568,7 +639,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
 
   // dossiê de chuva com dados reais
   if (d.ui.dossier === 'chuva' && saida.dossier && (d.serieDossie.data || d.estacoesChuva.data)) {
-    const dossie = { ...saida.dossier }
+    const dossie = { ...saida.dossier, ausencia: null }
     const pontos: any[] = d.serieDossie.data?.pontos ?? []
     if (pontos.length >= 2) {
       const porBucket = new Map<string, number>()
@@ -581,12 +652,12 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       dossie.s1 = 'chuva observada — máx entre as 33 estações (mm/h)'
       dossie.s2 = 'média histórica · disponível após o backfill'
       dossie.annW = 0; dossie.annX = -10; dossie.annLabel = ''
-      const passoN = Math.max(1, Math.floor(ordenado.length / 8))
-      dossie.axis = ordenado.filter((_, i) => i % passoN === 0).slice(0, 8).map(([ts]) => hhmm(ts))
+      dossie.axis = eixo(ordenado.map(([ts]) => ({ ts })), hhmm)
       const ultimo = ordenado.at(-1)!
       dossie.tipTime = `${hhmm(ultimo[0])} · MÁX DAS 33`
       dossie.tip1 = `${String(Math.round(ultimo[1] * 10) / 10).replace('.', ',')} mm`
       dossie.tip2 = 'histórico após o backfill'
+      Object.assign(dossie, posicaoTip(ordenado.length - 1, ordenado.length, ultimo[1], maxV))
       const soma = valores.reduce((a, b) => a + b, 0)
       dossie.chartTitle = `Chuva por hora · ${d.ui.period === '24h' ? 'últimas 24 h' : d.ui.period === '7d' ? 'últimos 7 dias' : 'últimos 30 dias'}`
       dossie.context = `Acumulado do período (máx horária somada): ${String(Math.round(soma * 10) / 10).replace('.', ',')} mm. Comparação com a média histórica 1997–2025 entra com o backfill.`
@@ -625,6 +696,25 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       ]
     }
     saida.dossier = dossie
+  }
+
+  /* Dossiês temáticos. Cada um só troca o esqueleto quando a consulta voltou —
+     enquanto não voltar, o esqueleto do base.ts se declara sem resposta em vez de
+     mostrar o assunto errado. Navios é o caso extremo: nunca vai voltar, porque a
+     fonte não chegou a ser integrada, e o dossiê diz isso com todas as letras. */
+  if (saida.dossier) {
+    const tema = d.ui.dossier
+    const pontosPrev = lista(d.previsaoPontos.data)
+    const pontosMar = lista(d.marPontos.data)
+    if (tema === 'previsao' && pontosPrev.length) saida.dossier = dossiePrevisao(saida.dossier, pontosPrev)
+    if (tema === 'mar' && pontosMar.length) saida.dossier = dossieMar(saida.dossier, pontosMar)
+    if (tema === 'ar' && d.estacoesAr.data)
+      saida.dossier = dossieAr(saida.dossier, lista(d.estacoesAr.data), lista(d.serieAr.data?.pontos))
+    if (tema === 'ceu' && d.aeronaves.data) saida.dossier = dossieCeu(saida.dossier, d.aeronaves.data)
+    if (tema === 'queimadas' && d.queimadas.data)
+      saida.dossier = dossieQueimadas(saida.dossier, d.queimadas.data, d.ui.period)
+    if (tema === 'cidade' && d.agenda.data) saida.dossier = dossieCidade(saida.dossier, lista(d.agenda.data))
+    if (tema === 'navios') saida.dossier = dossieNavios(saida.dossier)
   }
 
   // timeline do mapa: quadros reais do radar (o mais novo em ciano)

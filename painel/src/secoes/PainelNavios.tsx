@@ -15,18 +15,21 @@ export function PainelNavios({ m }: { m: Modelo }) {
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>BAÍA</span>
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
             </div>
+            {/* O card exibia "38 embarcações · 12 fundeadas", número que nunca saiu
+                de fonte alguma: o AIS não chegou a ser integrado. Ausência declarada
+                no lugar. [[DEC - Interface não afirma o que não mediu]] */}
             <div style={{display: 'flex', alignItems: 'flex-start', gap: '6px', padding: '6px 8px', borderRadius: '6px', background: 'var(--warn-bg)', border: '1px solid var(--warn-bd)', fontSize: '11px', color: 'var(--warn-tx)', lineHeight: '1.35'}}>
-              <span>⚠</span><span>Fonte degradada desde 05/08. Exibindo a última leitura válida — não é o estado atual.</span>
+              <span>⚠</span><span>Fonte não integrada: o aisstream.io ficou mudo nos testes e a coleta nunca entrou no ar.</span>
             </div>
-            <div style={{flex: '1 1 auto', minHeight: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '4px', opacity: '.62'}}>
+            <div style={{flex: '1 1 auto', minHeight: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '4px'}}>
               <div style={{display: 'flex', alignItems: 'baseline', gap: '6px'}}>
-                <span style={{fontFamily: "'Space Grotesk',sans-serif", fontSize: '24px', fontWeight: '600', letterSpacing: '-.02em', lineHeight: '1', color: 'var(--tx2)'}}>38</span>
+                <span style={{fontFamily: "'Space Grotesk',sans-serif", fontSize: '24px', fontWeight: '600', letterSpacing: '-.02em', lineHeight: '1', color: 'var(--tx3)'}}>—</span>
                 <span style={{fontSize: '11px', color: 'var(--tx3)'}}>embarcações na Baía</span>
               </div>
-              <div style={{fontSize: '11px', color: 'var(--tx3)'}}>12 fundeadas · 6 atracadas no Porto · 20 em trânsito</div>
+              <div style={{fontSize: '11px', color: 'var(--tx3)', lineHeight: '1.35'}}>Sem leitura nenhuma — nem antiga. Quando o AIS entrar, aparecem aqui as fundeadas, atracadas e em trânsito.</div>
             </div>
             <div style={{display: 'flex', alignItems: 'center', gap: '6px', borderTop: '1px solid var(--bd2)', paddingTop: '7px', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--s2)', letterSpacing: '.05em'}}>
-              <span style={{width: '5px', height: '5px', borderRadius: '50%', background: 'var(--s2)'}}></span>FONTE: AISSTREAM · LEITURA DE HÁ 19 H
+              <span style={{width: '5px', height: '5px', borderRadius: '50%', background: 'var(--s2)'}}></span>FONTE: AISSTREAM · SEM INTEGRAÇÃO
             </div>
           </div>
     </>

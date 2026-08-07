@@ -111,9 +111,12 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
         : [{n:'Campinho',v:'16,7',p:48,c:'#c08428'},{n:'Irajá',v:'13,3',p:39,c:'#149cc6'},{n:'Bangu',v:'12,1',p:35,c:'#149cc6'}]
     };
 
+    /* Pousos por hora em SDU/GIG saíram do card: o ADS-B diz onde a aeronave está,
+       não pra onde ela vai. Sem plano de voo, "12 pousos/h" era chute com cara de
+       leitura — e a pontualidade de julho nunca teve fonte nenhuma. */
     const ceu = crisis
-      ? { sev:SEV[2], hero:'6', count:'SDU ✕', sdu:'0 (fechado)', sduC:'var(--s4)', gig:'9' }
-      : { sev:SEV[1], hero:'14', count:'2 AEROP', sdu:'12', sduC:'var(--tx)', gig:'21' };
+      ? { sev:SEV[2], hero:'6', count:'40 MN', nota:'Pousos por hora em SDU e GIG não são medidos: a origem (ADS-B) não traz plano de voo.' }
+      : { sev:SEV[1], hero:'14', count:'40 MN', nota:'Pousos por hora em SDU e GIG não são medidos: a origem (ADS-B) não traz plano de voo.' };
     const mar = crisis
       ? { sev:SEV[3], hero:'2,8', hc:'var(--s3)', heroSub:'m · período 11 s · mar agitado', proprias:'6', improprias:'11', list:'Impróprias após a chuva: toda a orla da Zona Sul e Ramos' }
       : { sev:SEV[1], hero:'1,4', hc:'var(--tx)', heroSub:'m · período 9 s · mar calmo', proprias:'14', improprias:'3', list:'Impróprias: Botafogo, Flamengo, Ramos' };
@@ -282,8 +285,45 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
     });
 
     // ---------- dossiê ----------
+    /* Título e severidade saem do próprio tema. O corpo é um esqueleto vazio que o
+       dadosReais.ts preenche com a API — antes daqui TODO tema caía no dossiê de
+       chuva do protótipo, o que fazia /ar abrir estações pluviométricas. Esqueleto
+       sem dado se declara ausente; não herda o número de outro assunto. */
+    const TEMAS = {
+      chuva:      ['Chuva e água',    '/chuva',     chuva.sev],
+      mobilidade: ['Mobilidade',      '/mobilidade', mob.sev],
+      transito:   ['Trânsito',        '/transito',  transito.sev],
+      previsao:   ['Previsão',        '/previsao',  previsao.sev],
+      seguranca:  ['Segurança',       '/seguranca', seguranca.sev],
+      ar:         ['Qualidade do ar', '/ar',        ar.sev],
+      mar:        ['Mar e praias',    '/mar',       mar.sev],
+      ceu:        ['Céu',             '/ceu',       ceu.sev],
+      queimadas:  ['Queimadas',       '/queimadas', SEV[1]],
+      cidade:     ['Cidade viva',     '/cidade',    SEV[1]],
+      navios:     ['Navios (AIS)',    '/navios',    SEV[2]],
+    };
+
     let dossier = null;
-    if (s.route !== 'home' && s.route !== 'mapa' && s.route !== 'status' && s.route !== 'nerds') {
+    const tema = TEMAS[s.route];
+    if (tema) {
+      const sufixo = ['periodo=' + s.period].concat(zone ? ['zona=' + zone] : []).join('&');
+      dossier = {
+        sev: tema[2], title: tema[0], route: tema[1] + '?' + sufixo,
+        kpis: [], chartTitle: '', s1: '', s2: '', series1: '', series2: '',
+        annX: -10, annW: 0, annLeft: -20, annLabel: '',
+        tipTime: '', tip1: '', tip2: '', axis: [],
+        tableTitle: '', sortBy: '', cols: [], rows: [],
+        mapTitle: '', mapDots: [], mapNota: '',
+        context: '', seal: '',
+        ausencia: crisis || zone
+          ? { titulo: 'Modo demonstração', texto: 'Os modos "dia de crise" e "por zona" são encenação do protótipo — só o painel de chuva tem roteiro. Volte ao dia calmo, sem recorte de zona, pra ver o dado real deste tema.' }
+          : { titulo: 'Sem resposta da API', texto: 'Este dossiê é montado com dado ao vivo e a consulta não voltou. Não é a fonte que caiu: é o nosso servidor de leitura. A página de status mostra o estado de cada fonte.' },
+      };
+    }
+    /* O roteiro de chuva só vale nos modos de demonstração. No dia calmo real quem
+       manda é a API: sem ela, o dossiê declara ausência em vez de exibir as 33
+       estações fabricadas do protótipo. */
+    if (s.route === 'chuva' && (crisis || zone)) {
       const rainSeries = crisis
         ? [0,0,1,1,2,3,2,4,6,9,14,22,31,38,45,42,38,30,22,16,11,7,4,2]
         : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -300,7 +340,7 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       const mapDots = stations.slice(0,22).map((n,i) => ({ x:(rnd(i+13)*86+6).toFixed(0), y:(rnd(i+61)*78+10).toFixed(0),
         c: crisis ? (i<8 ? 'var(--s4)' : (i<14 ? 'var(--s3)' : '#1d7cab')) : '#2c96c4' }));
       dossier = {
-        sev: chuva.sev, title:'Chuva e água', route:'/chuva?' + ['periodo=' + s.period].concat(zone ? ['zona=' + zone] : []).join('&'),
+        ...dossier, ausencia: null,  // chuva é o único tema com roteiro de demonstração
         kpis: crisis ? [
           {l:'Acumulado 24 h (máx.)', v:'112', u:'mm · Jacarepaguá', c:'var(--s4)', d:'311% da média diária de agosto'},
           {l:'Intensidade agora (máx.)', v:'45,2', u:'mm/h', c:'var(--s4)', d:'12 estações acima de 20 mm/h'},
@@ -355,7 +395,7 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       {t:'Trânsito', sev:transito.sev, v:transito.hero, u:'km/h médios', sub:transito.sub, hc:'var(--tx)', seal:'SMTR/TOMTOM · HÁ 5 MIN', dot:'var(--s1)'},
       {t:'Previsão', sev:previsao.sev, v:previsao.hero, u:previsao.heroSub, sub:'umidade 58% · vento 18 km/h SE', hc:'var(--tx)', seal:'OPEN-METEO · 14H', dot:'var(--s1)'},
       {t:'Qualidade do ar', sev:ar.sev, v:ar.hero, u:ar.heroSub, sub:'28 estações reportando', hc:'var(--s1)', seal:'OPENAQ · HÁ 20 MIN', dot:'var(--s1)'},
-      {t:'Navios (AIS)', sev:SEV[2], v:'38', u:'embarcações · leitura de há 19 h', sub:'Fonte degradada desde 05/08 — exibindo a última leitura válida.', hc:'var(--tx2)', seal:'AISSTREAM · DEGRADADA', dot:'var(--s2)'}
+      {t:'Navios (AIS)', sev:SEV[2], v:'—', u:'sem leitura', sub:'O AIS (aisstream.io) não chegou a ser integrado — não existe leitura, nem antiga.', hc:'var(--tx2)', seal:'AISSTREAM · SEM INTEGRAÇÃO', dot:'var(--s2)'}
     ];
 
     const open = (r) => () => defina({ route:r, dossier:r });
@@ -408,6 +448,9 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       fleetDots, hexes, mapFleet, mapIncidents, mapPresets, layers, frames, sources, presetAtivo: active,
       camadasAtivas: ativas, contagemCamadas,
       feed, feedCount: feedAll.length + ' EVENTOS · 24H',
+      // rodapé: contagem e relógio saem do modelo — no JSX eram fixos ("11 DE 12", "14:31:07")
+      rodapeFontes: sources.filter(f => f.state === 'Online').length + ' DE ' + sources.length + ' FONTES OPERANDO NORMALMENTE',
+      atualizadoEm: new Date().toLocaleTimeString('pt-BR', { hour12: false }),
       abn: { track: s.onlyAbn ? 'var(--brand)' : 'var(--bd4)', x: s.onlyAbn ? 14 : 2, c: s.onlyAbn ? 'var(--live-tx)' : 'var(--tx2)' },
       toggleAbnormal: () => defina({ onlyAbn: !s.onlyAbn }),
       openChuva: open('chuva'), openMob: open('mobilidade'), openTransito: open('transito'),
