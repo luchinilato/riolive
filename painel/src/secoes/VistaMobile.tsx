@@ -2,6 +2,7 @@
    (sem a moldura de celular do preview). Mesmo view-model do desktop. */
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
+import { LARGURA_MIN_HORIZONTAL, Logo } from '../componentes/Logo'
 
 export function VistaMobile({ m }: { m: Modelo }) {
   const { zoneLabel, toggleTheme, themeIcon, sev, headlineShort, tickerLoop, mt, mTabCards, mTabFeed, mobileCards, mobileFeed, mobileList, feed } = m
@@ -9,7 +10,8 @@ export function VistaMobile({ m }: { m: Modelo }) {
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--tx)', fontFamily: 'Inter,system-ui,sans-serif', overflow: 'hidden' }}>
 <div style={{flex: '0 0 auto', padding: '10px 14px 8px', borderBottom: '1px solid var(--bd)'}}>
           <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-            <div style={{width: '96px', height: '20px', border: '1px dashed var(--tx4)', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px'}}>marca</div>
+            {/* o slot do handoff tinha 96px; horizontal não desce de 120px, então é essa a largura */}
+            <Logo variante="horizontal" style={{width: `${LARGURA_MIN_HORIZONTAL}px`, flex: '0 0 auto'}} />
             <div style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--bd)', fontSize: '11px', color: 'var(--tx)', whiteSpace: 'nowrap'}}>{zoneLabel} <span style={{color: 'var(--tx3)', fontSize: '9px'}}>▾</span></div>
             <div onClick={toggleTheme} style={{padding: '4px 7px', borderRadius: '6px', border: '1px solid var(--bd)', fontSize: '11px', color: 'var(--tx2)', cursor: 'pointer'}}>{themeIcon}</div>
             <span style={{width: '7px', height: '7px', borderRadius: '50%', background: 'var(--live)', animation: 'pulse 2s infinite'}}></span>
