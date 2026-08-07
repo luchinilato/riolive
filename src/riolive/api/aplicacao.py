@@ -21,6 +21,7 @@ from riolive.api.rotas import (
     posicoes,
     previsao,
     radar,
+    seguranca,
     series,
     transito,
 )
@@ -62,3 +63,4 @@ app.include_router(locais.rota)
 app.include_router(chuva.rota)
 app.include_router(mobilidade.rota)
 app.include_router(transito.rota)
+app.include_router(seguranca.rota)

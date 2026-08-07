@@ -2,7 +2,10 @@
 
    Regra: só sobrepõe no modo calmo sem recorte de zona (os modos crise/zona são
    demonstrações visuais do protótipo). Painéis cuja fonte ainda não existe
-   (segurança, trânsito, céu, mar, cidade viva) permanecem com o mock do design. */
+   (céu, mar, cidade viva) permanecem com o mock do design.
+
+   Dossiês com dado real: chuva, mobilidade, trânsito e segurança. Os demais ainda
+   caem no template de chuva do protótipo — isso engana e é dívida conhecida. */
 
 import { useQuery } from '@tanstack/react-query'
 import type { EstadoUi, Modelo } from './tipos'
@@ -59,12 +62,25 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: ativo, refetchInterval: 60_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, ui, ativo }
+  // dossiê de Segurança: só busca quando aberto — a janela de 30 d varre 10 anos de base
+  const seguranca = useQuery({
+    queryKey: ['seguranca-resumo', ui.period],
+    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/seguranca/resumo?horas=${horas}`).then((r) => r.json()),
+    enabled: ativo && ui.dossier === 'seguranca', refetchInterval: 300_000, retry: 1,
+  })
+
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, ui, ativo }
 }
 
 const hhmm = (iso: string) => {
   const d = new Date(iso)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+/* Janelas de 7 e 30 dias vêm em balde diário — hora não diz nada ali. */
+const ddmm = (iso: string) => {
+  const d = new Date(iso)
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
 export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>): Modelo {
@@ -360,6 +376,62 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     dossie.mapDots = []
     dossie.context = 'A camada base de trânsito é a velocidade derivada da nossa própria frota (cidade inteira); o TomTom calibra os corredores estruturais por amostragem, dentro do free tier. Fluidez = velocidade atual ÷ fluxo livre do trecho.'
     dossie.seal = 'TOMTOM FLOW + FROTA SMTR · AMOSTRADO'
+    saida.dossier = dossie
+  }
+
+  // dossiê de Segurança real — o histórico do Fogo Cruzado é o material mais denso do banco
+  const sg = d.seguranca.data
+  if (d.ui.dossier === 'seguranca' && saida.dossier && sg) {
+    const serie: any[] = sg.serie ?? []
+    const bairros: any[] = sg.bairros ?? []
+    const anos: any[] = sg.por_ano ?? []
+    const rotuloJanela = d.ui.period === '24h' ? 'últimas 24 h' : d.ui.period === '7d' ? 'últimos 7 dias' : 'últimos 30 dias'
+    const dossie: any = { ...saida.dossier, title: 'Segurança', route: '/seguranca' }
+    dossie.sev = sg.mortos > 0 ? SEV[3] : sg.ocorrencias > 0 ? SEV[2] : SEV[1]
+    const pctPolicial = sg.ocorrencias ? Math.round((sg.acao_policial / sg.ocorrencias) * 100) : 0
+    dossie.kpis = [
+      { l: `Tiroteios · ${rotuloJanela}`, v: String(sg.ocorrencias ?? '—'), u: 'ocorrências', c: 'var(--tx)', d: 'registro do Fogo Cruzado, pino exato e sem atraso' },
+      { l: 'Mortos', v: String(sg.mortos ?? '—'), u: 'na janela', c: sg.mortos ? 'var(--s4)' : 'var(--s1)', d: 'somados como vieram da fonte, sem reinterpretação' },
+      { l: 'Feridos', v: String(sg.feridos ?? '—'), u: 'na janela', c: sg.feridos ? 'var(--s3)' : 'var(--s1)', d: 'inclui vítimas que sobreviveram ao disparo' },
+      { l: 'Com ação policial', v: String(sg.acao_policial ?? '—'), u: sg.ocorrencias ? `${pctPolicial}% do total` : '', c: 'var(--tx)', d: 'classificação da própria fonte, não nossa' },
+    ]
+    if (serie.length >= 2) {
+      const ocorrencias = serie.map((p) => p.ocorrencias)
+      const mortos = serie.map((p) => p.mortos)
+      const teto = Math.max(1, ...ocorrencias)
+      dossie.series1 = poly(ocorrencias, 1000, 205, teto)
+      dossie.series2 = poly(mortos, 1000, 205, teto)
+      dossie.s1 = 'tiroteios'
+      dossie.s2 = 'com morte'
+      dossie.annW = 0; dossie.annX = -10; dossie.annLabel = ''
+      dossie.chartTitle = `Tiroteios · ${rotuloJanela}`
+      const passoN = Math.max(1, Math.floor(serie.length / 8))
+      dossie.axis = serie.filter((_: any, i: number) => i % passoN === 0).slice(0, 8).map((p) => (sg.passo === 'hour' ? hhmm(p.ts) : ddmm(p.ts)))
+      const ult = serie.at(-1)
+      dossie.tipTime = `${sg.passo === 'hour' ? hhmm(ult.ts) : ddmm(ult.ts)} · TIROTEIOS`
+      dossie.tip1 = `${ult.ocorrencias} ocorrências`
+      dossie.tip2 = ult.mortos ? `${ult.mortos} com morte` : ''
+    }
+    dossie.rows = bairros.map((b) => ({
+      a: b.nome,
+      b: String(b.ocorrencias),
+      c: String(b.mortos),
+      d: sg.ocorrencias ? `${Math.round((b.ocorrencias / sg.ocorrencias) * 100)}%` : '—',
+      e: b.mortos > 0 ? 'COM MORTE' : 'sem morte',
+      ec: b.mortos > 0 ? 'var(--s4)' : 'var(--tx2)',
+    }))
+    dossie.cols = ['Bairro', 'Tiroteios', 'Mortos', '% da janela', 'Situação']
+    dossie.tableTitle = `Bairros mais atingidos · ${rotuloJanela}`
+    dossie.sortBy = 'MAIS TIROTEIOS'
+    dossie.mapTitle = 'Ocorrências no mapa'
+    dossie.mapDots = []
+    // O contexto é a memória: a janela curta sozinha não diz se é muito ou pouco
+    const pico = anos.reduce((a: any, b: any) => (b.ocorrencias > (a?.ocorrencias ?? -1) ? b : a), null)
+    const total = anos.reduce((s: number, a: any) => s + a.ocorrencias, 0)
+    dossie.context = pico
+      ? `A base tem ${total.toLocaleString('pt-BR')} tiroteios mapeados desde ${anos[0].ano}. O pior ano foi ${pico.ano}, com ${pico.ocorrencias.toLocaleString('pt-BR')} — o ano da intervenção federal. Este recorte é ${rotuloJanela}; o pino é exato e não há atraso na publicação, por decisão de produto.`
+      : 'Registro do Fogo Cruzado com pino exato e sem atraso, por decisão de produto.'
+    dossie.seal = 'FOGO CRUZADO · USO AUTORIZADO'
     saida.dossier = dossie
   }
 

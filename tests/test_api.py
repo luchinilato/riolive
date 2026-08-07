@@ -95,3 +95,20 @@ def test_locais_estacoes_de_chuva(cliente: TestClient) -> None:
 def test_cache_control_pra_cdn(cliente: TestClient) -> None:
     resposta = cliente.get("/agora")
     assert "max-age" in resposta.headers["Cache-Control"]
+
+
+def test_seguranca_resumo_traz_janela_e_memoria(cliente: TestClient) -> None:
+    corpo = cliente.get("/seguranca/resumo", params={"horas": 24 * 30}).json()
+    assert corpo["passo"] == "day"  # 30 dias em balde diário; hora seria ilegível
+    assert corpo["ocorrencias"] >= 0
+    assert corpo["mortos"] <= corpo["ocorrencias"] * 10  # sanidade grosseira da soma
+    # o contexto de longo prazo não depende da janela: é a memória da cidade
+    anos = {a["ano"] for a in corpo["por_ano"]}
+    assert 2016 in anos, "backfill do Fogo Cruzado começa em 2016"
+    pico = max(corpo["por_ano"], key=lambda a: a["ocorrencias"])
+    assert pico["ano"] == 2018, "2018 foi o ano da intervenção federal — pico conhecido"
+
+
+def test_seguranca_janela_curta_usa_balde_de_hora(cliente: TestClient) -> None:
+    corpo = cliente.get("/seguranca/resumo", params={"horas": 24}).json()
+    assert corpo["passo"] == "hour"
