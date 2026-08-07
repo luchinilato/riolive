@@ -28,7 +28,7 @@ class ClienteFalso:
             raise self._erro
         return Resposta(
             dados=self._dados,
-            modelo="google/gemini-3.6-flash",
+            modelo="anthropic/claude-sonnet-5",
             tokens_entrada=800,
             tokens_saida=120,
             custo_usd=0.0007,
@@ -113,7 +113,7 @@ def test_erro_do_provedor_vira_erro_da_camada(monkeypatch: pytest.MonkeyPatch) -
 def test_uso_volta_junto_da_resposta(monkeypatch: pytest.MonkeyPatch) -> None:
     # camada de IA sem contador vira surpresa na fatura
     corpo = {
-        "model": "google/gemini-3.6-flash",
+        "model": "anthropic/claude-sonnet-5",
         "choices": [
             {"message": {"content": '{"locais": [], "inicio": null, "fim": null, "resumo": "x"}'}}
         ],
