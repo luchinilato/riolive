@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Backup diário do Postgres pro Cloudflare R2 (requisito da DEC de stack).
+# Backup diário do Postgres pro Cloudflare R2 (requisito da `[[DEC - Stack de backend e infraestrutura]]`).
 # pg_dump sai do container do banco e o upload usa o boto3 que já existe no
 # container da API (mesmas credenciais R2 do .env) — nada instalado no host.
 # Retenção: 14 diários no prefixo backups/pg/ do bucket.

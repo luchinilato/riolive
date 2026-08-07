@@ -3,7 +3,9 @@
 Deploy feito em 2026-08-06. Ubuntu 24.04 LTS, Docker CE + Compose, stack em
 `/srv/riolive` (mesmo compose do dev + override `docker-compose.prod.yml`).
 Painel público: **http://169.58.140.118** (Caddy: SPA + `/api` → FastAPI).
-Sem domínio/TLS por enquanto (decisão de 2026-08-06; ver DEC do nome — Pulso Rio).
+Sem domínio/TLS por enquanto — o nome do produto foi reaberto em 2026-08-06 e
+o domínio tem que ser `.rio` (ver `[[DEC - Nome do produto - Pulso Rio]]`, que
+guarda a primeira escolha e a correção).
 
 ## Acesso
 
@@ -104,6 +106,6 @@ O `.env` NUNCA entra no rsync — vive só no servidor. Migrations:
 
 - SMTP (alertas por e-mail), healthchecks.io (dead-man's switch), Sentry —
   preencher as variáveis já existentes no `.env` e `docker compose up -d`.
-- Domínio (Pulso Rio): trocar `:80` pelo hostname no `deploy/Caddyfile`
+- Domínio (nome ainda em aberto): trocar `:80` pelo hostname no `deploy/Caddyfile`
   (TLS automático) e rebuildar o painel se a API mudar de origem; Cloudflare
-  na frente conforme a DEC de stack.
+  na frente conforme a `[[DEC - Stack de backend e infraestrutura]]`.
