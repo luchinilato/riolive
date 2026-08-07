@@ -2,6 +2,7 @@
    a fonte visual da verdade é docs/design/handoff/painel-rio.dc.html */
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
+import { Logo } from '../componentes/Logo'
 
 export function Cabecalho({ m }: { m: Modelo }) {
   const { clearZone, copyLabel, copyLink, goHome, goMapa, goStatus, headline, modeLabel, navA, navM, navS, sev, themeIcon, themeLabel, toggleMode, toggleTheme, toggleZonePicker, zoneChip, zoneLabel, zonePickerOpen, zones } = m
@@ -9,7 +10,8 @@ export function Cabecalho({ m }: { m: Modelo }) {
     <>
 {/* ================= CABEÇALHO DE ESTADO ================= */}
     <div style={{display: 'flex', alignItems: 'center', gap: '16px', padding: '0 16px', height: '56px', flex: '0 0 56px', borderBottom: '1px solid var(--bd)', background: 'var(--bg)'}}>
-      <div style={{width: '140px', height: '28px', border: '1px dashed var(--tx4)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', letterSpacing: '.08em', flex: '0 0 auto'}}>marca</div>
+      {/* altura limitada (faixa de 56px) → variante horizontal; 26px de altura dá ~147px de largura, acima do mínimo legível */}
+      <Logo variante="horizontal" style={{height: '26px', flex: '0 0 auto'}} />
 
       <div style={{display: 'flex', gap: '2px', flex: '0 0 auto'}}>
         <div onClick={goHome} style={{padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: 'pointer', color: `${navA.c}`, background: `${navA.b}`}}>Agora</div>

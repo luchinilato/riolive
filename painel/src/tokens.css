@@ -8,6 +8,8 @@
     --tx:#e8eaed; --tx2:#9aa4ad; --tx3:#5b6570; --tx4:#3a4452;
     --brand:#004A80; --brand2:#0a6aad; --on-brand:#dff2fd; --on-brand2:#8fcdee;
     --live:#00C0F3; --live-tx:#00C0F3; --live-bg:rgba(0,192,243,.09); --live-bd:rgba(0,192,243,.2);
+    /* marca Sinal Carioca: --sc-marca vira o currentColor das letras, --sc-acento pinta as diagonais */
+    --sc-marca:#FFFFFF; --sc-acento:#00C0F3;
     --hero-grad:linear-gradient(180deg,#0d2138,#14181f 66%); --hero-bd:#1d3f5e;
     --warn-bg:rgba(173,141,44,.10); --warn-bd:#4a3d1c; --warn-tx:#d9b855;
     --ok-bg:rgba(63,169,107,.08); --ok-bd:#234a33; --up-ok:#2c5f43;
@@ -27,6 +29,9 @@
     --tx:#111820; --tx2:#4d5a67; --tx3:#7b8794; --tx4:#a6b1bc;
     --brand:#004A80; --brand2:#00385f; --on-brand:#ffffff; --on-brand2:#a9d3ee;
     --live:#0093c4; --live-tx:#00688f; --live-bg:rgba(0,147,196,.10); --live-bd:rgba(0,147,196,.28);
+    /* acento mais escuro no claro: #00C0F3 sobre branco dá 2.1:1 e os trechos de
+       letra cruzados pela diagonal somem; #0099CC sobe pra 3.3:1 e segue o mesmo ciano */
+    --sc-marca:#004A80; --sc-acento:#0099CC;
     --hero-grad:linear-gradient(180deg,#dfecf7,#ffffff 66%); --hero-bd:#b3cee5;
     --warn-bg:rgba(160,127,26,.13); --warn-bd:#d8c68d; --warn-tx:#7a6112;
     --ok-bg:rgba(47,125,79,.10); --ok-bd:#a8cdb7; --up-ok:#8cc4a4;
