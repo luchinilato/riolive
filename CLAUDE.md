@@ -35,4 +35,8 @@ Dagster UI: `localhost:3300` (a 3000 do host está ocupada por outro app). API/S
 
 ## Estado e fila
 
-`fontes.xlsx` (raiz) = planilha viva das fontes com status real. O que falta está no handoff do vault (`2026-08-06 Handoff - backend e painel construídos...`): dossiê de Segurança + demais dossiês honestos, camadas reais no mapa, costuras de cards (mar/ar/queimadas), re-escopo por zona; deploy/monitoramento ficou deliberadamente pro final. Screenshots de referência em `docs/capturas/`.
+`fontes.xlsx` (raiz) = planilha viva das fontes com status real. O que falta está no handoff do vault (`2026-08-06 Handoff - backend e painel construídos...`): dossiê de Segurança + demais dossiês honestos, camadas reais no mapa, costuras de cards (mar/ar/queimadas), re-escopo por zona. Screenshots de referência em `docs/capturas/`.
+
+## Produção (desde 2026-08-06)
+
+No ar em **http://169.58.140.118** (Contabo VPS, `/srv/riolive`). **`deploy/README.md` é a doc de operação** — acesso, túneis, backup, restore. Push na `main` deploya sozinho depois do gate (`.github/workflows/deploy.yml`); **migrations não são automáticas** por decisão — o deploy avisa e você aplica à mão. O daemon do Dagster **local está parado de propósito** (duas instâncias gastariam as cotas das APIs em dobro); produção é a fonte da série. Decisões no vault: `DEC - Topologia de produção no VPS` e `DEC - Deploy automático com gate, migrations manuais`.
