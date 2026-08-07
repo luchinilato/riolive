@@ -21,6 +21,7 @@ from email.utils import parsedate_to_datetime
 
 from defusedxml import ElementTree
 
+from riolive.fontes.comum import erro_de_status
 from riolive.ingestao.contrato import ErroSchema, EventoNovo, FonteConfig, ResultadoColeta
 from riolive.ingestao.fetcher import ClienteHttp
 
@@ -43,7 +44,7 @@ def _texto(bruto: str | None) -> str:
 def coletar(cliente: ClienteHttp) -> ResultadoColeta:
     resposta = cliente.obter(URL)
     if resposta.status_code != 200:
-        raise ErroSchema(f"HTTP {resposta.status_code} no feed do COR")
+        raise erro_de_status(resposta.status_code, "feed do COR")
     return interpretar(resposta.text)
 
 

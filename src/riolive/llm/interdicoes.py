@@ -32,7 +32,7 @@ from sqlalchemy import select
 
 from riolive.config import config
 from riolive.db import sessao
-from riolive.fontes.comum import coordenada_plausivel
+from riolive.fontes.comum import TZ_RIO, coordenada_plausivel
 from riolive.llm.cliente import ClienteLlm, ErroLlm
 from riolive.modelos import Evento
 
@@ -169,7 +169,12 @@ def rodar(limite: int | None = None, cliente: ClienteLlm | None = None) -> dict[
         with sessao() as s:
             pendentes = _pendentes(s, limite)
             for evento in pendentes:
-                texto = "\n\n".join(p for p in (evento.titulo, evento.descricao) if p)
+                # A data de publicação vai junto: sem ela o modelo não tem como
+                # transformar "nesta sexta-feira (07/08), liberação após as 5h" em
+                # instante absoluto, e devolve vigência nula mesmo quando o texto diz.
+                publicado = evento.inicio.astimezone(TZ_RIO).strftime("%d/%m/%Y %H:%M")
+                corpo = "\n\n".join(p for p in (evento.titulo, evento.descricao) if p)
+                texto = f"Comunicado publicado em {publicado} (hora do Rio).\n\n{corpo}"
                 try:
                     resposta = cliente.extrair(
                         instrucao=INSTRUCAO,
