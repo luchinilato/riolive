@@ -164,3 +164,19 @@ def test_inmet_marca_frescor_vem_do_canal(xml_inmet: str) -> None:
     # dia sem aviso pro Rio é normal; o frescor mede o feed, não o movimento
     resultado = inmet_avisos.interpretar(xml_inmet)
     assert resultado.marca_frescor == datetime(2026, 8, 7, 18, 10, 36, tzinfo=UTC)
+
+
+def test_403_e_falha_transitoria_nao_de_schema() -> None:
+    """Cloudflare barrando não é "a origem mudou de formato".
+
+    Em 2026-08-07 o `cor.rio` alternou entre 200 e 403 para o mesmo cliente em
+    minutos, por reputação de IP. Classificar isso como `schema` marca a fonte
+    com a classe errada na página de status e alerta o time por nada.
+    """
+    from riolive.fontes.comum import erro_de_status
+    from riolive.ingestao.fetcher import ErroRede
+
+    for status in (403, 429):
+        assert isinstance(erro_de_status(status, "x"), ErroRede)
+    for status in (400, 404, 418):
+        assert isinstance(erro_de_status(status, "x"), ErroSchema)

@@ -64,11 +64,16 @@ class Config(BaseSettings):
     # LLM via OpenRouter. Sem chave, o enriquecimento por texto fica desligado e
     # o resto do produto segue igual — extração de texto é sempre acréscimo.
     openrouter_api_key: SecretStr = SecretStr("")
-    # Gemini 3.6 Flash: o Flash mais recente no catálogo do OpenRouter em
-    # 2026-08-07 ($1,50/$7,50 por milhão de tokens), com saída estruturada por
-    # JSON Schema — que é o requisito da camada. Alternativa mais barata pra
-    # tarefas simples: google/gemini-3.5-flash-lite ($0,30/$2,50).
-    llm_modelo: str = "google/gemini-3.6-flash"
+    # Escolhido por medição em 2026-08-07: oito modelos rodaram a mesma extração
+    # real (comunicado do COR com cinco interdições). Todos acertaram os cinco
+    # nomes; o que separou foi a vigência e o comedimento com coordenada.
+    # O Sonnet acerta a janela de vigência, se RECUSA a chutar coordenada, e
+    # gasta 625 tokens de saída contra os 2.009 do Gemini 3.6 Flash — que tem
+    # raciocínio obrigatório e não dá pra desligar. Sai por metade do preço.
+    # Descartados: deepseek-v4-flash (inventou data errada e cinco coordenadas),
+    # deepseek-v4-pro (58 s por comunicado) e gemini-3.1-flash-lite (barato e
+    # rápido, mas arrisca coordenadas que discordam entre modelos em até 12 km).
+    llm_modelo: str = "anthropic/claude-sonnet-5"
     # Teto de segurança: acima disso o job para e loga, em vez de varrer a fila
     # inteira num dia ruim. O feed do COR publica ~10 posts/dia.
     llm_max_itens_por_rodada: int = 25
