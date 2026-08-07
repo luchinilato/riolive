@@ -27,7 +27,7 @@ export function Dossie({ m }: { m: Modelo }) {
       <div style={{position: 'fixed', inset: '0', zIndex: '80', background: 'var(--bg)', display: 'flex', flexDirection: 'column', animation: 'expandIn .26s cubic-bezier(.2,.7,.3,1)'}}>
         <div style={{flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderBottom: '1px solid var(--bd)'}}>
           <span onClick={closeDossier} style={{display: 'flex', alignItems: 'center', gap: '7px', padding: '6px 10px', border: '1px solid var(--bd)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', color: 'var(--tx2)', whiteSpace: 'nowrap'}}>← Voltar</span>
-          <span style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '2px 6px', borderRadius: '4px', border: `1px solid ${dossier.sev.c}`, color: `${dossier.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{dossier.sev.i} {dossier.sev.n}</span>
+          <span title={dossier.sev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '2px 6px', borderRadius: '4px', border: `1px solid ${dossier.sev.c}`, color: `${dossier.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{dossier.sev.i} {dossier.sev.n}</span>
           <span style={{fontFamily: "'Space Grotesk',sans-serif", fontSize: '20px', fontWeight: '600'}}>{dossier.title}</span>
           <span style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', padding: '3px 7px', border: '1px solid var(--bd)', borderRadius: '4px'}}>{dossier.route}</span>
           <div style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px'}}>

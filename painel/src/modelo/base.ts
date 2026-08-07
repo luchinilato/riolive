@@ -5,12 +5,20 @@
 
 import type { Acoes, EstadoUi, Modelo } from './tipos'
 
+/* Escala de severidade 1 a 5. O número sozinho não diz nada a quem chega: cada
+   selo carrega a legenda inteira no `title` (`d`), incluindo o aviso de que isto
+   é a nossa leitura do bloco — o Estágio da cidade, que usa a mesma escala, é
+   publicado pelo COR e aparece só no cabeçalho. */
+const ESCALA = '1 normalidade · 2 mobilização · 3 atenção · 4 alerta · 5 crise';
+const dicaSev = (n, l) =>
+  `Severidade ${n} de 5 — ${l}.\n${ESCALA}.\nLeitura deste bloco, feita por nós a partir do dado da fonte. Não é o Estágio Operacional da cidade, que quem declara é o COR.`;
+
 const SEV = [null,
-  {n:1,l:'Normalidade',c:'var(--s1)',i:'●',bg:'var(--s1-bg)'},
-  {n:2,l:'Mobilização',c:'var(--s2)',i:'◆',bg:'var(--s2-bg)'},
-  {n:3,l:'Atenção',c:'var(--s3)',i:'▲',bg:'var(--s3-bg)'},
-  {n:4,l:'Alerta',c:'var(--s4)',i:'◼',bg:'var(--s4-bg)'},
-  {n:5,l:'Crise',c:'var(--s5)',i:'✦',bg:'var(--s5-bg)'}];
+  {n:1,l:'Normalidade',c:'var(--s1)',i:'●',bg:'var(--s1-bg)',d:dicaSev(1,'Normalidade')},
+  {n:2,l:'Mobilização',c:'var(--s2)',i:'◆',bg:'var(--s2-bg)',d:dicaSev(2,'Mobilização')},
+  {n:3,l:'Atenção',c:'var(--s3)',i:'▲',bg:'var(--s3-bg)',d:dicaSev(3,'Atenção')},
+  {n:4,l:'Alerta',c:'var(--s4)',i:'◼',bg:'var(--s4-bg)',d:dicaSev(4,'Alerta')},
+  {n:5,l:'Crise',c:'var(--s5)',i:'✦',bg:'var(--s5-bg)',d:dicaSev(5,'Crise')}];
 const RAMP = ['#9bd7ec','#57b7dc','#2c96c4','#1d7cab','#166490','#114e75'];
 const rnd = (s) => { let x = Math.sin(s) * 10000; return x - Math.floor(x); };
 
@@ -447,6 +455,9 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       ],
       fleetDots, hexes, mapFleet, mapIncidents, mapPresets, layers, frames, sources, presetAtivo: active,
       camadasAtivas: ativas, contagemCamadas,
+      // severidade de Queimadas e Cidade viva vinha fixa no JSX ("● 1", "◆ 2"):
+      // selo que não muda simula avaliação onde não há
+      queimadasSev: SEV[1], cidadeSev: SEV[1],
       feed, feedCount: feedAll.length + ' EVENTOS · 24H',
       // rodapé: contagem e relógio saem do modelo — no JSX eram fixos ("11 DE 12", "14:31:07")
       rodapeFontes: sources.filter(f => f.state === 'Online').length + ' DE ' + sources.length + ' FONTES OPERANDO NORMALMENTE',
