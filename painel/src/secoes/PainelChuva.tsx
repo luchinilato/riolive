@@ -2,6 +2,7 @@
    a fonte visual da verdade é docs/design/handoff/painel-rio.dc.html */
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
+import { BarraRegua } from '../componentes/Regua'
 
 export function PainelChuva({ m }: { m: Modelo }) {
   const { chuva, lay, openChuva, ramp } = m
@@ -10,7 +11,7 @@ export function PainelChuva({ m }: { m: Modelo }) {
 {/* CHUVA E ÁGUA */}
           <div onClick={openChuva} style={{background: 'var(--card)', border: `1px solid ${chuva.bd}`, borderRadius: '10px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden', cursor: 'pointer', gridColumn: `span ${lay.chuva.s}`, order: `${lay.chuva.o}`}}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto'}}>
-              <span style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${chuva.sev.c}`, color: `${chuva.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{chuva.sev.i} {chuva.sev.n}</span>
+              <span title={chuva.sev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${chuva.sev.c}`, color: `${chuva.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{chuva.sev.i} {chuva.sev.n}</span>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>Chuva e água</span>
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>{chuva.count}</span>
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
@@ -22,6 +23,7 @@ export function PainelChuva({ m }: { m: Modelo }) {
                   <span style={{fontFamily: "'Space Grotesk',sans-serif", fontSize: '14px', color: 'var(--tx2)'}}>mm/h</span>
                 </div>
                 <div style={{fontSize: '12px', color: 'var(--tx2)', lineHeight: '1.35'}}>{chuva.sub}</div>
+                <BarraRegua regua={chuva.regua} />
                 <div style={{flex: '1 1 auto', minHeight: '0', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
                   <div style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx3)', letterSpacing: '.08em', marginBottom: '3px'}}>CHUVA 24H · MM</div>
                   <svg viewBox="0 0 220 34" preserveAspectRatio="none" style={{width: '100%', height: '30px', display: 'block'}}>

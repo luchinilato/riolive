@@ -2,6 +2,7 @@
    a fonte visual da verdade é docs/design/handoff/painel-rio.dc.html */
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
+import { BarraRegua } from '../componentes/Regua'
 
 export function PainelMobilidade({ m }: { m: Modelo }) {
   const { fleetDots, lay, mob, openMob } = m
@@ -10,7 +11,7 @@ export function PainelMobilidade({ m }: { m: Modelo }) {
 {/* MOBILIDADE */}
           <div onClick={openMob} style={{background: 'var(--card)', border: `1px solid ${mob.bd}`, borderRadius: '10px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden', cursor: 'pointer', gridColumn: `span ${lay.mob.s}`, order: `${lay.mob.o}`}}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto'}}>
-              <span style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${mob.sev.c}`, color: `${mob.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{mob.sev.i} {mob.sev.n}</span>
+              <span title={mob.sev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${mob.sev.c}`, color: `${mob.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{mob.sev.i} {mob.sev.n}</span>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>Mobilidade</span>
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>{mob.count}</span>
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
@@ -22,6 +23,7 @@ export function PainelMobilidade({ m }: { m: Modelo }) {
                   <span style={{fontSize: '11px', color: 'var(--tx2)'}}>veículos</span>
                 </div>
                 <div style={{fontSize: '11px', color: 'var(--tx2)', lineHeight: '1.4'}}>{mob.sub}</div>
+                <BarraRegua regua={mob.regua} />
                 <div style={{display: 'flex', alignItems: 'flex-start', gap: '6px', padding: '6px 8px', borderRadius: '6px', background: `${mob.warnBg}`, border: `1px solid ${mob.warnBd}`, fontSize: '11px', color: `${mob.warnC}`, lineHeight: '1.35'}}>
                   <span>⚠</span><span>{mob.warn}</span>
                 </div>

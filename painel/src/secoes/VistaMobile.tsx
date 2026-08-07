@@ -17,7 +17,7 @@ export function VistaMobile({ m }: { m: Modelo }) {
             <span style={{width: '7px', height: '7px', borderRadius: '50%', background: 'var(--live)', animation: 'pulse 2s infinite'}}></span>
           </div>
           <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginTop: '9px'}}>
-            <span style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 8px', borderRadius: '6px', border: `1px solid ${sev.c}`, background: `${sev.bg}`, color: `${sev.c}`, fontSize: '12px', fontWeight: '600'}}>{sev.i} {sev.n} {sev.l}</span>
+            <span title={sev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 8px', borderRadius: '6px', border: `1px solid ${sev.c}`, background: `${sev.bg}`, color: `${sev.c}`, fontSize: '12px', fontWeight: '600'}}>{sev.i} {sev.n} {sev.l}</span>
           </div>
           <div style={{fontSize: '12px', color: 'var(--tx2)', marginTop: '7px', lineHeight: '1.4'}}>{headlineShort}</div>
         </div>

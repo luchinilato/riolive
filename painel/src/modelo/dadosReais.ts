@@ -10,6 +10,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { EstadoUi, Modelo } from './tipos'
 import { SEV, poly } from './base'
+import { reguaAr, reguaChuva, reguaFrota, reguaMar, reguaTransito } from './reguas'
 import {
   dossieAr,
   dossieCeu,
@@ -193,11 +194,19 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     }
     const cont = ag.snapshot?.contadores ?? {}
     if (cont.chuva) {
+      /* O cartão rotula o número como mm/h, então o número tem que ser mm/h: o
+         acumulado de 15 min estava sendo exibido sob esse rótulo (0,2 mm em 15
+         min viraria 0,8 mm/h). A classificação do Alerta Rio também é por hora,
+         então a régua só fecha com a janela certa. */
+      const max1h = cont.chuva.max_1h ?? 0
       const max15 = cont.chuva.max_15min ?? 0
       saida.chuva = {
         ...m.chuva,
-        hero: String(max15).replace('.', ','),
-        sub: max15 > 0 ? 'máxima entre as 33 estações · últimos 15 min' : 'na última hora · todas as estações reportando',
+        hero: String(max1h).replace('.', ','),
+        sub: max1h > 0 || max15 > 0
+          ? `máxima entre as 33 estações · última hora${max15 > 0 ? ` · ${String(max15).replace('.', ',')} mm nos últimos 15 min` : ''}`
+          : 'na última hora · todas as estações reportando',
+        regua: reguaChuva(max1h),
       }
       if (cont.nivel_rios_max_cm != null)
         saida.chuva.rios = `Rios: máx ${cont.nivel_rios_max_cm} cm — monitorando 4 estações`
@@ -300,6 +309,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       warnBd: !mo.gps_saudavel ? 'var(--warn-bd)' : paradas.length ? 'var(--s3-bd)' : 'var(--ok-bd)',
       warnC: !mo.gps_saudavel ? 'var(--warn-tx)' : paradas.length ? 'var(--s3-tx)' : 'var(--s1)',
       count: `${mo.linhas_planejadas_agora} LINHAS`,
+      regua: mo.pct_ativas != null ? reguaFrota(mo.pct_ativas) : null,
     }
     if (mo.pct_ativas != null && saida.mob.sub?.includes('ao vivo'))
       saida.mob.sub = `${saida.mob.sub} · ${mo.pct_ativas}% das linhas planejadas ativas`
@@ -418,6 +428,9 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       hero: String(tc.media_kmh),
       count: `${tc.corredores.length} CORR`,
       sub: `fluxo livre ${tc.media_livre_kmh} km/h · TomTom nos corredores + nossa frota`,
+      regua: tc.media_livre_kmh
+        ? reguaTransito(Math.round((tc.media_kmh / tc.media_livre_kmh) * 100))
+        : null,
       rows: tc.corredores.slice(0, 4).map((c: any) => ({
         n: c.nome.replace(' · ', ' — '), v: String(Math.round(c.agora_kmh ?? 0)), ...seta(c),
       })),
@@ -543,6 +556,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       hero: altura.toFixed(1).replace('.', ','),
       hc: altura >= 2.5 ? 'var(--s3)' : 'var(--tx)',
       heroSub: `m · ${periodo ? `período ${Math.round(periodo)} s · ` : ''}${estado}`,
+      regua: reguaMar(altura),
       proprias: '—',
       improprias: '—',
       list: 'Balneabilidade do INEA ainda não integrada — o boletim é PDF e o parsing está pendente. As ondas acima são leitura real de Copacabana.',
@@ -563,6 +577,7 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       hc: pior.leituras.pm25 >= 25 ? 'var(--s3)' : pior.leituras.pm25 >= 15 ? 'var(--s2)' : 'var(--s1)',
       heroSub: `PM2.5 máx ${pior.leituras.pm25.toFixed(1).replace('.', ',')} µg/m³ (${pior.nome})`,
       count: `${comPm25.length} EST`,
+      regua: reguaAr(pior.leituras.pm25),
       rows: comPm25.slice(0, 3).map((e) => ({
         n: e.bairro ?? e.nome,
         v: e.leituras.pm25.toFixed(1).replace('.', ','),

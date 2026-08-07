@@ -10,7 +10,7 @@ export function PainelCidadeViva({ m }: { m: Modelo }) {
 {/* CIDADE VIVA */}
           <div onClick={openCidade} style={{background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: '10px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden', cursor: 'pointer', gridColumn: `span ${lay.cidade.s}`, order: `${lay.cidade.o}`}}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-              <span style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: '1px solid var(--s2)', color: 'var(--s2)', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>◆ 2</span>
+              <span title={m.cidadeSev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${m.cidadeSev.c}`, color: `${m.cidadeSev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{m.cidadeSev.i} {m.cidadeSev.n}</span>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>Cidade viva</span>
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>4</span>
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>

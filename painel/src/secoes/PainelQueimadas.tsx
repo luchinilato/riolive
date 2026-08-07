@@ -10,7 +10,7 @@ export function PainelQueimadas({ m }: { m: Modelo }) {
 {/* QUEIMADAS */}
           <div onClick={openQueimadas} style={{background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: '10px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden', cursor: 'pointer', gridColumn: `span ${lay.queimadas.s}`, order: `${lay.queimadas.o}`}}>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-              <span style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: '1px solid var(--s1)', color: 'var(--s1)', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>● 1</span>
+              <span title={m.queimadasSev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${m.queimadasSev.c}`, color: `${m.queimadasSev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{m.queimadasSev.i} {m.queimadasSev.n}</span>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>Queimadas</span>
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>3H</span>
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
