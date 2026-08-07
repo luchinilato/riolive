@@ -20,27 +20,35 @@ def listar_eventos(
     vigentes: bool = False,
     limite: Annotated[int, Query(ge=1, le=500)] = 100,
 ) -> list[dict[str, Any]]:
-    condicoes = ["(fim IS NULL OR inicio > now() - make_interval(hours => :horas))"]
+    # Condições qualificadas com `v.`: o join com bairro/ra traz `ra_id` e `nome`
+    # homônimos, e coluna ambígua aqui seria erro de SQL em tempo de execução.
+    condicoes = ["(v.fim IS NULL OR v.inicio > now() - make_interval(hours => :horas))"]
     parametros: dict[str, Any] = {"horas": horas, "severidade_min": severidade_min, "lim": limite}
-    condicoes.append("severidade >= :severidade_min")
+    condicoes.append("v.severidade >= :severidade_min")
     if tipo:
-        condicoes.append("tipo = :tipo")
+        condicoes.append("v.tipo = :tipo")
         parametros["tipo"] = tipo
     if bairro_id is not None:
-        condicoes.append("bairro_id = :bairro_id")
+        condicoes.append("v.bairro_id = :bairro_id")
         parametros["bairro_id"] = bairro_id
     if ra_id is not None:
-        condicoes.append("ra_id = :ra_id")
+        condicoes.append("v.ra_id = :ra_id")
         parametros["ra_id"] = ra_id
     if vigentes:
-        condicoes.append("fim IS NULL")
+        condicoes.append("v.fim IS NULL")
+    # O nome do bairro vem junto de propósito: sem ele o consumidor cai no título do
+    # evento pra dizer "onde", e título de foco de calor é o nome do satélite.
     with sessao() as s:
         linhas = s.execute(
             text(
-                "SELECT id, tipo, fonte_id, severidade, inicio, fim, titulo, descricao, "
-                "ST_Y(geom) lat, ST_X(geom) lon, bairro_id, ra_id, h3_r8 "
-                f"FROM vw_evento_publico WHERE {' AND '.join(condicoes)} "
-                "ORDER BY inicio DESC LIMIT :lim"
+                "SELECT v.id, v.tipo, v.fonte_id, v.severidade, v.inicio, v.fim, v.titulo, "
+                "v.descricao, ST_Y(v.geom) lat, ST_X(v.geom) lon, v.bairro_id, v.ra_id, v.h3_r8, "
+                "b.nome AS bairro, r.nome AS ra "
+                "FROM vw_evento_publico v "
+                "LEFT JOIN bairro b ON b.id = v.bairro_id "
+                "LEFT JOIN ra r ON r.id = v.ra_id "
+                f"WHERE {' AND '.join(condicoes)} "
+                "ORDER BY v.inicio DESC LIMIT :lim"
             ),
             parametros,
         ).all()
@@ -56,7 +64,9 @@ def listar_eventos(
             "lat": linha.lat,
             "lon": linha.lon,
             "bairro_id": linha.bairro_id,
+            "bairro": linha.bairro,
             "ra_id": linha.ra_id,
+            "ra": linha.ra,
             "h3_r8": linha.h3_r8,
         }
         for linha in linhas

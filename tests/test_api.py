@@ -119,3 +119,32 @@ def test_ar_estacoes_lista_todas_mesmo_sem_leitura(cliente: TestClient) -> None:
     corpo = cliente.get("/ar/estacoes").json()
     assert len(corpo) == 28
     assert all("leituras" in e and "lat" in e and "lon" in e for e in corpo)
+
+
+def test_eventos_trazem_nome_do_bairro(cliente: TestClient) -> None:
+    # Sem o nome, quem consome usa o título pra dizer "onde" — e título de foco de
+    # calor é o nome do satélite. O campo existe mesmo quando o evento não tem pino.
+    corpo = cliente.get("/eventos", params={"horas": 24 * 7}).json()
+    assert corpo, "esperava algum evento na última semana"
+    assert all("bairro" in e and "ra" in e for e in corpo)
+    com_bairro = [e for e in corpo if e["bairro_id"] is not None]
+    assert all(e["bairro"] for e in com_bairro), "bairro_id preenchido tem que ter nome"
+
+
+def test_ceu_aeronaves_com_serie_e_altitude(cliente: TestClient) -> None:
+    corpo = cliente.get("/ceu/aeronaves", params={"minutos": 30}).json()
+    assert corpo["total"] == len(corpo["aeronaves"])
+    assert isinstance(corpo["serie_15min"], list)
+    # altitude é número ou None; "ground" do adsb.lol não pode virar 0
+    assert all(
+        a["altitude_pes"] is None or isinstance(a["altitude_pes"], int) for a in corpo["aeronaves"]
+    )
+
+
+def test_queimadas_resumo_declara_desde_quando_temos_serie(cliente: TestClient) -> None:
+    corpo = cliente.get("/queimadas/resumo", params={"horas": 24 * 30}).json()
+    assert corpo["passo"] == "day"
+    assert corpo["focos"] == sum(p["focos"] for p in corpo["serie"])
+    assert corpo["focos"] >= len(corpo["lista"]) or len(corpo["lista"]) == 100
+    # a memória do INPE aqui é curta e o dossiê precisa poder dizer desde quando
+    assert "desde" in corpo

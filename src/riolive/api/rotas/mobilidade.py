@@ -19,8 +19,10 @@ def planejado_realizado() -> dict[str, Any]:
         paradas = detectar_paradas(linhas) if saudavel else []
         serie = s.execute(
             text(
+                # só transporte de superfície: o agregado guarda avião e navio também,
+                # e contá-los aqui inflaria a "frota" que o dossiê rotula como ônibus+BRT
                 "SELECT bucket, count(*) AS veiculos FROM frota_veiculo_15min "
-                "WHERE bucket > now() - interval '24 hours' "
+                "WHERE modal IN ('onibus', 'brt') AND bucket > now() - interval '24 hours' "
                 "GROUP BY bucket ORDER BY bucket"
             )
         ).all()
