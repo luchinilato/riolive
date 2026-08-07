@@ -3,9 +3,9 @@
 Deploy feito em 2026-08-06. Ubuntu 24.04 LTS, Docker CE + Compose, stack em
 `/srv/riolive` (mesmo compose do dev + override `docker-compose.prod.yml`).
 Painel público: **http://169.58.140.118** (Caddy: SPA + `/api` → FastAPI).
-Sem domínio/TLS por enquanto — o nome do produto foi reaberto em 2026-08-06 e
-o domínio tem que ser `.rio` (ver `[[DEC - Nome do produto - Pulso Rio]]`, que
-guarda a primeira escolha e a correção).
+O produto se chama **Sinal Carioca** e o domínio é **`sinalcarioca.rio`** (ver
+`[[DEC - Nome do produto - Sinal Carioca]]`). O Caddy ainda serve por IP puro:
+apontar o DNS e ligar o TLS é passo pendente.
 
 ## Acesso
 

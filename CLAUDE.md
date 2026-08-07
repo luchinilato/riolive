@@ -1,6 +1,6 @@
 # riolive — guia pra sessões de código
 
-Painel público em tempo real da cidade do Rio. Backend Python (ingestão + API) e frontend React (`painel/`), monorepo privado. **Código, tabelas e identificadores em português** (decisão do Luciano). As decisões de produto/arquitetura vivem no vault Obsidian (`/mnt/c/Users/lucia/obsidian-cofre/Rio Live/` — comece pelo handoff mais recente e pelas notas `DEC - *`).
+**Sinal Carioca** (`sinalcarioca.rio`) — painel público em tempo real da cidade do Rio. `riolive` é o nome do repo/código; o produto é Sinal Carioca. Backend Python (ingestão + API) e frontend React (`painel/`), monorepo privado. **Código, tabelas e identificadores em português** (decisão do Luciano). As decisões de produto/arquitetura vivem no vault Obsidian (`/mnt/c/Users/lucia/obsidian-cofre/Rio Live/` — comece pelo handoff mais recente e pelas notas `DEC - *`).
 
 ## Comandos
 

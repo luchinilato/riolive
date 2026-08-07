@@ -1,6 +1,6 @@
-# riolive
+# riolive — Sinal Carioca
 
-Backend do painel público em tempo real da cidade do Rio de Janeiro: ingestão de dezenas de fontes de dados abertos, persistência espacial/temporal (PostGIS + TimescaleDB) e API.
+Backend do **Sinal Carioca** (`sinalcarioca.rio`), painel público em tempo real da cidade do Rio de Janeiro: ingestão de dezenas de fontes de dados abertos, persistência espacial/temporal (PostGIS + TimescaleDB) e API. `riolive` é o nome do repositório e do código; o produto é Sinal Carioca.
 
 **Código fechado.** O produto é o painel hospedado; este repositório é privado.
 
