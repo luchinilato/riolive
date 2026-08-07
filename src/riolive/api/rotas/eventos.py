@@ -43,8 +43,9 @@ def listar_eventos(
             text(
                 "SELECT v.id, v.tipo, v.fonte_id, v.severidade, v.inicio, v.fim, v.titulo, "
                 "v.descricao, ST_Y(v.geom) lat, ST_X(v.geom) lon, v.bairro_id, v.ra_id, v.h3_r8, "
-                "b.nome AS bairro, r.nome AS ra "
+                "b.nome AS bairro, r.nome AS ra, e.payload->'llm' AS llm "
                 "FROM vw_evento_publico v "
+                "JOIN evento e ON e.id = v.id "
                 "LEFT JOIN bairro b ON b.id = v.bairro_id "
                 "LEFT JOIN ra r ON r.id = v.ra_id "
                 f"WHERE {' AND '.join(condicoes)} "
@@ -68,6 +69,10 @@ def listar_eventos(
             "ra_id": linha.ra_id,
             "ra": linha.ra,
             "h3_r8": linha.h3_r8,
+            # Extração de texto por modelo de linguagem, quando existe: relato,
+            # não medição. Vem embaixo de `llm` e rotulado, pra que o consumidor
+            # nunca confunda com o que a fonte publicou.
+            "llm": linha.llm,
         }
         for linha in linhas
     ]

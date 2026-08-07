@@ -22,6 +22,7 @@ from riolive.detectores import linha_parada
 from riolive.fontes import FONTES
 from riolive.ingestao.contrato import FonteConfig
 from riolive.ingestao.execucao import executar_fonte
+from riolive.llm import interdicoes
 from riolive.saude import heartbeat
 from riolive.snapshot import gravar_snapshot
 
@@ -100,6 +101,20 @@ def _job_snapshot() -> None:
 
 
 @op
+def extrair_comunicados(context: OpExecutionContext) -> None:
+    resultado = interdicoes.rodar()
+    context.log.info("extração por LLM: %s", resultado)
+
+
+@job(
+    name="extracao_comunicados",
+    description="Local e vigência dos comunicados do COR, extraídos do texto por LLM",
+)
+def _job_extracao() -> None:
+    extrair_comunicados()
+
+
+@op
 def detectar_linhas_paradas(context: OpExecutionContext) -> None:
     resultado = linha_parada.rodar()
     context.log.info("detector linha_parada: %s", resultado)
@@ -142,6 +157,15 @@ _schedules = [
         default_status=DefaultScheduleStatus.RUNNING,
     ),
     ScheduleDefinition(
+        name="agenda_extracao_comunicados",
+        job=_job_extracao,
+        # o COR publica ~10 posts/dia e a extração é idempotente por evento:
+        # de 30 em 30 min sobra folga sem virar fila
+        cron_schedule="*/30 * * * *",
+        execution_timezone="America/Sao_Paulo",
+        default_status=DefaultScheduleStatus.RUNNING,
+    ),
+    ScheduleDefinition(
         name="agenda_snapshot_cidade",
         job=_job_snapshot,
         cron_schedule="*/15 * * * *",
@@ -151,6 +175,6 @@ _schedules = [
 ]
 
 defs = Definitions(
-    jobs=[_job_quentes, *_jobs_frias, _job_snapshot, _job_linha_parada],
+    jobs=[_job_quentes, *_jobs_frias, _job_snapshot, _job_linha_parada, _job_extracao],
     schedules=_schedules,
 )
