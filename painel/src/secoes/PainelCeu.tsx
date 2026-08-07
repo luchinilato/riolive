@@ -20,9 +20,8 @@ export function PainelCeu({ m }: { m: Modelo }) {
               <span style={{fontSize: '11px', color: 'var(--tx2)'}}>aeronaves sobre a cidade</span>
             </div>
             <div style={{flex: '1 1 auto', minHeight: '0', display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '11px', color: 'var(--tx2)'}}>
-              <div style={{display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--bd3)', paddingBottom: '4px'}}><span>SDU pousos/h</span><span style={{fontFamily: "'JetBrains Mono',monospace", color: `${ceu.sduC}`}}>{ceu.sdu}</span></div>
-              <div style={{display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--bd3)', paddingBottom: '4px'}}><span>GIG pousos/h</span><span style={{fontFamily: "'JetBrains Mono',monospace", color: 'var(--tx)'}}>{ceu.gig}</span></div>
-              <div style={{display: 'flex', justifyContent: 'space-between'}}><span>pontualidade julho</span><span style={{fontFamily: "'JetBrains Mono',monospace", color: 'var(--tx)'}}>87%</span></div>
+              <div style={{display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--bd3)', paddingBottom: '4px'}}><span>SDU e GIG · pousos/h</span><span style={{fontFamily: "'JetBrains Mono',monospace", color: 'var(--tx3)'}}>—</span></div>
+              <div style={{lineHeight: '1.35', color: 'var(--tx3)'}}>{ceu.nota}</div>
             </div>
             <div style={{display: 'flex', alignItems: 'center', gap: '6px', borderTop: '1px solid var(--bd2)', paddingTop: '7px', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', color: 'var(--tx3)', letterSpacing: '.05em'}}>
               <span style={{width: '5px', height: '5px', borderRadius: '50%', background: 'var(--live)', animation: 'pulse 2s infinite'}}></span>FONTE: ADSB.LOL · AO VIVO
