@@ -180,3 +180,16 @@ def test_403_e_falha_transitoria_nao_de_schema() -> None:
         assert isinstance(erro_de_status(status, "x"), ErroRede)
     for status in (400, 404, 418):
         assert isinstance(erro_de_status(status, "x"), ErroSchema)
+
+
+def test_fonte_do_cor_exige_libcurl() -> None:
+    """O feed do COR barra o httpx pelo handshake TLS.
+
+    Medido em 2026-08-07, intercalando os dois clientes no mesmo host e no mesmo
+    minuto: curl 5/5, httpx 0/5. Não é IP, header nem horário — as três pistas
+    que pareciam explicar antes eram artefato de medir em janelas diferentes,
+    com a proteção oscilando. O flag troca só a pilha TLS: o user-agent segue
+    identificado e o `impersonate` do curl_cffi fica desligado.
+    """
+    assert cor_feed.FONTE.exige_libcurl is True
+    assert inmet_avisos.FONTE.exige_libcurl is False, "só quem precisa carrega o custo"

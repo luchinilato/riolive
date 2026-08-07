@@ -110,6 +110,11 @@ class FonteConfig:
     tolerancia_frescor: timedelta  # dado mais velho que isso = fonte congelada
     coletar: Callable[[ClienteHttp], ResultadoColeta]
     licenca: str | None = None
+    # Origem atrás de proteção que barra o httpx pelo fingerprint de TLS (o COR
+    # é o caso: curl passa 5/5 e httpx falha 0/5, intercalados no mesmo minuto).
+    # Com o flag, a coleta sai por libcurl em vez de httpx — mesmo user-agent
+    # identificado, mesma transparência; muda só a pilha TLS.
+    exige_libcurl: bool = False
 
     @property
     def quente(self) -> bool:

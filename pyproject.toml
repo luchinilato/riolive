@@ -27,6 +27,7 @@ dependencies = [
     "boto3>=1.43.65",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
+    "curl-cffi>=0.16.0",
 ]
 
 [dependency-groups]
