@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from riolive.api.rotas import (
     agora,
+    ar,
     chuva,
     eventos,
     fontes,
@@ -64,3 +65,4 @@ app.include_router(chuva.rota)
 app.include_router(mobilidade.rota)
 app.include_router(transito.rota)
 app.include_router(seguranca.rota)
+app.include_router(ar.rota)

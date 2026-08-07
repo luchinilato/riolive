@@ -62,6 +62,22 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: ativo, refetchInterval: 60_000, retry: 1,
   })
 
+  const mar = useQuery({
+    queryKey: ['previsao-mar'],
+    queryFn: () => api.previsao('mar_copacabana'),
+    enabled: ativo, refetchInterval: 600_000, retry: 1,
+  })
+  const estacoesAr = useQuery({
+    queryKey: ['ar-estacoes'],
+    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/ar/estacoes`).then((r) => r.json()),
+    enabled: ativo, refetchInterval: 600_000, retry: 1,
+  })
+  const focos = useQuery({
+    queryKey: ['focos-calor'],
+    queryFn: () => fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/eventos?tipo=foco_calor&horas=24&limite=200`).then((r) => r.json()),
+    enabled: ativo, refetchInterval: 600_000, retry: 1,
+  })
+
   // dossiê de Segurança: só busca quando aberto — a janela de 30 d varre 10 anos de base
   const seguranca = useQuery({
     queryKey: ['seguranca-resumo', ui.period],
@@ -69,7 +85,7 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: ativo && ui.dossier === 'seguranca', refetchInterval: 300_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, ui, ativo }
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, mar, estacoesAr, focos, ui, ativo }
 }
 
 const hhmm = (iso: string) => {
@@ -433,6 +449,66 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       : 'Registro do Fogo Cruzado com pino exato e sem atraso, por decisão de produto.'
     dossie.seal = 'FOGO CRUZADO · USO AUTORIZADO'
     saida.dossier = dossie
+  }
+
+  // Mar: ondas são reais (Open-Meteo Marine). Balneabilidade NÃO é — o boletim do
+  // INEA é PDF e o parsing está adiado, então os contadores de praia saem de cena
+  // em vez de continuarem exibindo número inventado como se fosse leitura.
+  const ondas = d.mar.data?.metricas
+  if (ondas?.onda_altura_m?.length) {
+    const altura = ondas.onda_altura_m[0]?.valor
+    const periodo = ondas.onda_periodo_s?.[0]?.valor
+    const estado = altura >= 2.5 ? 'mar agitado' : altura >= 1.5 ? 'mar moderado' : 'mar calmo'
+    saida.mar = {
+      ...m.mar,
+      sev: altura >= 2.5 ? SEV[3] : altura >= 1.5 ? SEV[2] : SEV[1],
+      hero: altura.toFixed(1).replace('.', ','),
+      hc: altura >= 2.5 ? 'var(--s3)' : 'var(--tx)',
+      heroSub: `m · ${periodo ? `período ${Math.round(periodo)} s · ` : ''}${estado}`,
+      proprias: '—',
+      improprias: '—',
+      list: 'Balneabilidade do INEA ainda não integrada — o boletim é PDF e o parsing está pendente. As ondas acima são leitura real de Copacabana.',
+    }
+  }
+
+  // Ar: estações reais, ordenadas pela pior leitura de PM2.5
+  const arEstacoes: any[] = d.estacoesAr.data ?? []
+  const comPm25 = arEstacoes.filter((e) => e.leituras?.pm25 != null).sort((a, b) => b.leituras.pm25 - a.leituras.pm25)
+  if (comPm25.length) {
+    const pior = comPm25[0]
+    const teto = Math.max(25, pior.leituras.pm25)
+    saida.ar = {
+      ...m.ar,
+      // OMS 2021: 15 µg/m³ como média de 24 h é o limite recomendado
+      sev: pior.leituras.pm25 >= 25 ? SEV[3] : pior.leituras.pm25 >= 15 ? SEV[2] : SEV[1],
+      hero: pior.leituras.pm25 >= 25 ? 'Ruim' : pior.leituras.pm25 >= 15 ? 'Moderada' : 'Boa',
+      hc: pior.leituras.pm25 >= 25 ? 'var(--s3)' : pior.leituras.pm25 >= 15 ? 'var(--s2)' : 'var(--s1)',
+      heroSub: `PM2.5 máx ${pior.leituras.pm25.toFixed(1).replace('.', ',')} µg/m³ (${pior.nome})`,
+      count: `${comPm25.length} EST`,
+      rows: comPm25.slice(0, 3).map((e) => ({
+        n: e.bairro ?? e.nome,
+        v: e.leituras.pm25.toFixed(1).replace('.', ','),
+        p: Math.min(100, Math.round((e.leituras.pm25 / teto) * 100)),
+        c: e.leituras.pm25 >= 25 ? 'var(--s3)' : e.leituras.pm25 >= 15 ? '#c08428' : '#149cc6',
+      })),
+    }
+  }
+
+  // Queimadas: o texto era um parágrafo fixo no JSX afirmando focos que podiam
+  // não existir. Agora sai do dado ou diz que não há foco.
+  const focosLista: any[] = d.focos.data ?? []
+  if (d.focos.data) {
+    const porBairro = new Map<string, number>()
+    for (const f of focosLista) {
+      const onde = (f.descricao || f.titulo || 'sem localização').split('—')[0].trim()
+      porBairro.set(onde, (porBairro.get(onde) ?? 0) + 1)
+    }
+    const maiores = [...porBairro.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+    saida.queimadasHero = String(focosLista.length)
+    saida.queimadasSub = 'focos detectados · 24 h'
+    saida.queimadasTexto = focosLista.length
+      ? `${maiores.map(([onde, n]) => `${onde}${n > 1 ? ` (${n})` : ''}`).join(', ')}. Detecção por satélite do INPE; foco não é sinônimo de incêndio confirmado.`
+      : 'Nenhum foco de calor detectado pelo INPE nas últimas 24 h no recorte monitorado.'
   }
 
   // Segurança real: ocorrências do Fogo Cruzado nas 24 h + contexto mensal do ISP

@@ -112,3 +112,10 @@ def test_seguranca_resumo_traz_janela_e_memoria(cliente: TestClient) -> None:
 def test_seguranca_janela_curta_usa_balde_de_hora(cliente: TestClient) -> None:
     corpo = cliente.get("/seguranca/resumo", params={"horas": 24}).json()
     assert corpo["passo"] == "hour"
+
+
+def test_ar_estacoes_lista_todas_mesmo_sem_leitura(cliente: TestClient) -> None:
+    # Estação atrasada não pode sumir da lista: sumir sugere que ela não existe
+    corpo = cliente.get("/ar/estacoes").json()
+    assert len(corpo) == 28
+    assert all("leituras" in e and "lat" in e and "lon" in e for e in corpo)
