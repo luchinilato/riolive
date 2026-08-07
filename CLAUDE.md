@@ -20,7 +20,7 @@ Dagster UI: `localhost:3300` (a 3000 do host está ocupada por outro app). API/S
 - **`ingestao/`** — `fetcher.py` (httpx+tenacity), `contrato.py` (MedicaoNova/PosicaoNova/EventoNovo/PrevisaoNova/BlobNovo), `gravacao.py` (dedup por PK natural + enriquecimento bairro/RA/H3 na entrada), `execucao.py` (coleta→grava→saúde→alerta).
 - **`saude/`** — máquina de estados (online/degradada/fora/congelada), contadores e cooldown no Redis. **`detectores/linha_parada.py`** — planejado×realizado; NUNCA roda sem `gps_confiavel()` (online 20+ min contínuos + 1.500 ônibus transmitindo — aprendido com 111 falsos positivos).
 - **`api/rotas/`** — read-only; eventos saem SÓ pela `vw_evento_publico`. Cache-Control pra CDN.
-- **`semente/`** — cargas re-executáveis: bairros, GTFS, fogo_cruzado (backfill; retomada ignora últimos 7 dias).
+- **`semente/`** — cargas re-executáveis: bairros, GTFS, fogo_cruzado (backfill; retomada ignora últimos 7 dias), gps_sppo (backfill de posições; retoma da fronteira do banco, fatias de 10 min).
 - **`blobs.py`** — R2 quando `RIOLIVE_R2_*` no ambiente, senão disco (`dados/blobs/`).
 - **`painel/`** — view-model único (`modelo/base.ts` = porte literal do protótipo, com modos demo) + `modelo/dadosReais.ts` (overlay da API via TanStack Query). Seções em `secoes/` geradas do handoff (`docs/design/handoff/painel-rio.dc.html` é a fonte visual da verdade). Estilos inline por design. `maplibre-gl` fixado no v5 (v6 quebra pmtiles silenciosamente).
 
@@ -28,6 +28,8 @@ Dagster UI: `localhost:3300` (a 3000 do host está ocupada por outro app). API/S
 
 - `.env` NUNCA entra na imagem Docker (o Dagster auto-carrega `.env` do cwd e sobrepõe o ambiente — ver `.dockerignore`). Chaves só no `.env`; `.env.example` é versionado e fica vazio.
 - SPPO devolve HTTP 200 com dict de erro em timeout interno (classificar como rede). Fontes municipais caem com frequência — o produto é desenhado pra mostrar isso.
+- **SPPO: o sufixo `Z` do campo `datetime` é mentira** — o valor é hora local do Rio. Parseado ao pé da letra, toda posição entra 3 h no passado, em silêncio. Quem pegou foi a checagem de frescor (fonte virou `congelada`), não teste nenhum. Achado em 2026-08-07, junto com a troca de schema da SMTR (o payload virou GTFS: `id_veiculo`, `servico`, `trip_id`, `shape_id`). Ao mexer em fonte com timestamp, desconfie do fuso antes de confiar no rótulo.
+- Posição de ônibus **tem** backfill: a API do SPPO serve janelas passadas (testado até 30 h). Buraco na série é recuperável com `python -m riolive.semente.gps_sppo`.
 - `cd` relativo em comandos compostos falha quando o cwd do shell resetou — usar caminhos absolutos.
 - `pkill -f` com o padrão no mesmo comando se mata — usar o truque `[p]adrão`.
 - Cron do Dagster: minutos <60 → `*/N`; horas → `0 */H`; diária/semanal têm forma própria em `_cron()`.
