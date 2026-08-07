@@ -256,7 +256,7 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
 
     // ---------- dossiê ----------
     let dossier = null;
-    if (s.route !== 'home' && s.route !== 'mapa' && s.route !== 'status') {
+    if (s.route !== 'home' && s.route !== 'mapa' && s.route !== 'status' && s.route !== 'nerds') {
       const rainSeries = crisis
         ? [0,0,1,1,2,3,2,4,6,9,14,22,31,38,45,42,38,30,22,16,11,7,4,2]
         : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -363,11 +363,13 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       copyLink: () => acoes.piscar('copied'),
       quoteLabel: s.quoted ? 'dado copiado' : 'copiar dado citável',
       copyQuote: () => acoes.piscar('quoted'),
-      navA:nav('home'), navM:nav('mapa'), navS:nav('status'),
+      navA:nav('home'), navM:nav('mapa'), navS:nav('status'), navN:nav('nerds'),
       goHome: () => defina({ route:'home', dossier:null }),
       goMapa: () => defina({ route:'mapa', dossier:null }),
       goStatus: () => defina({ route:'status', dossier:null }),
+      goNerds: () => defina({ route:'nerds', dossier:null }),
       isHome: s.route === 'home', isMapa: s.route === 'mapa', isStatus: s.route === 'status',
+      isNerds: s.route === 'nerds',
       tickerLoop: tick.concat(tick), tickerState: s.paused ? 'paused' : 'running',
       pauseTicker: () => defina({ paused:true }), resumeTicker: () => defina({ paused:false }),
       chuva, mob, transito, previsao, seguranca, ar, ceu, mar, memoria, lay, ramp:RAMP,

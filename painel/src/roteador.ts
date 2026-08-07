@@ -16,6 +16,7 @@ export function estadoDaUrl(): Partial<EstadoUi> {
   }
   if (caminho === '/mapa') return { ...comum, route: 'mapa', dossier: null }
   if (caminho === '/status') return { ...comum, route: 'status', dossier: null }
+  if (caminho === '/nerds') return { ...comum, route: 'nerds', dossier: null }
   const tema = caminho.slice(1)
   if (TEMAS.includes(tema)) return { ...comum, route: tema, dossier: tema }
   return { ...comum, route: 'home', dossier: null }
