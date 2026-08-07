@@ -105,4 +105,5 @@ FONTE = FonteConfig(
     # dia inteiro sem publicação é normal em dia calmo
     tolerancia_frescor=timedelta(days=2),
     coletar=coletar,
+    exige_libcurl=True,
 )

@@ -5,6 +5,8 @@ exponencial. Falha de rede (timeout, conexão, 5xx persistente) vira ErroRede �
 a classe de falha transitória da máquina de estados de saúde.
 """
 
+from typing import Any
+
 import httpx
 from tenacity import (
     retry,
@@ -28,7 +30,28 @@ class _ErroServidor(Exception):
 
 
 class ClienteHttp:
-    def __init__(self, timeout: httpx.Timeout = TIMEOUT_PADRAO) -> None:
+    """Cliente HTTP dos coletores.
+
+    `libcurl=True` troca a pilha por libcurl (curl_cffi). É necessário em
+    origens atrás de proteção que classifica o handshake TLS do httpx como bot:
+    no feed do COR, medido em 2026-08-07 intercalando os dois clientes no mesmo
+    host e minuto, curl passou 5/5 e httpx falhou 0/5. Não há disfarce de
+    navegador envolvido — o user-agent segue identificado com nosso contato, e
+    o `impersonate` do curl_cffi fica desligado de propósito.
+    """
+
+    _cliente: Any
+
+    def __init__(self, timeout: httpx.Timeout = TIMEOUT_PADRAO, libcurl: bool = False) -> None:
+        self._libcurl = libcurl
+        if libcurl:
+            from curl_cffi import requests as curl_requests
+
+            self._cliente = curl_requests.Session(
+                timeout=timeout.read or 30,
+                headers={"User-Agent": config().user_agent},
+            )
+            return
         self._cliente = httpx.Client(
             timeout=timeout,
             headers={"User-Agent": config().user_agent},
@@ -44,7 +67,11 @@ class ClienteHttp:
     def _obter_com_retry(
         self, url: str, params: dict[str, str] | None, headers: dict[str, str] | None
     ) -> httpx.Response:
-        resposta = self._cliente.get(url, params=params, headers=headers)
+        resposta: httpx.Response = (
+            self._cliente.get(url, params=params, headers=headers, allow_redirects=True)
+            if self._libcurl
+            else self._cliente.get(url, params=params, headers=headers)
+        )
         if resposta.status_code >= 500:
             raise _ErroServidor(f"HTTP {resposta.status_code} em {url}")
         return resposta

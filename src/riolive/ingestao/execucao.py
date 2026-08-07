@@ -42,7 +42,7 @@ def executar_fonte(
     coletado_em = gravacao.agora_utc()
     controle = controle if controle is not None else ControleSaude(cfg.slug)
     proprio_cliente = cliente is None
-    cliente = cliente if cliente is not None else ClienteHttp()
+    cliente = cliente if cliente is not None else ClienteHttp(libcurl=cfg.exige_libcurl)
 
     classe_erro: str | None = None
     detalhe_erro = ""
