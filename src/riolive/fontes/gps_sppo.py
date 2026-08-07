@@ -1,17 +1,34 @@
 """GPS da frota de ônibus SPPO (dados.mobilidade.rio).
 
-Pegadinhas (catálogo, confirmadas ao vivo em 2026-08-06):
-- Params dataInicial/dataFinal são OBRIGATÓRIOS e em hora local do Rio.
-- `datahora` é epoch em milissegundos UTC; `latitude`/`longitude` são strings
-  com vírgula decimal; `velocidade` é string.
+A SMTR trocou o schema deste endpoint entre 2026-08-06 02:00 e 2026-08-07 00:49
+(quebra pega ao vivo em produção). O formato antigo — `ordem`, `linha`, epoch em
+ms, lat/lon como string com vírgula decimal — morreu de vez: até as janelas
+passadas voltam no formato novo. O BRT, no mesmo host, não foi tocado.
+
+O novo payload fala GTFS (`trip_id`, `shape_id`, `route_id`, `servico`), o que é
+um upgrade pra nós: 97% dos `trip_id` casam com a `gtfs_trips` já carregada, então
+o detector de linha parada pode ler a viagem da origem em vez de adivinhar.
+
+Pegadinhas (confirmadas ao vivo em 2026-08-07):
+- Params dataInicial/dataFinal seguem OBRIGATÓRIOS e em hora local do Rio (sem
+  eles a API devolve HTTP 500); janelas passadas funcionam — dá pra fazer backfill.
+- **O sufixo `Z` do `datetime` é mentira**: o valor é hora local do Rio. Conferido
+  em 2026-08-07 — o `datetime` máximo (02:11:39Z) batia com o relógio local
+  (02:11:46), não com o UTC real (05:11:46). Parseado ao pé da letra, todo ponto
+  entra 3 h no passado; quem pegou foi a checagem de frescor da máquina de saúde.
+  O schema antigo não tinha esse defeito (o epoch em ms era UTC de verdade).
+- lat/lon já vêm float; `velocidade` é float sempre inteiro (km/h); `direcao` é o
+  azimute em graus.
+- `route_id` vem nulo em 100% dos registros hoje — por isso não é gravado.
+- `sentido` é I/V/C e vem vazio em ~30% dos registros.
 - Janelas de coleta se sobrepõem: dedup na PK (modal, veiculo_id, ts).
-~15.5k registros a cada 2 min; fonte quente (cadência 1 min, job agregador).
+~20k registros por janela de 3 min; fonte quente (cadência 1 min, job agregador).
 """
 
 import json
 from datetime import UTC, datetime, timedelta
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from riolive.fontes.comum import TZ_RIO, coordenada_plausivel
 from riolive.ingestao.contrato import (
@@ -24,37 +41,31 @@ from riolive.ingestao.fetcher import ClienteHttp, ErroRede
 
 URL = "https://dados.mobilidade.rio/gps/sppo"
 JANELA = timedelta(minutes=3)  # sobrepõe a cadência de 1 min de propósito
+FOLGA_FUTURO = timedelta(minutes=30)  # relógio da origem adiantado é normal; 3 h não é
 
 
 class RegistroSppo(BaseModel):
-    """Schema de um registro do payload do SPPO."""
+    """Schema de um registro do payload do SPPO (formato GTFS, desde 2026-08-07)."""
 
-    ordem: str
+    id_veiculo: str
+    servico: str
     latitude: float
     longitude: float
-    datahora: datetime
-    velocidade: int
-    linha: str
-
-    @field_validator("latitude", "longitude", mode="before")
-    @classmethod
-    def _virgula_decimal(cls, bruto: object) -> object:
-        if isinstance(bruto, str):
-            return bruto.replace(",", ".")
-        return bruto
+    velocidade: float
+    # `datetime` é nome reservado aqui; o alias mantém o contrato da origem
+    datahora: datetime = Field(alias="datetime")
+    sentido: str = ""
+    direcao: float | None = None
+    trip_id: str | None = None
+    shape_id: str | None = None
 
     @field_validator("datahora", mode="before")
     @classmethod
-    def _epoch_ms_utc(cls, bruto: object) -> object:
-        if isinstance(bruto, str | int | float):
-            return datetime.fromtimestamp(int(bruto) / 1000, tz=UTC)
-        return bruto
-
-    @field_validator("velocidade", mode="before")
-    @classmethod
-    def _velocidade_int(cls, bruto: object) -> object:
+    def _z_mentiroso_e_hora_do_rio(cls, bruto: object) -> object:
+        """O sufixo Z é falso: o valor é hora local do Rio (ver docstring do módulo)."""
         if isinstance(bruto, str):
-            return int(float(bruto.replace(",", ".")))
+            ingenuo = datetime.fromisoformat(bruto.removesuffix("Z"))
+            return ingenuo.replace(tzinfo=TZ_RIO).astimezone(UTC)
         return bruto
 
 
@@ -73,8 +84,10 @@ def coletar(cliente: ClienteHttp) -> ResultadoColeta:
     except json.JSONDecodeError as exc:
         raise ErroSchema(f"resposta não é JSON: {exc}") from exc
     if isinstance(registros, dict) and registros.get("RetornoOK") is False:
-        # Backend do SPPO devolve HTTP 200 com dict de erro em timeout interno
-        # (visto em 2026-08-06): é falha transitória, não mudança de formato
+        # Backend antigo devolvia HTTP 200 com dict de erro em timeout interno
+        # (visto em 2026-08-06). Mantido depois da troca de schema: se a camada
+        # nova ainda expuser esse erro, classificar como schema marcaria a fonte
+        # "fora" por uma falha que é transitória
         raise ErroRede(f"servidor SPPO com erro interno: {registros.get('DescricaoErro')}")
     if not isinstance(registros, list):
         raise ErroSchema(f"esperava lista, veio {type(registros).__name__}")
@@ -92,14 +105,26 @@ def coletar(cliente: ClienteHttp) -> ResultadoColeta:
         posicoes.append(
             PosicaoNova(
                 modal="onibus",
-                veiculo_id=registro.ordem,
+                veiculo_id=registro.id_veiculo,
                 ts=registro.datahora,
                 lat=registro.latitude,
                 lon=registro.longitude,
-                linha=registro.linha,
-                velocidade=registro.velocidade,
+                linha=registro.servico,
+                velocidade=round(registro.velocidade),
+                extra={
+                    "sentido": registro.sentido,
+                    "direcao": registro.direcao,
+                    "trip_id": registro.trip_id,
+                    "shape_id": registro.shape_id,
+                },
             )
         )
+
+    # Se a origem corrigir o Z pra UTC de verdade, a reetiquetagem acima passa a
+    # jogar tudo 3 h pro futuro — e frescor só enxerga dado velho, então a falha
+    # seria silenciosa. Acusa como schema, que é o que ela é.
+    if marca_frescor and marca_frescor - datetime.now(tz=UTC) > FOLGA_FUTURO:
+        raise ErroSchema(f"dado no futuro ({marca_frescor.isoformat()}): o Z virou UTC de verdade?")
 
     return ResultadoColeta(posicoes=posicoes, marca_frescor=marca_frescor)
 
