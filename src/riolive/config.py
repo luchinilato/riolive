@@ -61,6 +61,22 @@ class Config(BaseSettings):
     tomtom_api_key: SecretStr = SecretStr("")
     aisstream_api_key: SecretStr = SecretStr("")
 
+    # LLM via OpenRouter. Sem chave, o enriquecimento por texto fica desligado e
+    # o resto do produto segue igual — extração de texto é sempre acréscimo.
+    openrouter_api_key: SecretStr = SecretStr("")
+    # Gemini 3.6 Flash: o Flash mais recente no catálogo do OpenRouter em
+    # 2026-08-07 ($1,50/$7,50 por milhão de tokens), com saída estruturada por
+    # JSON Schema — que é o requisito da camada. Alternativa mais barata pra
+    # tarefas simples: google/gemini-3.5-flash-lite ($0,30/$2,50).
+    llm_modelo: str = "google/gemini-3.6-flash"
+    # Teto de segurança: acima disso o job para e loga, em vez de varrer a fila
+    # inteira num dia ruim. O feed do COR publica ~10 posts/dia.
+    llm_max_itens_por_rodada: int = 25
+
+    @property
+    def llm_configurado(self) -> bool:
+        return bool(self.openrouter_api_key.get_secret_value())
+
     @property
     def user_agent(self) -> str:
         return f"riolive/0.1 (coletor de dados abertos; contato: {self.contato})"
