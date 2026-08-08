@@ -121,12 +121,25 @@ def _consultar(cliente: bigquery.Client, inicio: date, fim: date) -> tuple[list[
     return list(linhas.result()), gb
 
 
-def _medicoes(linhas: list[Any], locais: dict[str, int]) -> list[MedicaoNova]:
+def _medicoes(linhas: list[Any], locais: dict[str, int]) -> tuple[list[MedicaoNova], int]:
+    """Converte linhas da origem em medições nossas. Devolve também quantas
+    leituras foram descartadas por não terem quando.
+
+    A origem tem 7.178 linhas com `horario` nulo em 29,3 milhões (0,024%) —
+    medidas em 2026-08-07, depois que uma delas derrubou o backfill em pleno
+    voo. Sem hora não há instante, e medição sem instante não existe para uma
+    série temporal. O contador volta junto porque descarte silencioso viraria
+    buraco invisível na climatologia.
+    """
     saida: list[MedicaoNova] = []
+    descartadas = 0
     for linha in linhas:
         codigo = str(linha.id_estacao)
         if codigo not in locais:
             continue  # estação que não existe na nossa rede atual
+        if linha.horario is None or linha.data_particao is None:
+            descartadas += 1
+            continue
         # `horario` vem como hora local do Rio, sem fuso declarado
         instante = datetime.combine(linha.data_particao, linha.horario).replace(tzinfo=TZ_RIO)
         for coluna, metrica in METRICAS:
@@ -136,7 +149,7 @@ def _medicoes(linhas: list[Any], locais: dict[str, int]) -> list[MedicaoNova]:
             saida.append(
                 MedicaoNova(codigo_local=codigo, metrica=metrica, ts=instante, valor=float(valor))
             )
-    return saida
+    return saida, descartadas
 
 
 def _materializar() -> None:
@@ -162,24 +175,26 @@ def rodar(ano_inicial: int = ANO_INICIAL, teto_gb: float = TETO_GB_PADRAO) -> di
     pendentes = _meses_pendentes(fonte_id, ano_inicial)
     logger.info("%s meses pendentes (%s estações na rede atual)", len(pendentes), len(locais))
 
-    total = {"meses": 0, "inseridos": 0, "gb": 0.0}
+    total = {"meses": 0, "inseridos": 0, "gb": 0.0, "descartadas": 0}
     for inicio, fim in pendentes:
         if total["gb"] >= teto_gb:
             logger.warning("teto de %.0f GB atingido — parando em %s", teto_gb, inicio)
             break
         linhas, gb = _consultar(cliente, inicio, fim)
         total["gb"] += gb
-        medicoes = _medicoes(linhas, locais)
+        medicoes, descartadas = _medicoes(linhas, locais)
+        total["descartadas"] += descartadas
         with sessao() as s:
             inseridos = inserir_medicoes(s, fonte_id, medicoes, locais, agora_utc())
             s.commit()
         total["meses"] += 1
         total["inseridos"] += inseridos
         logger.info(
-            "%s: %s leituras → %s medições novas (%.2f GB · acumulado %.1f GB)",
+            "%s: %s leituras → %s medições novas%s (%.2f GB · acumulado %.1f GB)",
             inicio,
             len(linhas),
             inseridos,
+            f" · {descartadas} sem horário, descartadas" if descartadas else "",
             gb,
             total["gb"],
         )

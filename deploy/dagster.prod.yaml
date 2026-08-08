@@ -23,7 +23,7 @@ run_monitoring:
   start_timeout_seconds: 300
   # Zero retomadas de propósito: coleta de uma hora atrás não tem valor, e
   # retomar em cima de um deploy é como o órfão nasce.
-  max_resume_attempts: 0
+  max_resume_run_attempts: 0
 
 telemetry:
   enabled: false
