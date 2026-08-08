@@ -6,6 +6,7 @@ a classe de falha transitória da máquina de estados de saúde.
 """
 
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 from tenacity import (
@@ -76,6 +77,33 @@ class ClienteHttp:
             raise _ErroServidor(f"HTTP {resposta.status_code} em {url}")
         return resposta
 
+    def _desviar(
+        self, url: str, headers: dict[str, str] | None
+    ) -> tuple[str, dict[str, str] | None]:
+        """Manda a requisição pelo relay quando o host está na lista.
+
+        Existe porque origem pública pode barrar a faixa de IP do datacenter
+        sem barrar o projeto: o MetrôRio devolve 403 (`server: awselb/2.0`) para
+        o VPS e 200 para uma máquina residencial, com o mesmo cliente e os
+        mesmos headers. O relay é infra nossa com outro IP de saída — não
+        disfarça quem somos, o user-agent continua identificado.
+
+        Só os hosts declarados desviam. Rotear tudo por um ponto único trocaria
+        um bloqueio conhecido por uma dependência que derruba todas as fontes de
+        uma vez.
+        """
+        cfg = config()
+        if not cfg.proxy_saida:
+            return url, headers
+        host = (urlparse(url).hostname or "").lower()
+        if host not in cfg.hosts_via_proxy:
+            return url, headers
+        token = cfg.proxy_token.get_secret_value()
+        cabecalhos = {**(headers or {}), "X-Riolive-Alvo": url}
+        if token:
+            cabecalhos["X-Riolive-Token"] = token
+        return cfg.proxy_saida, cabecalhos
+
     def obter(
         self,
         url: str,
@@ -87,9 +115,12 @@ class ClienteHttp:
         4xx NÃO é erro de rede: retorna a resposta pro parser decidir
         (contrato quebrado costuma ser classe `schema`, não `rede`).
         `headers` extras (ex. X-API-Key) somam aos padrão do cliente.
+
+        Host declarado em `RIOLIVE_PROXY_HOSTS` sai pelo relay — ver `_desviar`.
         """
+        alvo, cabecalhos = self._desviar(url, headers)
         try:
-            return self._obter_com_retry(url, params, headers)
+            return self._obter_com_retry(alvo, params, cabecalhos)
         except (httpx.TransportError, _ErroServidor) as exc:
             raise ErroRede(str(exc)) from exc
 

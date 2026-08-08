@@ -4,12 +4,22 @@ O token Bearer vive hardcoded no JS público do site (catálogo, exp. 2051); em
 vez de congelá-lo aqui, ele é re-extraído do script a cada coleta — sobrevive a
 rotação. Só status ANORMAL vira evento (vigente por linha); a volta ao normal
 encerra o evento. `updatedAt` da API é lixo (2024): frescor não se aplica.
+
+**A API bloqueia o IP do nosso VPS.** Medido em 2026-08-07: o site
+(`metrorio.com.br`) responde 200 do servidor, mas `api.ondeestameutrem.metrorio.app`
+devolve 403 com `server: awselb/2.0` — WAF da AWS barrando a faixa do datacenter,
+não o nosso cliente. Da máquina de casa a mesma coleta passa e devolve as três
+linhas. Não é o caso do COR (lá era o handshake TLS do httpx, e `exige_libcurl`
+resolveu): aqui curl e httpx tomam 403 igual. Por isso o 403 entra como falha de
+rede — a fonte fica fora por bloqueio da origem, que é o que de fato acontece, e
+volta sozinha se a faixa sair da lista.
 """
 
 import json
 import re
 from datetime import UTC, datetime, timedelta
 
+from riolive.fontes.comum import erro_de_status
 from riolive.ingestao.contrato import ErroSchema, EventoNovo, FonteConfig, ResultadoColeta
 from riolive.ingestao.fetcher import ClienteHttp
 
@@ -30,14 +40,14 @@ def _severidade(status: str) -> int:
 def coletar(cliente: ClienteHttp) -> ResultadoColeta:
     script = cliente.obter(URL_SCRIPT)
     if script.status_code != 200:
-        raise ErroSchema(f"HTTP {script.status_code} no script do site do MetrôRio")
+        raise erro_de_status(script.status_code, "script do site do MetrôRio")
     achado = RE_TOKEN.search(script.text)
     if not achado:
         raise ErroSchema("token não encontrado no script do site — formato mudou")
 
     resposta = cliente.obter(URL_STATUS, headers={"Authorization": f"Bearer {achado.group(1)}"})
     if resposta.status_code != 200:
-        raise ErroSchema(f"HTTP {resposta.status_code} no StatusLinha")
+        raise erro_de_status(resposta.status_code, "StatusLinha")
     try:
         linhas = resposta.json()
     except json.JSONDecodeError as exc:

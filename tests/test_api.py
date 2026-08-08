@@ -161,3 +161,24 @@ def test_queimadas_resumo_declara_desde_quando_temos_serie(cliente: TestClient) 
     assert corpo["focos"] >= len(corpo["lista"]) or len(corpo["lista"]) == 100
     # a memória do INPE aqui é curta e o dossiê precisa poder dizer desde quando
     assert "desde" in corpo
+
+
+def test_climatologia_nao_compara_com_cobertura_parcial(cliente: TestClient) -> None:
+    """Ano corrente com menos dias medidos que o recorte não vira percentual.
+
+    É o erro que o card antigo cometia ao anunciar "34% da média histórica" com
+    uma semana de mês: aritmética certa, afirmação falsa.
+    """
+    dados = cliente.get("/chuva/climatologia").json()
+    assert dados["periodo"].startswith("1 a ")
+    assert dados["dia_ate"] >= 1
+
+    atual = dados["atual"]
+    if atual and atual["dias"] < dados["dia_ate"]:
+        assert dados["percentual"] is None
+        assert "ausencia" in dados
+    # A série é sempre crescente em ano e traz o tamanho da rede — a comparação
+    # entre 26 estações (1997) e 33 (2013) tem que ser auditável de fora.
+    anos = [p["ano"] for p in dados["serie"]]
+    assert anos == sorted(anos)
+    assert all(p["estacoes"] > 0 for p in dados["serie"])
