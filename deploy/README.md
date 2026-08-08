@@ -101,6 +101,9 @@ erro. Os seeds que escrevem passado chamam `refresh_continuous_aggregate` no
 fim; se rodar carga por fora, chamar à mão:
 
 ```sql
+-- Dois agregados, nesta ordem: o diário é agregado do de 15 min (ver 0008).
+-- Materializar só o de cima devolve dia vazio, sem erro nenhum.
+CALL refresh_continuous_aggregate('chuva_15min_estacao', NULL, NULL);
 CALL refresh_continuous_aggregate('chuva_dia_estacao', NULL, NULL);
 ```
 

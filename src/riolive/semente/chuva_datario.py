@@ -159,12 +159,16 @@ def _materializar() -> None:
     `medicao` e o agregado segue sem enxergar — a climatologia continuaria vazia
     depois de um backfill que funcionou. Precisa de autocommit: `CALL
     refresh_continuous_aggregate` não roda dentro de transação.
+
+    São dois, e a ordem importa: o diário é agregado do de 15 min (ver 0008).
+    Materializar só o de cima devolve dia vazio sem erro nenhum.
     """
     from riolive.db import engine
 
     with engine().connect().execution_options(isolation_level="AUTOCOMMIT") as c:
-        c.execute(text("CALL refresh_continuous_aggregate('chuva_dia_estacao', NULL, NULL)"))
-    logger.info("agregado chuva_dia_estacao materializado")
+        for agregado in ("chuva_15min_estacao", "chuva_dia_estacao"):
+            c.execute(text(f"CALL refresh_continuous_aggregate('{agregado}', NULL, NULL)"))
+            logger.info("agregado %s materializado", agregado)
 
 
 def rodar(ano_inicial: int = ANO_INICIAL, teto_gb: float = TETO_GB_PADRAO) -> dict[str, float]:
