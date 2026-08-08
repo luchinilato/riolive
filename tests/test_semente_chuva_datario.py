@@ -40,7 +40,7 @@ def test_horario_e_hora_do_rio_e_nao_utc() -> None:
     para denunciar.
     """
     linha = LinhaFalsa("1", date(2003, 3, 15), time(2, 30), 1.2, 4.8)
-    medicoes = _medicoes([linha], LOCAIS)
+    medicoes, _ = _medicoes([linha], LOCAIS)
 
     instante = medicoes[0].ts
     assert instante.astimezone(TZ_RIO).hour == 2
@@ -56,7 +56,7 @@ def test_valor_nulo_nao_vira_zero() -> None:
     sem leitura entrariam como dias secos.
     """
     linha = LinhaFalsa("1", date(2003, 3, 15), time(2, 30), None, 4.8)
-    metricas = {m.metrica for m in _medicoes([linha], LOCAIS)}
+    metricas = {m.metrica for m in _medicoes([linha], LOCAIS)[0]}
     assert metricas == {"chuva_1h"}
 
 
@@ -70,4 +70,20 @@ def test_estacao_fora_da_rede_atual_e_descartada() -> None:
         LinhaFalsa("1", date(2003, 3, 15), time(2, 30), 1.0, 2.0),
         LinhaFalsa("99", date(2003, 3, 15), time(2, 30), 1.0, 2.0),
     ]
-    assert {m.codigo_local for m in _medicoes(linhas, LOCAIS)} == {"1"}
+    assert {m.codigo_local for m in _medicoes(linhas, LOCAIS)[0]} == {"1"}
+
+
+def test_linha_sem_horario_e_descartada_e_contada() -> None:
+    """A origem tem 7.178 linhas com `horario` nulo em 29,3 milhões.
+
+    Uma delas derrubou o backfill em pleno voo, no mês 301 de 330. Sem hora não
+    há instante, e medição sem instante não existe numa série temporal — mas o
+    descarte precisa ser contado, senão vira buraco invisível na climatologia.
+    """
+    linhas = [
+        LinhaFalsa("1", date(2023, 1, 5), None, 1.0, 2.0),  # type: ignore[arg-type]
+        LinhaFalsa("1", date(2023, 1, 5), time(3, 0), 1.0, 2.0),
+    ]
+    medicoes, descartadas = _medicoes(linhas, LOCAIS)
+    assert descartadas == 1
+    assert len(medicoes) == 2  # só a linha boa, com suas duas métricas
