@@ -384,6 +384,13 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
     }));
 
     const zoneNames = { norte:'Zona Norte', sul:'Zona Sul', oeste:'Zona Oeste', centro:'Centro' };
+    /* Seletor territorial desligado até o filtro existir de verdade.
+       Enquanto esteve ligado, escolher uma zona DESLIGAVA o overlay de dados
+       reais (`dadosReais.ts`: ativo = modo calmo && !zone) e o painel voltava
+       inteiro para o modo demonstração, sem avisar — e o próprio seletor
+       anunciava "Zona Norte · 9 EST · 1.184 VEÍC", números que ninguém mediu.
+       Volta quando `?zona=` filtrar de verdade nas rotas. */
+    const zonaDisponivel = false;
     const zones = [
       {k:null,label:'Cidade inteira',meta:'33 EST · 4.212 VEÍC'},
       {k:'norte',label:'Zona Norte',meta:'9 EST · 1.184 VEÍC'},
@@ -430,7 +437,7 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       zoneLabel: zone ? zoneNames[zone] : 'Cidade inteira',
       zoneChip: zone ? zoneNames[zone] : null,
       clearZone: (e) => { e.stopPropagation(); defina({ zone:null }); },
-      zonePickerOpen: s.zonePicker, zones,
+      zonePickerOpen: s.zonePicker && zonaDisponivel, zones, zonaDisponivel,
       toggleZonePicker: () => defina({ zonePicker: !s.zonePicker }),
       modeLabel: crisis ? 'DIA DE CRISE' : 'DIA CALMO',
       toggleMode: () => defina({ mode: crisis ? 'calmo' : 'crise' }),
