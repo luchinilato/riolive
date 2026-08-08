@@ -27,3 +27,20 @@ run_monitoring:
 
 telemetry:
   enabled: false
+
+# Teto de simultaneidade: 5, não os 10 do padrão.
+#
+# Cada run é um processo que importa o mundo (dagster + riolive + shapely/h3).
+# Dez ao mesmo tempo, numa máquina de 6 núcleos, levaram o container do daemon a
+# 559% de CPU em 2026-08-08 — e a máquina saturada foi o que fez o code server
+# perder o heartbeat, o que fabricou os runs zumbis, o que engordou a fila, que
+# ao ser drenada saturava de novo. Ciclo que se alimenta.
+#
+# O teto não custa vazão no dia normal (coleta leva segundos e a fila fica
+# vazia); ele age exatamente quando há atraso acumulado, que é quando saturar
+# piora tudo.
+run_coordinator:
+  module: dagster.core.run_coordinator
+  class: QueuedRunCoordinator
+  config:
+    max_concurrent_runs: 5

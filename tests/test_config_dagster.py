@@ -82,3 +82,18 @@ def test_servidor_de_codigo_existe_no_compose_com_a_mesma_porta() -> None:
 
     for dependente in ("dagster-daemon", "dagster-webserver"):
         assert alvo["host"] in servicos[dependente]["depends_on"], dependente
+
+
+@pytest.mark.parametrize("caminho", CONFIGS)
+def test_teto_de_simultaneidade_abaixo_do_padrao(caminho: str) -> None:
+    """Dez runs simultâneos saturaram a máquina e o resto veio em cascata.
+
+    Máquina saturada → code server sem heartbeat → run zumbi → fila cheia → ao
+    drenar, satura de novo. O teto é o que quebra o ciclo, e voltar ao padrão
+    tem que ser decisão de alguém, não o efeito de apagar um bloco do YAML.
+    """
+    with tempfile.TemporaryDirectory() as dir_tmp:
+        shutil.copy(RAIZ / caminho, Path(dir_tmp) / "dagster.yaml")
+        config, _ = dagster_instance_config(dir_tmp)
+    teto = config["run_coordinator"]["config"]["max_concurrent_runs"]
+    assert 0 < teto <= 5, teto
