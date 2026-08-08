@@ -39,6 +39,9 @@ class RA(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)  # codra do data.rio
     nome: Mapped[str] = mapped_column(Text)
+    # Zona popular (centro/sul/norte/oeste), mapeada na 0006. Não é divisão
+    # oficial — é como o carioca fala, e é o recorte que o painel oferece.
+    zona: Mapped[str | None] = mapped_column(String(16))
 
 
 class Bairro(Base):

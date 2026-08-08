@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter
 from sqlalchemy import text
 
+from riolive.api.zonas import FILTRO_SQL, ZonaQuery, valor
 from riolive.db import sessao
 from riolive.fontes.comum import TZ_RIO
 
@@ -15,12 +16,12 @@ METRICAS_TABELA = ("chuva_15min", "chuva_1h", "chuva_24h")
 
 
 @rota.get("/chuva/estacoes")
-def estacoes_chuva() -> list[dict[str, Any]]:
+def estacoes_chuva(zona: ZonaQuery = None) -> list[dict[str, Any]]:
     with sessao() as s:
         linhas = s.execute(
             text(
-                """
-                SELECT l.id, l.nome, b.nome bairro, r.nome ra,
+                f"""
+                SELECT l.id, l.nome, b.nome bairro, r.nome ra, r.zona,
                        ST_Y(l.geom) lat, ST_X(l.geom) lon,
                        u.metrica, u.valor, u.ts
                 FROM local l
@@ -34,9 +35,11 @@ def estacoes_chuva() -> list[dict[str, Any]]:
                       AND ts > now() - interval '3 hours'
                     ORDER BY ts DESC LIMIT 6
                 ) u ON TRUE
+                WHERE {FILTRO_SQL}
                 ORDER BY l.id
                 """
-            )
+            ),
+            {"zona": valor(zona)},
         ).all()
     por_estacao: dict[int, dict[str, Any]] = {}
     for linha in linhas:
@@ -47,6 +50,7 @@ def estacoes_chuva() -> list[dict[str, Any]]:
                 "nome": linha.nome,
                 "bairro": linha.bairro,
                 "ra": linha.ra,
+                "zona": linha.zona,
                 "lat": linha.lat,
                 "lon": linha.lon,
                 "leituras": {},
@@ -79,16 +83,20 @@ MESES = (
 # A comparação é sempre "mesmos dias do mês, anos diferentes". Comparar 7 dias
 # de agosto contra agostos inteiros daria "34% da média" todo início de mês —
 # um número que parece seca e é só calendário.
-SQL_CLIMATOLOGIA = """
+SQL_CLIMATOLOGIA = f"""
     WITH diario AS (
         SELECT (d.dia AT TIME ZONE 'America/Sao_Paulo')::date AS data, d.local_id, d.mm
         FROM chuva_dia_estacao d
         JOIN local l ON l.id = d.local_id
         JOIN fonte f ON f.id = l.fonte_id AND f.slug = 'alerta_rio'
+        LEFT JOIN ra r ON r.id = l.ra_id
+        -- O recorte entra aqui, antes da média: filtrar depois compararia a
+        -- chuva da zona deste ano com a média da cidade nos anteriores.
+        WHERE {FILTRO_SQL}
         -- Dia cheio são 96 leituras (uma a cada 15 min). Abaixo de 3/4 disso o
         -- total do dia é um piso, não uma medida: entra como chuva menor do que
         -- foi, e puxa a média histórica para baixo sem que nada acuse.
-        WHERE d.leituras >= 72
+          AND d.leituras >= 72
     ),
     por_estacao AS (
         SELECT EXTRACT(YEAR FROM data)::int AS ano, local_id,
@@ -106,17 +114,24 @@ SQL_CLIMATOLOGIA = """
 
 
 @rota.get("/chuva/climatologia")
-def climatologia() -> dict[str, Any]:
+def climatologia(zona: ZonaQuery = None) -> dict[str, Any]:
     """Chuva do mês corrente contra o mesmo recorte de dias nos anos anteriores.
 
     "Chuva da cidade" é a **média** das estações, não a soma: somar 33
     pluviômetros mede a rede, não a cidade. Estação sem leitura no período fica
     de fora do próprio ano, e o número de estações vai na resposta porque a rede
     cresceu de 26 (1997) para 33 (2013) e a comparação tem que assumir isso.
+
+    Com `?zona=`, a mesma conta sobre os pluviômetros daquela zona — 4 a 15
+    estações em vez de 33. O recorte vale para os dois lados da comparação, e
+    `estacoes` na resposta continua dizendo sobre quantos a média foi feita.
     """
     hoje = datetime.now(TZ_RIO).date()
     with sessao() as s:
-        linhas = s.execute(text(SQL_CLIMATOLOGIA), {"mes": hoje.month, "dia_ate": hoje.day}).all()
+        linhas = s.execute(
+            text(SQL_CLIMATOLOGIA),
+            {"mes": hoje.month, "dia_ate": hoje.day, "zona": valor(zona)},
+        ).all()
 
     serie = [
         {
@@ -130,10 +145,12 @@ def climatologia() -> dict[str, Any]:
     atual = next((p for p in serie if p["ano"] == hoje.year), None)
     anteriores = [p for p in serie if p["ano"] != hoje.year]
 
+    recorte = f" da Zona {zona.value.capitalize()}" if zona else ""
     resposta: dict[str, Any] = {
         "mes": hoje.month,
         "dia_ate": hoje.day,
         "periodo": f"1 a {hoje.day} de {MESES[hoje.month - 1]}",
+        "zona": zona.value if zona else None,
         "atual": atual,
         "serie": serie,
         "historico": None,
@@ -141,8 +158,8 @@ def climatologia() -> dict[str, Any]:
         "posicao": None,
         "lacuna": None,
         "metodologia": (
-            "Média dos pluviômetros do Alerta Rio, somando o acumulado de 15 min de "
-            f"1 a {hoje.day} de {MESES[hoje.month - 1]}. O dia de hoje ainda está em curso."
+            f"Média dos pluviômetros do Alerta Rio{recorte}, somando o acumulado de 15 min "
+            f"de 1 a {hoje.day} de {MESES[hoje.month - 1]}. O dia de hoje ainda está em curso."
         ),
     }
     if not anteriores:
