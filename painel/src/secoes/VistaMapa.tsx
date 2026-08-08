@@ -5,7 +5,12 @@ import React, { Suspense } from 'react'
 const MapaReal = React.lazy(() => import('./MapaReal').then((m) => ({ default: m.MapaReal })))
 
 export function VistaMapa({ m }: { m: Modelo }) {
-  const { camadasAtivas, contagemCamadas, copyLabel, copyLink, frames, isMapa, layers, mapPresets } = m
+  const { camadasAtivas, contagemCamadas, copyLabel, copyLink, frames, isMapa, layers, mapPresets, recortes } = m
+  /* O mapa não recorta por zona: as camadas saem de `/locais`, que ainda não
+     tem o filtro, e a geografia já está na tela. Com uma zona escolhida no
+     cabeçalho, dizer isso aqui é o mínimo — senão o carimbo do cabeçalho vale
+     para uma tela que mostra a cidade inteira. */
+  const semRecorte = recortes && Object.keys(recortes).length > 0
   return (
     <>
 {/* ================= MAPA ================= */}
@@ -20,6 +25,7 @@ export function VistaMapa({ m }: { m: Modelo }) {
           </React.Fragment>))}
           <div style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px'}}>
             <div style={{display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--bd)', background: 'var(--card)', fontSize: '11px', color: 'var(--tx2)', whiteSpace: 'nowrap'}}>Janela <span style={{color: 'var(--tx)', fontFamily: "'JetBrains Mono',monospace"}}>3h</span> <span style={{color: 'var(--tx3)'}}>/ 24h</span></div>
+            {Boolean(semRecorte) && (<div title="As camadas do mapa saem de /locais, que ainda não filtra por zona." style={{display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--bd)', background: 'transparent', fontFamily: "'JetBrains Mono',monospace", fontSize: '9px', letterSpacing: '.06em', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>◻ MAPA: CIDADE INTEIRA</div>)}
             <div onClick={copyLink} style={{display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--bd)', background: 'var(--card)', cursor: 'pointer', fontSize: '11px', color: 'var(--live-tx)', whiteSpace: 'nowrap'}}>⧉ {copyLabel}</div>
           </div>
         </div>

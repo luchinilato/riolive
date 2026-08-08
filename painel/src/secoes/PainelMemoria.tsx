@@ -2,6 +2,7 @@
    a fonte visual da verdade é docs/design/handoff/painel-rio.dc.html */
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
+import { Recorte } from '../componentes/Recorte'
 
 export function PainelMemoria({ m }: { m: Modelo }) {
   const { copyQuote, lay, memoria, quoteLabel } = m
@@ -12,6 +13,7 @@ export function PainelMemoria({ m }: { m: Modelo }) {
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--live-tx)', textTransform: 'uppercase'}}>Memória da cidade</span>
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>SÉRIE 1997–2026</span>
+              <Recorte marca={m.recortes?.memoria} />
             </div>
             <div style={{flex: '1 1 auto', minHeight: '0', display: 'flex', gap: '14px', alignItems: 'stretch', overflow: 'hidden'}}>
               <div style={{flex: '1 1 0', minWidth: '0', minHeight: '0', overflowY: 'auto', overflowX: 'hidden'}}>

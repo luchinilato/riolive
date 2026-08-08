@@ -61,7 +61,10 @@ export function Cabecalho({ m }: { m: Modelo }) {
     {/* seletor territorial aberto */}
     {Boolean(zonePickerOpen) && (<>
       <div style={{position: 'absolute', top: '58px', right: '16px', zIndex: '60', width: '280px', background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: '10px', padding: '10px', boxShadow: 'var(--shadow)', animation: 'fadeIn .12s'}}>
-        <input placeholder="Buscar zona ou bairro" style={{width: '100%', background: 'var(--bg)', border: '1px solid var(--bd)', borderRadius: '6px', padding: '7px 9px', color: 'var(--tx)', fontSize: '12px', fontFamily: 'Inter,sans-serif', outline: 'none'}} />
+        {/* O protótipo tinha aqui um "Buscar zona ou bairro" que não buscava
+            nada — invisível enquanto o seletor esteve desligado, e caixa morta
+            agora que ele voltou. São cinco opções: cabem sem busca. Volta
+            quando houver recorte por bairro (`?bairro_id=`, que a API já tem). */}
         <div style={{display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '8px', maxHeight: '240px', overflow: 'auto'}}>
           {(zones as any[]).map((z: any, zI: number) => (<React.Fragment key={zI}>
             <div onClick={z.pick} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', color: 'var(--tx)'}}>

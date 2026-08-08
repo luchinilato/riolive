@@ -10,6 +10,7 @@ from typing import Any
 from fastapi import APIRouter
 from sqlalchemy import text
 
+from riolive.api.zonas import FILTRO_SQL, ZonaQuery, valor
 from riolive.db import sessao
 
 rota = APIRouter(tags=["ar"])
@@ -18,12 +19,12 @@ POLUENTES = ("pm25", "pm10", "no2", "o3", "so2", "co")
 
 
 @rota.get("/ar/estacoes")
-def estacoes_ar() -> list[dict[str, Any]]:
+def estacoes_ar(zona: ZonaQuery = None) -> list[dict[str, Any]]:
     with sessao() as s:
         linhas = s.execute(
             text(
-                """
-                SELECT l.id, l.nome, b.nome bairro, r.nome ra,
+                f"""
+                SELECT l.id, l.nome, b.nome bairro, r.nome ra, r.zona,
                        ST_Y(l.geom) lat, ST_X(l.geom) lon,
                        u.metrica, u.valor, u.ts
                 FROM local l
@@ -37,10 +38,11 @@ def estacoes_ar() -> list[dict[str, Any]]:
                       AND ts > now() - interval '6 hours'
                     ORDER BY metrica, ts DESC
                 ) u ON TRUE
+                WHERE {FILTRO_SQL}
                 ORDER BY l.id
                 """
             ),
-            {"poluentes": list(POLUENTES)},
+            {"poluentes": list(POLUENTES), "zona": valor(zona)},
         ).all()
 
     por_estacao: dict[int, dict[str, Any]] = {}
@@ -52,6 +54,7 @@ def estacoes_ar() -> list[dict[str, Any]]:
                 "nome": linha.nome,
                 "bairro": linha.bairro,
                 "ra": linha.ra,
+                "zona": linha.zona,
                 "lat": linha.lat,
                 "lon": linha.lon,
                 "leituras": {},

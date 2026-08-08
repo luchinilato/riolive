@@ -2,6 +2,7 @@
    a fonte visual da verdade é docs/design/handoff/painel-rio.dc.html */
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
+import { Recorte } from '../componentes/Recorte'
 
 export function PainelSeguranca({ m }: { m: Modelo }) {
   const { hexes, lay, openSeguranca, seguranca, segurancaIspLinha } = m
@@ -12,6 +13,7 @@ export function PainelSeguranca({ m }: { m: Modelo }) {
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span title={seguranca.sev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${seguranca.sev.c}`, color: `${seguranca.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{seguranca.sev.i} {seguranca.sev.n}</span>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>Segurança</span>
+              <Recorte marca={m.recortes?.seguranca} />
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>{seguranca.count}</span>
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
             </div>

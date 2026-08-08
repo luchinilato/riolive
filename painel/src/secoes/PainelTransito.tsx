@@ -3,6 +3,7 @@
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
 import { BarraRegua } from '../componentes/Regua'
+import { Recorte } from '../componentes/Recorte'
 
 export function PainelTransito({ m }: { m: Modelo }) {
   const { lay, openTransito, transito } = m
@@ -13,6 +14,7 @@ export function PainelTransito({ m }: { m: Modelo }) {
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span title={transito.sev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${transito.sev.c}`, color: `${transito.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{transito.sev.i} {transito.sev.n}</span>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>Trânsito</span>
+              <Recorte marca={m.recortes?.transito} />
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>{transito.count}</span>
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
             </div>

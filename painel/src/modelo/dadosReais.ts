@@ -1,7 +1,11 @@
 /* Sobrepõe dados reais da API ao modelo demo do handoff.
 
-   Regra: só sobrepõe no modo calmo sem recorte de zona (os modos crise/zona são
-   demonstrações visuais do protótipo).
+   Regra: só sobrepõe no modo calmo (o modo crise é demonstração visual do
+   protótipo). Recorte de zona NÃO desliga o overlay — desligava, e escolher uma
+   zona devolvia o painel de demonstração inteiro sem avisar. Cinco consultas
+   sabem recortar (chuva, ar, segurança, eventos e o que sai deles); as outras
+   seguem medindo a cidade e dizem isso no próprio cartão, via `recorte` no
+   modelo. Número da cidade sob carimbo de zona é a mentira que isto evita.
 
    Todos os onze dossiês são montados com dado real (chuva, mobilidade, trânsito e
    segurança aqui; os outros sete em `dossies.ts`). Nenhum tema herda mais o
@@ -29,10 +33,13 @@ const A_CADA_30S = { refetchInterval: 30_000, staleTime: 15_000, retry: 1 }
 import { api } from '../api'
 
 export function useDadosReais(ui: EstadoUi) {
-  const ativo = ui.mode === 'calmo' && !ui.zone
+  const ativo = ui.mode === 'calmo'
+  /* Entra na queryKey de tudo que recorta: sem isso o TanStack serve o cache da
+     cidade inteira para a zona (e vice-versa) — dado certo, recorte errado. */
+  const z = ui.zone ?? null
   const agora = useQuery({ queryKey: ['agora'], queryFn: api.agora, enabled: ativo, ...A_CADA_30S })
   const fontes = useQuery({ queryKey: ['fontes'], queryFn: api.fontes, enabled: ativo, ...A_CADA_30S })
-  const eventos = useQuery({ queryKey: ['eventos'], queryFn: () => api.eventos(24), enabled: ativo, ...A_CADA_30S })
+  const eventos = useQuery({ queryKey: ['eventos', z], queryFn: () => api.eventos(24, 40, z), enabled: ativo, ...A_CADA_30S })
   const previsao = useQuery({ queryKey: ['previsao'], queryFn: () => api.previsao('centro'), enabled: ativo, refetchInterval: 300_000, retry: 1 })
   const chuva1h = useQuery({ queryKey: ['chuva1h'], queryFn: () => api.serie('chuva_15min', '1h', 12), enabled: ativo, refetchInterval: 300_000, retry: 1 })
 
@@ -46,9 +53,11 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: noDossieChuva, refetchInterval: 300_000, retry: 1,
   })
   const estacoesChuva = useQuery({
-    queryKey: ['estacoes-chuva'],
-    queryFn: api.estacoesChuva,
-    enabled: noDossieChuva, refetchInterval: 60_000, retry: 1,
+    queryKey: ['estacoes-chuva', z],
+    queryFn: () => api.estacoesChuva(z),
+    /* Com zona escolhida elas também alimentam o CARTÃO, não só o dossiê: o
+       número de `/agora` é a máxima da cidade e não cabe sob carimbo de zona. */
+    enabled: noDossieChuva || (ativo && !!z), refetchInterval: 60_000, retry: 1,
   })
 
   const radarMapa = useQuery({
@@ -81,20 +90,20 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: ativo, refetchInterval: 600_000, retry: 1,
   })
   const estacoesAr = useQuery({
-    queryKey: ['ar-estacoes'],
-    queryFn: api.estacoesAr,
+    queryKey: ['ar-estacoes', z],
+    queryFn: () => api.estacoesAr(z),
     enabled: ativo, refetchInterval: 600_000, retry: 1,
   })
   const focos = useQuery({
-    queryKey: ['focos-calor'],
-    queryFn: () => api.eventosDoTipo('foco_calor', 24, 200),
+    queryKey: ['focos-calor', z],
+    queryFn: () => api.eventosDoTipo('foco_calor', 24, 200, z),
     enabled: ativo, refetchInterval: 600_000, retry: 1,
   })
 
   // dossiê de Segurança: só busca quando aberto — a janela de 30 d varre 10 anos de base
   const seguranca = useQuery({
-    queryKey: ['seguranca-resumo', ui.period],
-    queryFn: () => api.seguranca(horas),
+    queryKey: ['seguranca-resumo', ui.period, z],
+    queryFn: () => api.seguranca(horas, z),
     enabled: ativo && ui.dossier === 'seguranca', refetchInterval: 300_000, retry: 1,
   })
 
@@ -151,8 +160,8 @@ export function useDadosReais(ui: EstadoUi) {
 
   /* Climatologia muda uma vez por dia: 30 min de refetch é generoso. */
   const climatologia = useQuery({
-    queryKey: ['chuva-climatologia'],
-    queryFn: api.climatologia,
+    queryKey: ['chuva-climatologia', z],
+    queryFn: () => api.climatologia(z),
     enabled: ativo, refetchInterval: 1_800_000, retry: 1,
   })
 
@@ -165,8 +174,8 @@ export function useDadosReais(ui: EstadoUi) {
   })
 
   const agenda = useQuery({
-    queryKey: ['cidade-agenda', ui.period],
-    queryFn: () => api.eventos(horas, 200),
+    queryKey: ['cidade-agenda', ui.period, z],
+    queryFn: () => api.eventos(horas, 200, z),
     enabled: aberto('cidade'), refetchInterval: 600_000, retry: 1,
   })
 
@@ -227,7 +236,9 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
         regua: reguaChuva(max1h),
       }
       if (cont.nivel_rios_max_cm != null)
-        saida.chuva.rios = `Rios: máx ${cont.nivel_rios_max_cm} cm — monitorando 4 estações`
+        // As 4 réguas de rio não são recortáveis por zona (a ANA publica o
+        // conjunto), então sob recorte a linha diz de quem ela fala.
+        saida.chuva.rios = `Rios${d.ui.zone ? ' na cidade' : ''}: máx ${cont.nivel_rios_max_cm} cm — monitorando 4 estações`
     }
     if (cont.pm25_max != null)
       saida.ar = { ...m.ar, heroSub: `PM2.5 máx ${String(cont.pm25_max).replace('.', ',')} µg/m³` }
@@ -244,6 +255,30 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     const valores = [...porHora.values()].slice(-12)
     if (valores.length >= 2)
       saida.chuva = { ...saida.chuva, spark: poly(valores, 220, 34, Math.max(10, ...valores)) }
+  }
+
+  /* Cartão de chuva sob recorte: o herói vem das estações DA ZONA, não da
+     máxima do município que `/agora` traz. A sparkline continua sendo da cidade
+     e por isso perde o rótulo de máxima — dizer "24 h" já é o que ela é. */
+  const chuvaDaZona = d.ui.zone ? lista(d.estacoesChuva.data) : []
+  if (d.ui.zone && d.estacoesChuva.data && !chuvaDaZona.length) {
+    /* Zona sem pluviômetro é resposta, não falta de resposta. Sem isto o cartão
+       cairia no número do protótipo com o carimbo da zona em cima. */
+    saida.chuva = { ...saida.chuva, hero: '—', sub: 'nenhuma estação de chuva nesta zona', count: '0 EST', regua: null }
+  }
+  if (chuvaDaZona.length) {
+    const leitura = (e: any, m_: string) => (typeof e.leituras?.[m_] === 'number' ? e.leituras[m_] : 0)
+    const max1h = Math.max(0, ...chuvaDaZona.map((e) => leitura(e, 'chuva_1h')))
+    const max15 = Math.max(0, ...chuvaDaZona.map((e) => leitura(e, 'chuva_15min')))
+    saida.chuva = {
+      ...saida.chuva,
+      hero: nn(max1h),
+      sub: max1h > 0 || max15 > 0
+        ? `máxima entre as ${chuvaDaZona.length} estações da zona · última hora${max15 > 0 ? ` · ${nn(max15)} mm nos últimos 15 min` : ''}`
+        : `na última hora · ${chuvaDaZona.length} estações da zona reportando`,
+      regua: reguaChuva(max1h),
+      count: `${chuvaDaZona.length} EST`,
+    }
   }
 
   if (d.previsao.data?.metricas?.temp_c?.length) {
@@ -437,7 +472,13 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       .slice(0, 2)
       .map((e: any) => ({ quando: quando(e.inicio), cor: 'var(--s2)', titulo: e.titulo, sub: null }))
     const itens = [...jogos, ...aguas]
-    if (itens.length) saida.cidadeVivaItens = itens.slice(0, 4)
+    /* Vazio entra como vazio: os três itens do protótipo (Flamengo no Maracanã,
+       manutenção em Irajá) apareceriam sob carimbo de Zona Sul. Comunicado de
+       água não tem RA na origem, então some de qualquer recorte — por isso o
+       texto fala do recorte, não da cidade. */
+    saida.cidadeVivaItens = itens.length
+      ? itens.slice(0, 4)
+      : [{ quando: '—', cor: null, titulo: d.ui.zone ? 'Nada previsto neste recorte' : 'Nada previsto nas próximas horas', sub: null }]
   }
 
   // Trânsito real: cartão com os 4 piores corredores e dossiê /transito
@@ -592,6 +633,16 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
   // Ar: estações reais, ordenadas pela pior leitura de PM2.5
   const arEstacoes = lista(d.estacoesAr.data)
   const comPm25 = arEstacoes.filter((e) => e.leituras?.pm25 != null).sort((a, b) => b.leituras.pm25 - a.leituras.pm25)
+  if (d.estacoesAr.data && !comPm25.length) {
+    /* A consulta respondeu e não há PM2.5 — na zona escolhida ou na cidade.
+       Manter as três estações do protótipo aqui seria afirmar leitura que não
+       existe, e sob recorte seria pior: Campinho e Bangu não são Zona Sul. */
+    saida.ar = {
+      ...m.ar, sev: SEV[1], hero: '—', hc: 'var(--tx2)',
+      heroSub: d.ui.zone ? 'sem leitura de PM2.5 nesta zona' : 'sem leitura de PM2.5 nas últimas 6 h',
+      count: '0 EST', regua: null, rows: [],
+    }
+  }
   if (comPm25.length) {
     const pior = comPm25[0]
     const teto = Math.max(25, pior.leituras.pm25)
@@ -638,7 +689,10 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
   // Segurança real: ocorrências do Fogo Cruzado nas 24 h + contexto mensal do ISP
   if (d.eventos.data) {
     const tiros = lista(d.eventos.data).filter((e: any) => e.tipo === 'tiroteio')
-    if (tiros.length || d.eventos.data.length) {
+    {
+      /* Sem condição de tamanho: zero tiroteio no recorte É o dado. Com a
+         condição, uma zona sem ocorrência mantinha o "3 · Zona Norte 2 · Zona
+         Oeste 1" do protótipo embaixo do carimbo da zona escolhida. */
       const mortos = tiros.reduce((s: number, e: any) => s + (e.titulo.includes('morto') ? 1 : 0), 0)
       const ultimo = tiros[0]
       saida.seguranca = {
@@ -678,7 +732,10 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
   }
 
   // painel queimadas real (contagem de focos abertos dentro do município)
-  const focosAbertos = ag?.snapshot?.contadores?.eventos_abertos?.foco_calor
+  // Com zona escolhida, quem manda é a lista já recortada de `/eventos`: este
+  // contador é do município inteiro e sobrescrever com ele carimbaria a cidade
+  // de "Zona Sul".
+  const focosAbertos = d.ui.zone ? null : ag?.snapshot?.contadores?.eventos_abertos?.foco_calor
   if (focosAbertos != null) {
     saida.queimadasHero = String(focosAbertos)
     saida.queimadasSub = focosAbertos > 0 ? 'focos ativos no município agora' : 'focos no município · 3 h'

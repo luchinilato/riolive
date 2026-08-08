@@ -14,6 +14,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Query
 from sqlalchemy import text
 
+from riolive.api.zonas import FILTRO_SQL, ZonaQuery, valor
 from riolive.db import sessao
 
 rota = APIRouter(tags=["seguranca"])
@@ -21,34 +22,46 @@ rota = APIRouter(tags=["seguranca"])
 # Janela curta pede granularidade de hora; a longa viraria um gráfico ilegível.
 PASSO_POR_JANELA = {24: "hour", 24 * 7: "day", 24 * 30: "day"}
 
+# O recorte precisa valer também no `por_ano`. Ele é a memória da cidade e não
+# depende da janela — mas depende do território: zona de hoje contra história da
+# cidade inteira é a mesma comparação torta que a climatologia evita.
+#
+# `LEFT JOIN`, não `JOIN`: 5 dos 28.612 tiroteios não têm RA resolvida, e sem
+# zona pedida eles têm que continuar contando. O recorte fica no WHERE, onde
+# some com eles só quando alguém pediu uma zona.
+JUNCAO_ZONA = "LEFT JOIN ra r ON r.id = e.ra_id"
+
 
 @rota.get("/seguranca/resumo")
 def resumo_seguranca(
     horas: Annotated[int, Query(ge=1, le=24 * 365)] = 24,
     limite_bairros: Annotated[int, Query(ge=1, le=50)] = 10,
+    zona: ZonaQuery = None,
 ) -> dict[str, Any]:
     passo = PASSO_POR_JANELA.get(horas, "month" if horas > 24 * 90 else "day")
-    parametros = {"horas": horas, "lim": limite_bairros}
+    parametros = {"horas": horas, "lim": limite_bairros, "zona": valor(zona)}
 
     with sessao() as s:
         kpis = s.execute(
             text(
                 "SELECT count(*) AS ocorrencias, "
-                "  coalesce(sum((payload->>'mortos')::int), 0) AS mortos, "
-                "  coalesce(sum((payload->>'feridos')::int), 0) AS feridos, "
-                "  count(*) FILTER (WHERE (payload->>'acao_policial')::bool) AS acao_policial "
-                "FROM evento WHERE tipo = 'tiroteio' "
-                "  AND inicio > now() - make_interval(hours => :horas)"
+                "  coalesce(sum((e.payload->>'mortos')::int), 0) AS mortos, "
+                "  coalesce(sum((e.payload->>'feridos')::int), 0) AS feridos, "
+                "  count(*) FILTER (WHERE (e.payload->>'acao_policial')::bool) AS acao_policial "
+                f"FROM evento e {JUNCAO_ZONA} WHERE e.tipo = 'tiroteio' "
+                "  AND e.inicio > now() - make_interval(hours => :horas) "
+                f"  AND {FILTRO_SQL}"
             ),
             parametros,
         ).one()
 
         serie = s.execute(
             text(
-                f"SELECT date_trunc('{passo}', inicio) AS balde, count(*) AS ocorrencias, "
-                "  coalesce(sum((payload->>'mortos')::int), 0) AS mortos "
-                "FROM evento WHERE tipo = 'tiroteio' "
-                "  AND inicio > now() - make_interval(hours => :horas) "
+                f"SELECT date_trunc('{passo}', e.inicio) AS balde, count(*) AS ocorrencias, "
+                "  coalesce(sum((e.payload->>'mortos')::int), 0) AS mortos "
+                f"FROM evento e {JUNCAO_ZONA} WHERE e.tipo = 'tiroteio' "
+                "  AND e.inicio > now() - make_interval(hours => :horas) "
+                f"  AND {FILTRO_SQL} "
                 "GROUP BY balde ORDER BY balde"
             ),
             parametros,
@@ -58,9 +71,10 @@ def resumo_seguranca(
             text(
                 "SELECT b.nome, b.id AS bairro_id, count(*) AS ocorrencias, "
                 "  coalesce(sum((e.payload->>'mortos')::int), 0) AS mortos "
-                "FROM evento e JOIN bairro b ON b.id = e.bairro_id "
+                f"FROM evento e JOIN bairro b ON b.id = e.bairro_id {JUNCAO_ZONA} "
                 "WHERE e.tipo = 'tiroteio' "
                 "  AND e.inicio > now() - make_interval(hours => :horas) "
+                f"  AND {FILTRO_SQL} "
                 "GROUP BY b.id, b.nome ORDER BY ocorrencias DESC, b.nome LIMIT :lim"
             ),
             parametros,
@@ -69,15 +83,19 @@ def resumo_seguranca(
         # Contexto de longo prazo: não depende da janela, é a memória da cidade
         anos = s.execute(
             text(
-                "SELECT extract(year FROM inicio)::int AS ano, count(*) AS ocorrencias, "
-                "  coalesce(sum((payload->>'mortos')::int), 0) AS mortos "
-                "FROM evento WHERE tipo = 'tiroteio' GROUP BY ano ORDER BY ano"
-            )
+                "SELECT extract(year FROM e.inicio)::int AS ano, count(*) AS ocorrencias, "
+                "  coalesce(sum((e.payload->>'mortos')::int), 0) AS mortos "
+                f"FROM evento e {JUNCAO_ZONA} WHERE e.tipo = 'tiroteio' "
+                f"  AND {FILTRO_SQL} "
+                "GROUP BY ano ORDER BY ano"
+            ),
+            parametros,
         ).all()
 
     return {
         "horas": horas,
         "passo": passo,
+        "zona": valor(zona),
         "ocorrencias": kpis.ocorrencias,
         "mortos": kpis.mortos,
         "feridos": kpis.feridos,
