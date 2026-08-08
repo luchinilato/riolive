@@ -4,12 +4,20 @@ import React from 'react'
 import type { Modelo } from '../modelo/tipos'
 
 export function VistaStatus({ m }: { m: Modelo }) {
-  const { ar, isStatus, sources } = m
+  const { ar, isStatus, sources, pipelineParado } = m as any
   return (
     <>
 {/* ================= STATUS ================= */}
     {Boolean(isStatus) && (<>
       <div style={{flex: '1 1 auto', minHeight: '0', overflow: 'auto', padding: '16px'}}>
+        {/* Vem antes da lista de propósito: com a ingestão parada, o estado de
+            cada fonte abaixo é o último conhecido, não o de agora. */}
+        {Boolean(pipelineParado) && (
+          <div style={{border: '1px solid var(--s4)', borderRadius: '8px', padding: '12px 14px', marginBottom: '14px', background: 'var(--warn-bg)'}}>
+            <div style={{fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', color: 'var(--s4)'}}>Ingestão parada {pipelineParado.ha}</div>
+            <div style={{fontSize: '12px', color: 'var(--tx2)', marginTop: '4px', lineHeight: '1.4'}}>{pipelineParado.texto}</div>
+          </div>
+        )}
         <div style={{display: 'flex', alignItems: 'flex-end', gap: '16px', marginBottom: '14px'}}>
           <div>
             <div style={{fontFamily: "'Space Grotesk',sans-serif", fontSize: '22px', fontWeight: '600'}}>Status das fontes</div>

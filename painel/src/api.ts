@@ -29,4 +29,5 @@ export const api = {
     obter<any>(`/ceu/aeronaves?minutos=${minutos}&horas=${horas}`),
   queimadas: (horas = 24) => obter<any>(`/queimadas/resumo?horas=${horas}`),
   climatologia: () => obter<any>('/chuva/climatologia'),
+  pipeline: () => obter<any>('/fontes/pipeline'),
 }

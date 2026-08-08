@@ -11,5 +11,19 @@ retention:
   sensor:
     purge_after_days: 7
 
+# Run em container que morre (todo deploy reinicia a stack) não reporta falha:
+# fica STARTED para sempre e ocupa um slot da fila. Com dez órfãos, o
+# QueuedRunCoordinator (máximo 10) para de lançar qualquer coisa — foi o que
+# derrubou a coleta por 6 h em 2026-08-07, sem nada acusar.
+run_monitoring:
+  enabled: true
+  # De quanto em quanto tempo o daemon confere se o processo do run existe.
+  poll_interval_seconds: 60
+  # Run preso em STARTING (o launcher morreu antes de subir) vira falha.
+  start_timeout_seconds: 300
+  # Zero retomadas de propósito: coleta de uma hora atrás não tem valor, e
+  # retomar em cima de um deploy é como o órfão nasce.
+  max_resume_attempts: 0
+
 telemetry:
   enabled: false

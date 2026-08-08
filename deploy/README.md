@@ -55,6 +55,55 @@ a chave privada dedicada (`github-actions-deploy-riolive`) cuja pública está n
 fixado no workflow — se a máquina for reinstalada, atualizar aquela linha.
 O `.env` nunca passa pelo CI. Última entrega fica registrada em `/srv/riolive/VERSAO`.
 
+## Rota nova na API exige rebuild
+
+O serviço `api` é `build: .` sem volume de código, então o container roda a
+imagem antiga até ser reconstruído. Rota que existe no código e responde 404 em
+produção é quase sempre isto:
+
+```bash
+ssh root@169.58.140.118 'cd /srv/riolive && docker compose up -d --build api'
+```
+
+Ordem importa quando a rota depende de esquema novo: **migration primeiro**,
+rebuild depois. Ao contrário, a API sobe consultando tabela que ainda não
+existe e devolve 500 no lugar de 404.
+
+## Cargas históricas (seeds que escrevem passado)
+
+O container `api` **não monta `dados/`**, então credencial que vive ali (a
+service account do GCP, por exemplo) não existe dentro dele. Para uma carga que
+roda uma vez, subir um container avulso com o volume é melhor do que alterar o
+compose de forma permanente:
+
+```bash
+ssh root@169.58.140.118 'cd /srv/riolive &&   docker compose run -d --name riolive-backfill-chuva   -v /srv/riolive/dados:/app/dados:ro   api python -m riolive.semente.chuva_datario'
+
+docker logs -f riolive-backfill-chuva     # acompanhar
+docker rm riolive-backfill-chuva          # limpar quando terminar
+```
+
+**`-d` não é opcional em carga longa.** `docker compose exec -T` sobrevive à
+morte do cliente SSH, o que soa bom e não é: o processo continua no servidor
+sem ninguém lendo o log, e conferir órfão com `ps aux` dentro da imagem devolve
+vazio porque `ps` não existe ali. Lançado com `run -d`, o log fica no container.
+
+**Custo medido do backfill de chuva (2026-08-07):** 330 meses, ~69 s por mês em
+produção contra ~20 s em máquina local — 6 h no total, limitado por CPU do
+Python (container em 105%, Postgres em 2,7%). Enquanto roda, `/mobilidade/linhas`
+sai de 411 ms para ~1 s com cache quente; as demais rotas não mudam. É
+retomável: relançar pula os meses já carregados sem gastar consulta.
+
+**Agregado contínuo não enxerga passado inserido depois.** A política de refresh
+só olha os últimos dias, então um backfill de 1997 enche a `medicao` e o
+agregado continua vazio — com a API respondendo "sem histórico" e nada logando
+erro. Os seeds que escrevem passado chamam `refresh_continuous_aggregate` no
+fim; se rodar carga por fora, chamar à mão:
+
+```sql
+CALL refresh_continuous_aggregate('chuva_dia_estacao', NULL, NULL);
+```
+
 ## Atualizar o código à mão (fallback)
 
 ```bash

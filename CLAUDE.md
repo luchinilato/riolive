@@ -21,6 +21,7 @@ Dagster UI: `localhost:3300` (a 3000 do host está ocupada por outro app). API/S
 - **`saude/`** — máquina de estados (online/degradada/fora/congelada), contadores e cooldown no Redis. **`detectores/linha_parada.py`** — planejado×realizado; NUNCA roda sem `gps_confiavel()` (online 20+ min contínuos + 1.500 ônibus transmitindo — aprendido com 111 falsos positivos).
 - **`api/rotas/`** — read-only; eventos saem SÓ pela `vw_evento_publico`. Cache-Control pra CDN. Rotas de dossiê agregam por tema: `/seguranca/resumo` (janela + `por_ano`, que é a memória e NÃO depende da janela), `/mobilidade/linhas`, `/transito/corredores`, `/chuva/estacoes`, `/ar/estacoes`, `/chuva/climatologia` (mesmo recorte de dias contra os anos anteriores).
 - **`semente/`** — cargas re-executáveis: bairros, GTFS, fogo_cruzado (backfill; retomada ignora últimos 7 dias), gps_sppo (backfill de posições; retoma da fronteira do banco, fatias de 10 min), chuva_datario (1997→2024-06 do BigQuery público; ~1 GB de consulta para 27 anos, e **materializa `chuva_dia_estacao` no fim** — agregado contínuo não enxerga passado inserido depois).
+- **`ingestao/fetcher.py` — desvio por relay**: host declarado em `RIOLIVE_PROXY_HOSTS` sai por um Worker nosso (`deploy/relay/`), o resto vai direto. Existe porque origem pode barrar a faixa de IP do datacenter sem barrar o projeto (MetrôRio: 403 pro VPS, 200 pra máquina residencial, curl e httpx iguais). Lista explícita de propósito — rotear tudo por um ponto único trocaria um bloqueio conhecido por uma dependência capaz de derrubar todas as fontes.
 - **`blobs.py`** — R2 quando `RIOLIVE_R2_*` no ambiente, senão disco (`dados/blobs/`).
 - **`painel/`** — view-model único (`modelo/base.ts` = porte literal do protótipo, com modos demo) + `modelo/dadosReais.ts` (overlay da API via TanStack Query). Seções em `secoes/` geradas do handoff (`docs/design/handoff/painel-rio.dc.html` é a fonte visual da verdade). Estilos inline por design. `maplibre-gl` fixado no v5 (v6 quebra pmtiles silenciosamente). Rotas reais: `/`, `/mapa`, `/status`, `/nerds` (Info para Nerds — vitrine de engenharia, números são estimativa mensal com a derivação comentada em `modelo/nerds.ts`) e os temas, que abrem dossiê. Camadas do mapa são estado (`camadas` na `EstadoUi`); preset é um conjunto de camadas, e camada sem dado fica visível e inerte com o motivo no lugar do carimbo de fonte.
 
@@ -39,6 +40,8 @@ Dagster UI: `localhost:3300` (a 3000 do host está ocupada por outro app). API/S
 - Fogo Cruzado: rate limit ~4 req/s (429); pino exato e sem atraso são exigência de DEC.
 - **Chuva histórica: `chuva_1h` é janela móvel.** Somar todas as leituras dá 4× a chuva real (leitura de 15 em 15 min). A base somável é `chuva_15min` — é a única que o backfill importa como acumulável.
 - **Climatologia compara o mesmo recorte de dias** (1 a D contra 1 a D), nunca mês em curso contra mês fechado: o segundo anuncia seca histórica todo dia 5 só por ler o calendário.
+- **Rota nova na API não sobe sem rebuild, e migration vem antes dela.** Ao contrário, a API consulta tabela inexistente e devolve 500 em vez de 404. Sequência e comandos em `deploy/README.md`.
+- **Carga histórica em produção roda em container avulso** (`docker compose run -d` com `-v dados:`): o serviço `api` não monta `dados/`, então credencial que vive ali não existe dentro dele.
 
 ## Estado e fila
 
