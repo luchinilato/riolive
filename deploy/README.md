@@ -107,6 +107,52 @@ CALL refresh_continuous_aggregate('chuva_15min_estacao', NULL, NULL);
 CALL refresh_continuous_aggregate('chuva_dia_estacao', NULL, NULL);
 ```
 
+## Coleta parada com tudo "no ar" (fila do Dagster travada)
+
+Sintoma: `GET /api/fontes/pipeline` responde `"vivo": false`, o painel mostra
+fontes em `desconhecido` e o rodapé briga com o ticker — enquanto `docker
+compose ps` mostra todos os containers de pé. No log do daemon:
+
+```
+QueuedRunCoordinatorDaemon - 10 runs are currently in progress. Maximum is 10, won't launch more.
+```
+
+São runs zumbis: ficaram `STARTED` para sempre e ocupam os dez slots da fila.
+A causa de raiz foi tratada (servidor de código dedicado, ver `workspace.yaml`),
+mas o procedimento fica aqui porque o estado, uma vez criado, não se desfaz.
+
+Ver quantos são e enterrá-los — `dagster run` na CLI **não** tem `terminate`,
+então é pelo GraphQL do webserver (o `docker compose exec` não enxerga arquivo
+do host, por isso o script roda no host mesmo):
+
+```bash
+ssh root@169.58.140.118
+cat > /tmp/term.py <<'EOF'
+import json, urllib.request
+
+def gql(q, v=None):
+    req = urllib.request.Request(
+        "http://127.0.0.1:3300/graphql",
+        data=json.dumps({"query": q, "variables": v or {}}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    return json.loads(urllib.request.urlopen(req, timeout=30).read())
+
+ids = [r["runId"] for r in gql("{ runsOrError(filter: {statuses: [STARTED]}, limit: 50) { ... on Runs { results { runId } } } }")["data"]["runsOrError"]["results"]]
+print("presos:", len(ids))
+m = """mutation($ids: [String!]!) { terminateRuns(runIds: $ids, terminatePolicy: MARK_AS_CANCELED_IMMEDIATELY) { __typename ... on TerminateRunsResult { terminateRunResults { __typename ... on TerminateRunFailure { message } } } } }"""
+print(json.dumps(gql(m, {"ids": ids}))[:600])
+EOF
+python3 /tmp/term.py
+```
+
+A coleta volta sozinha em menos de um minuto — confira em `/api/fontes/pipeline`
+(`"vivo": true`). As fontes saem de `desconhecido` conforme cada uma roda: as de
+cadência longa (previsão, diário oficial) demoram o tempo da própria cadência.
+
+**Não reiniciar a stack para "resolver"**: o reinício cria os zumbis, não os
+remove — os runs em voo morrem sem reportar falha e voltam a entupir a fila.
+
 ## Atualizar o código à mão (fallback)
 
 ```bash

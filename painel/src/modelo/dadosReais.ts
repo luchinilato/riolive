@@ -727,7 +727,14 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     if (cont.pm25_max != null) põe('PM2.5 MÁX', String(cont.pm25_max).replace('.', ','))
     if (tempAgora != null) põe('TEMP CENTRO', `${String(Math.round(tempAgora * 10) / 10).replace('.', ',')}°C`)
     if (cont.eventos_abertos) põe('EVENTOS ABERTOS', String(Object.values(cont.eventos_abertos as Record<string, number>).reduce((a, b) => a + b, 0)))
-    if (cont.fontes) põe('FONTES ONLINE', `${cont.fontes.online ?? 0}/${Object.values(cont.fontes as Record<string, number>).reduce((a, b) => a + b, 0)}`)
+    /* Contagem de fontes vem de `/fontes`, NÃO do snapshot: o snapshot guarda o
+       estado do instante em que foi escrito e não envelhece sozinho. Com a
+       ingestão parada às 00h48 de 2026-08-08, o ticker anunciava "19/21" no
+       mesmo instante em que o rodapé, que já lê `/fontes`, dizia 7 de 21 — a
+       mesma tela discordando de si mesma, e a mais otimista das duas mentindo. */
+    const fontesVivas = lista(d.fontes.data)
+    if (fontesVivas.length)
+      põe('FONTES ONLINE', `${fontesVivas.filter((f: any) => f.estado === 'online').length}/${fontesVivas.length}`)
     if (itens.length >= 5) saida.tickerLoop = itens.concat(itens)
   }
 
