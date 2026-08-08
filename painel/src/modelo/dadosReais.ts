@@ -156,13 +156,21 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: ativo, refetchInterval: 1_800_000, retry: 1,
   })
 
+  /* Sinal de vida da ingestão. Vale sempre, não só na aba de status: se a
+     coleta parou, TODO número do painel é do passado. */
+  const pipeline = useQuery({
+    queryKey: ['pipeline'],
+    queryFn: api.pipeline,
+    enabled: ativo, ...A_CADA_30S,
+  })
+
   const agenda = useQuery({
     queryKey: ['cidade-agenda', ui.period],
     queryFn: () => api.eventos(horas, 200),
     enabled: aberto('cidade'), refetchInterval: 600_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, mar, estacoesAr, focos, previsaoPontos, marPontos, serieAr, aeronaves, queimadas, agenda, climatologia, ui, ativo }
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, mar, estacoesAr, focos, previsaoPontos, marPontos, serieAr, aeronaves, queimadas, agenda, climatologia, pipeline, ui, ativo }
 }
 
 const hhmm = (iso: string) => {
@@ -286,11 +294,19 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
     if (carimbo) saida.atualizadoEm = new Date(carimbo).toLocaleTimeString('pt-BR', { hour12: false })
     saida.sources = d.fontes.data.map((f: any) => {
       const deg = f.estado !== 'online'
+      /* Estado vencido não é falha da origem — é ausência de notícia nossa.
+         Merece símbolo e cor próprios, senão vira "degradada" e some no meio. */
+      const semNoticia = f.estado === 'desconhecido'
       return {
         n: f.nome, org: f.orgao,
         state: f.estado === 'online' ? 'Online' : f.estado.charAt(0).toUpperCase() + f.estado.slice(1),
-        i: deg ? '◆' : '●', c: deg ? 'var(--s2)' : 'var(--s1)',
-        age: f.desde ? `desde ${hhmm(f.desde)}` : '—',
+        i: semNoticia ? '?' : deg ? '◆' : '●',
+        c: semNoticia ? 'var(--tx2)' : deg ? 'var(--s2)' : 'var(--s1)',
+        /* Sem notícia, "desde 14:32" mentiria: aquilo é quando o estado mudou
+           pela última vez, não quando a fonte foi vista. */
+        age: semNoticia
+          ? (f.ultima_coleta ? `visto ${hhmm(f.ultima_coleta)}` : 'sem registro')
+          : f.desde ? `desde ${hhmm(f.desde)}` : '—',
         agec: deg ? 'var(--s2)' : 'var(--tx2)',
         up: f.uptime_pct != null ? `${String(f.uptime_pct).replace('.', ',')}%` : '—',
         bars: (f.dias ?? Array(30).fill(null)).map((dia: string | null) =>
@@ -791,6 +807,16 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
           }${rede}.`,
           bars,
         }
+  }
+
+  /* Ingestão parada é informação de primeira ordem: sem ela, todo o resto da
+     tela é passado com cara de presente. */
+  const pipe = d.pipeline.data
+  if (pipe && pipe.vivo === false) {
+    saida.pipelineParado = {
+      texto: pipe.detalhe ?? 'A ingestão está parada.',
+      ha: pipe.ha_segundos != null ? `há ${Math.floor(pipe.ha_segundos / 60)} min` : 'há tempo indeterminado',
+    }
   }
 
   // mobileList é derivada dos painéis no modelo base — re-deriva com os valores reais

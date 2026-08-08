@@ -6,6 +6,7 @@ estiver fora, degrada pra memória do processo — ingestão nunca para por caus
 """
 
 import logging
+from datetime import datetime
 
 import redis
 
@@ -14,6 +15,10 @@ from riolive.config import config
 logger = logging.getLogger(__name__)
 
 _memoria: dict[str, str] = {}  # fallback se o Redis estiver indisponível
+
+# 7 dias cobre a fonte mais lenta com folga; passou disso, "sem notícia" é a
+# resposta honesta, e é a que queremos que apareça.
+TTL_COLETA_S = 7 * 24 * 3600
 
 
 class ControleSaude:
@@ -52,6 +57,37 @@ class ControleSaude:
             self._redis.set(self._chave("estado"), estado)
         except redis.RedisError:
             _memoria[self._chave("estado")] = estado
+
+    def marcar_coleta(self, quando: datetime) -> None:
+        """Carimba que esta fonte foi coletada agora — deu certo ou não.
+
+        `saude_fonte` só ganha linha quando o estado MUDA, então fonte saudável
+        há dias não produz registro nenhum. Sem este carimbo não há como
+        distinguir "online e coletando" de "online era o último estado antes de
+        tudo parar" — e foi essa indistinção que fez a status page anunciar 20
+        de 21 fontes no ar com o pipeline morto havia 6 h.
+
+        O TTL é o que dá a resposta certa de graça: expirado, a chave some e a
+        fonte aparece como desconhecida em vez de eternamente no último estado.
+        """
+        try:
+            self._redis.set(self._chave("ultima_coleta"), quando.isoformat(), ex=TTL_COLETA_S)
+        except redis.RedisError:
+            _memoria[self._chave("ultima_coleta")] = quando.isoformat()
+
+    def ultima_coleta(self) -> datetime | None:
+        """Quando esta fonte foi coletada pela última vez, ou None se sem notícia."""
+        try:
+            valor = self._redis.get(self._chave("ultima_coleta"))
+        except redis.RedisError:
+            valor = _memoria.get(self._chave("ultima_coleta"))
+        if valor is None:
+            return None
+        texto = valor.decode() if isinstance(valor, bytes) else str(valor)
+        try:
+            return datetime.fromisoformat(texto)
+        except ValueError:
+            return None
 
     def tentar_iniciar_cooldown(self) -> bool:
         """True se não havia cooldown ativo (pode alertar); inicia a janela.

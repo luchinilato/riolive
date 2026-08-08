@@ -94,6 +94,10 @@ def executar_fonte(
         falhas = 0
         controle.zerar_falhas_rede()
 
+    # Antes de qualquer ramo: o carimbo diz que o pipeline passou por aqui, e é
+    # o que separa "está no ar" de "estava no ar quando parou".
+    controle.marcar_coleta(coletado_em)
+
     aval = avaliar(classe_erro, falhas, atraso_frescor)
     detalhe = detalhe_erro or aval.detalhe
     anterior = controle.estado_anterior()
