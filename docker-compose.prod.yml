@@ -25,6 +25,18 @@ services:
     environment:
       RIOLIVE_DATABASE_URL: postgresql+psycopg://riolive:${POSTGRES_PASSWORD}@db:5432/riolive
 
+  # Onde os runs de verdade executam (ver workspace.yaml). Precisa do mesmo
+  # ambiente da API: banco, credenciais do .env e o volume `dados`, que é onde
+  # mora a credencial do BigQuery usada pelas cargas.
+  dagster-codigo:
+    restart: unless-stopped
+    environment:
+      RIOLIVE_DATABASE_URL: postgresql+psycopg://riolive:${POSTGRES_PASSWORD}@db:5432/riolive
+      DAGSTER_PG_URL: postgresql://riolive:${POSTGRES_PASSWORD}@db:5432/dagster
+    volumes:
+      - ./deploy/dagster.prod.yaml:/app/.dagster_home/dagster.yaml:ro
+      - ./dados:/app/dados
+
   dagster-webserver:
     restart: unless-stopped
     ports: !override

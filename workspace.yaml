@@ -1,2 +1,22 @@
+# O código NÃO é carregado por `python_module` aqui — de propósito.
+#
+# Com `python_module`, webserver e daemon sobem cada um o seu code server
+# efêmero, com heartbeat: se o cliente não bate em 20 s, o servidor se desliga e
+# leva junto os runs que estavam executando dentro dele. Eles não reportam
+# falha, ficam STARTED para sempre e ocupam um slot do QueuedRunCoordinator
+# (máximo 10). Com dez, a fila trava e a coleta para inteira.
+#
+# Aconteceu duas vezes: 2026-08-07 (6 h parada) e 2026-08-08 (38 min, com o
+# backfill de chuva disputando CPU e o heartbeat estourando por isso). Na
+# primeira, `run_monitoring` foi a resposta — e não bastou: para marcar o run
+# como morto, o monitor precisa perguntar a um servidor que ainda esteja de pé,
+# e o que morreu foi justamente ele.
+#
+# Servidor dedicado (`dagster api grpc`, serviço `dagster-codigo`) resolve as
+# duas pontas: não tem heartbeat para perder, e quando ele reinicia num deploy o
+# `run_monitoring` consegue conferir a saúde dos runs e enterrá-los.
 load_from:
-  - python_module: riolive.orquestracao.definitions
+  - grpc_server:
+      host: dagster-codigo
+      port: 4000
+      location_name: riolive

@@ -43,12 +43,13 @@ services:
       db:
         condition: service_healthy
 
-  dagster-webserver:
+  # Servidor de código dedicado: é AQUI que os runs executam, e é por isso que
+  # ele existe como serviço em vez de ser carregado dentro do daemon. Ver o
+  # comentário do `workspace.yaml` — code server efêmero morre por heartbeat e
+  # deixa run zumbi ocupando a fila até a coleta parar inteira.
+  dagster-codigo:
     build: .
-    command: dagster-webserver -h 0.0.0.0 -p 3000 -w workspace.yaml
-    ports:
-      # 3300 no host: a porta 3000 costuma estar ocupada por outros apps locais
-      - "3300:3000"
+    command: dagster api grpc -h 0.0.0.0 -p 4000 -m riolive.orquestracao.definitions
     environment: &app_env
       RIOLIVE_DATABASE_URL: postgresql+psycopg://riolive:riolive@db:5432/riolive
       RIOLIVE_REDIS_URL: redis://redis:6379/0
@@ -62,6 +63,27 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  dagster-webserver:
+    build: .
+    command: dagster-webserver -h 0.0.0.0 -p 3000 -w workspace.yaml
+    ports:
+      # 3300 no host: a porta 3000 costuma estar ocupada por outros apps locais
+      - "3300:3000"
+    environment: *app_env
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./docker/dagster.yaml:/app/.dagster_home/dagster.yaml:ro
+      - ./dados:/app/dados
+    depends_on:
+      db:
+        condition: service_healthy
+      dagster-codigo:
+        condition: service_started
 
   dagster-daemon:
     build: .
@@ -78,6 +100,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      dagster-codigo:
+        condition: service_started
 
 volumes:
   db_dados:
