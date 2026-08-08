@@ -1,0 +1,6 @@
+name = "riolive-relay"
+main = "worker.js"
+compatibility_date = "2026-08-07"
+
+# Sem KV, sem D1, sem R2: o relay não guarda nada. O segredo entra por
+# `npx wrangler secret put TOKEN`, nunca neste arquivo.
