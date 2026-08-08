@@ -11,7 +11,11 @@ export function estadoDaUrl(): Partial<EstadoUi> {
   const caminho = window.location.pathname
   const consulta = new URLSearchParams(window.location.search)
   const comum: Partial<EstadoUi> = {
-    zone: consulta.get('zona'),
+    /* `?zona=` fica ignorado enquanto o filtro territorial não existe nas
+       rotas da API. Ler o parâmetro faria um link antigo desligar o overlay de
+       dados reais e devolver o painel de demonstração sem avisar — que é a
+       razão de o seletor estar desligado. Volta junto com o filtro. */
+    zone: null,
     period: (consulta.get('periodo') as EstadoUi['period']) ?? '24h',
   }
   if (caminho === '/mapa') return { ...comum, route: 'mapa', dossier: null }

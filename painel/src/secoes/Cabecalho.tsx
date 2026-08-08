@@ -6,6 +6,7 @@ import { Logo } from '../componentes/Logo'
 
 export function Cabecalho({ m }: { m: Modelo }) {
   const { clearZone, copyLabel, copyLink, goHome, goMapa, goStatus, headline, modeLabel, navA, navM, navS, sev, themeIcon, themeLabel, toggleMode, toggleTheme, toggleZonePicker, zoneChip, zoneLabel, zonePickerOpen, zones } = m
+  const { aoVivo, zonaDisponivel } = m as any
   return (
     <>
 {/* ================= CABEÇALHO DE ESTADO ================= */}
@@ -40,17 +41,19 @@ export function Cabecalho({ m }: { m: Modelo }) {
             <span onClick={clearZone} style={{cursor: 'pointer', color: 'var(--on-brand2)', fontSize: '11px'}}>✕</span>
           </div>
         </>)}
-        <div onClick={toggleZonePicker} style={{display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--bd)', background: 'var(--card)', cursor: 'pointer', fontSize: '12px'}}>
+        {Boolean(zonaDisponivel) && (<div onClick={toggleZonePicker} style={{display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--bd)', background: 'var(--card)', cursor: 'pointer', fontSize: '12px'}}>
           <span style={{color: 'var(--tx2)'}}>Território</span>
           <span style={{color: 'var(--tx)', fontWeight: '500'}}>{zoneLabel}</span>
           <span style={{color: 'var(--tx3)', fontSize: '9px'}}>▾</span>
-        </div>
+        </div>)}
         <div onClick={copyLink} style={{display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--bd)', background: 'var(--card)', cursor: 'pointer', fontSize: '11px', color: 'var(--live-tx)'}}>⧉ {copyLabel}</div>
         <div onClick={toggleMode} style={{display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', borderRadius: '6px', border: '1px dashed var(--tx4)', cursor: 'pointer', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx2)', whiteSpace: 'nowrap'}}>DEMO: {modeLabel}</div>
         <div onClick={toggleTheme} title="Alternar tema" style={{display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--bd)', background: 'var(--card)', cursor: 'pointer', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx2)', whiteSpace: 'nowrap'}}>{themeIcon} {themeLabel}</div>
         <div style={{display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '4px'}}>
-          <span style={{width: '7px', height: '7px', borderRadius: '50%', background: 'var(--live)', animation: 'pulse 2s infinite'}}></span>
-          <span style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx2)', letterSpacing: '.06em'}}>AO VIVO</span>
+          {/* Acende com a resposta de /agora na mão. Antes era fixo no HTML:
+              piscava "AO VIVO" com a ingestão morta havia horas. */}
+          <span style={{width: '7px', height: '7px', borderRadius: '50%', background: aoVivo ? 'var(--live)' : 'var(--tx2)', animation: aoVivo ? 'pulse 2s infinite' : 'none'}}></span>
+          <span style={{fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx2)', letterSpacing: '.06em'}}>{aoVivo ? 'AO VIVO' : 'SEM SINAL'}</span>
         </div>
       </div>
     </div>
