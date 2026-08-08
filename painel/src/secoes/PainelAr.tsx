@@ -3,6 +3,7 @@
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
 import { BarraRegua } from '../componentes/Regua'
+import { Recorte } from '../componentes/Recorte'
 
 export function PainelAr({ m }: { m: Modelo }) {
   const { ar, lay, openAr } = m
@@ -13,6 +14,7 @@ export function PainelAr({ m }: { m: Modelo }) {
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span title={ar.sev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${ar.sev.c}`, color: `${ar.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{ar.sev.i} {ar.sev.n}</span>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>Qualidade do ar</span>
+              <Recorte marca={m.recortes?.ar} />
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
             </div>
             <div style={{display: 'flex', alignItems: 'baseline', gap: '6px'}}>

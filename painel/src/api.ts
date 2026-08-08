@@ -8,26 +8,34 @@ async function obter<T>(caminho: string): Promise<T> {
   return resposta.json() as Promise<T>
 }
 
+/* `?zona=` só entra quando há zona escolhida: a API entende a ausência como "a
+   cidade inteira", e mandar `zona=` vazio seria pedir um recorte que não existe
+   — 422, não cidade inteira. */
+const comZona = (caminho: string, zona?: string | null) =>
+  zona ? `${caminho}${caminho.includes('?') ? '&' : '?'}zona=${zona}` : caminho
+
 export const api = {
   agora: () => obter<any>('/agora'),
   fontes: () => obter<any[]>('/fontes'),
-  eventos: (horas = 24, limite = 40) => obter<any[]>(`/eventos?horas=${horas}&limite=${limite}`),
-  eventosDoTipo: (tipo: string, horas = 24, limite = 200) =>
-    obter<any[]>(`/eventos?tipo=${tipo}&horas=${horas}&limite=${limite}`),
+  eventos: (horas = 24, limite = 40, zona?: string | null) =>
+    obter<any[]>(comZona(`/eventos?horas=${horas}&limite=${limite}`, zona)),
+  eventosDoTipo: (tipo: string, horas = 24, limite = 200, zona?: string | null) =>
+    obter<any[]>(comZona(`/eventos?tipo=${tipo}&horas=${horas}&limite=${limite}`, zona)),
   previsao: (local = 'centro', horas = 12) =>
     obter<any>(`/previsao?local=${local}&horas=${horas}`),
   serie: (metrica: string, passo = '1h', horas = 24) =>
     obter<any>(`/series/${metrica}?passo=${passo}&horas=${horas}`),
   locais: (consulta: string) => obter<any>(`/locais?${consulta}`),
-  estacoesChuva: () => obter<any[]>('/chuva/estacoes'),
-  estacoesAr: () => obter<any[]>('/ar/estacoes'),
+  estacoesChuva: (zona?: string | null) => obter<any[]>(comZona('/chuva/estacoes', zona)),
+  estacoesAr: (zona?: string | null) => obter<any[]>(comZona('/ar/estacoes', zona)),
   radar: (quadros = 12) => obter<any>(`/radar?quadros=${quadros}`),
   corredores: () => obter<any>('/transito/corredores'),
   mobilidade: () => obter<any>('/mobilidade/linhas'),
-  seguranca: (horas = 24) => obter<any>(`/seguranca/resumo?horas=${horas}`),
+  seguranca: (horas = 24, zona?: string | null) =>
+    obter<any>(comZona(`/seguranca/resumo?horas=${horas}`, zona)),
   aeronaves: (minutos = 10, horas = 24) =>
     obter<any>(`/ceu/aeronaves?minutos=${minutos}&horas=${horas}`),
   queimadas: (horas = 24) => obter<any>(`/queimadas/resumo?horas=${horas}`),
-  climatologia: () => obter<any>('/chuva/climatologia'),
+  climatologia: (zona?: string | null) => obter<any>(comZona('/chuva/climatologia', zona)),
   pipeline: () => obter<any>('/fontes/pipeline'),
 }

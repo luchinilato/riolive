@@ -7,15 +7,17 @@ const TEMAS = [
   'mar', 'ceu', 'queimadas', 'cidade', 'navios',
 ]
 
+/* As mesmas quatro que a API aceita. Zona escrita errada na URL vira cidade
+   inteira, não erro: link torto não deve deixar o painel em branco, e a API
+   recusaria com 422 uma zona que ela não conhece. */
+export const ZONAS = ['centro', 'sul', 'norte', 'oeste']
+
 export function estadoDaUrl(): Partial<EstadoUi> {
   const caminho = window.location.pathname
   const consulta = new URLSearchParams(window.location.search)
+  const zona = consulta.get('zona')
   const comum: Partial<EstadoUi> = {
-    /* `?zona=` fica ignorado enquanto o filtro territorial não existe nas
-       rotas da API. Ler o parâmetro faria um link antigo desligar o overlay de
-       dados reais e devolver o painel de demonstração sem avisar — que é a
-       razão de o seletor estar desligado. Volta junto com o filtro. */
-    zone: null,
+    zone: zona && ZONAS.includes(zona) ? zona : null,
     period: (consulta.get('periodo') as EstadoUi['period']) ?? '24h',
   }
   if (caminho === '/mapa') return { ...comum, route: 'mapa', dossier: null }

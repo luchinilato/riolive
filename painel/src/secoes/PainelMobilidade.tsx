@@ -3,6 +3,7 @@
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
 import { BarraRegua } from '../componentes/Regua'
+import { Recorte } from '../componentes/Recorte'
 
 export function PainelMobilidade({ m }: { m: Modelo }) {
   const { fleetDots, lay, mob, openMob } = m
@@ -13,6 +14,7 @@ export function PainelMobilidade({ m }: { m: Modelo }) {
             <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto'}}>
               <span title={mob.sev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${mob.sev.c}`, color: `${mob.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{mob.sev.i} {mob.sev.n}</span>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>Mobilidade</span>
+              <Recorte marca={m.recortes?.mob} />
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>{mob.count}</span>
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
             </div>

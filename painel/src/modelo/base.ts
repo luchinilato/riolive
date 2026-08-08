@@ -35,13 +35,16 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
     
     const crisis = s.mode === 'crise';
     const zone = s.zone;
-    const zn = zone === 'norte';
+    /* O protótipo trazia um roteiro de demonstração para a Zona Norte (`zn`),
+       com 9 estações, 1.184 veículos e "4º agosto mais seco desde 1997". Agora
+       que a zona é recorte de verdade, esse roteiro seria número inventado
+       embaixo de um carimbo verdadeiro — que é pior do que o seletor desligado.
+       O fundo é sempre o da cidade, e quem recorta é o overlay com dado real. */
 
     const citySev = SEV[crisis ? 4 : 1];
     const headline = crisis
       ? 'Chuva forte na Zona Oeste e Jacarepaguá · 14 linhas de ônibus sem circular · risco de alagamento até 18h.'
-      : (zn ? 'A Zona Norte opera normalmente. Sem chuva nas últimas 24 h; 1.184 veículos em circulação.'
-            : 'A cidade opera normalmente. Sem chuva nas últimas 24h.');
+      : 'A cidade opera normalmente. Sem chuva nas últimas 24h.';
 
     // ---------- painéis ----------
     const chuva = crisis ? {
@@ -51,9 +54,9 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       spark:poly([0,0,1,2,6,14,22,31,38,45,42,40], 220, 34, 50),
       echo1:'rgba(205,64,72,.55)', echo2:'rgba(29,124,171,.6)'
     } : {
-      sev:SEV[1], bd:'var(--bd)', hero:'0,0', hc:'var(--tx)', count: zn ? '9 ESTAÇÕES' : '33 ESTAÇÕES',
-      sub: zn ? 'na última hora · 9 estações da Zona Norte' : 'na última hora · todas as 33 estações reportando',
-      rios: zn ? 'Rios: Acari 48 cm — estável · Faria-Timbó ok' : 'Rios: Tijuca 65 cm — estável · Acari, Maracanã, Faria-Timbó ok',
+      sev:SEV[1], bd:'var(--bd)', hero:'0,0', hc:'var(--tx)', count: '33 ESTAÇÕES',
+      sub: 'na última hora · todas as 33 estações reportando',
+      rios: 'Rios: Tijuca 65 cm — estável · Acari, Maracanã, Faria-Timbó ok',
       spark:poly([0,0,0,0,0,0,0,0,0,0,0,0], 220, 34, 10),
       echo1:'rgba(63,169,107,.22)', echo2:'rgba(63,169,107,.16)'
     };
@@ -65,16 +68,16 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       warnBg:'var(--s3-bg)', warnBd:'var(--s3-bd)', warnC:'var(--s3-tx)',
       m1:'var(--s1)', m2:'var(--s2)', m4:'var(--s1)', metro:'METRÔ: L2 COM LENTIDÃO'
     } : {
-      sev:SEV[1], bd:'var(--bd)', hero: zn ? '1.184' : '4.212', count: zn ? '82 LINHAS' : '312 LINHAS',
-      sub: zn ? '1.021 ônibus + 163 BRT · 97% das linhas da zona ativas' : '3.642 ônibus + 558 BRT · 96% das linhas planejadas ativas',
-      warn: zn ? '1 linha sem circular há 40+ min: 232' : '3 linhas sem circular há 40+ min: 232, SV790, 863',
+      sev:SEV[1], bd:'var(--bd)', hero:'4.212', count:'312 LINHAS',
+      sub: '3.642 ônibus + 558 BRT · 96% das linhas planejadas ativas',
+      warn: '3 linhas sem circular há 40+ min: 232, SV790, 863',
       warnBg:'var(--s2-bg)', warnBd:'var(--warn-bd)', warnC:'var(--warn-tx)',
       m1:'var(--s1)', m2:'var(--s1)', m4:'var(--s1)', metro:'METRÔ NORMAL'
     };
 
     const transito = {
       sev: crisis ? SEV[3] : SEV[1], count: crisis ? '9 CORR' : '12 CORR',
-      hero: crisis ? '19' : (zn ? '28' : '31'),
+      hero: crisis ? '19' : '31',
       sub: crisis ? 'fluxo livre 42 km/h · 4 corredores interditados' : 'fluxo livre 42 km/h · derivado da nossa frota + TomTom',
       rows: crisis ? [
         {n:'Linha Amarela', v:'8', d:'▼', dc:'var(--s4)'},
@@ -105,18 +108,16 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
 
     const seguranca = {
       sev: crisis ? SEV[2] : SEV[2], count: crisis ? '24H' : '24H',
-      hero: zn ? '2' : '3',
-      sub: zn ? 'todas na Zona Norte · nenhuma nas últimas 6 h' : 'Zona Norte 2 · Zona Oeste 1 · nenhuma nas últimas 6 h'
+      hero: '3',
+      sub: 'Zona Norte 2 · Zona Oeste 1 · nenhuma nas últimas 6 h'
     };
 
     const ar = crisis ? {
       sev:SEV[1], hero:'Boa', hc:'var(--s1)', heroSub:'PM2.5 máx 9,4 µg/m³ (chuva lavou o ar)', count:'28 EST',
       rows:[{n:'Bangu',v:'9,4',p:24,c:'var(--s1)'},{n:'Irajá',v:'8,1',p:20,c:'var(--s1)'},{n:'Centro',v:'7,7',p:19,c:'var(--s1)'}]
     } : {
-      sev:SEV[1], hero:'Boa', hc:'var(--s1)', heroSub: zn ? 'PM2.5 máx 14,1 µg/m³ (Irajá)' : 'PM2.5 máx 16,7 µg/m³ (Campinho)', count: zn ? '9 EST' : '28 EST',
-      rows: zn
-        ? [{n:'Irajá',v:'14,1',p:42,c:'#c08428'},{n:'Pilares',v:'12,8',p:38,c:'#149cc6'},{n:'Bonsucesso',v:'11,3',p:34,c:'#149cc6'}]
-        : [{n:'Campinho',v:'16,7',p:48,c:'#c08428'},{n:'Irajá',v:'13,3',p:39,c:'#149cc6'},{n:'Bangu',v:'12,1',p:35,c:'#149cc6'}]
+      sev:SEV[1], hero:'Boa', hc:'var(--s1)', heroSub:'PM2.5 máx 16,7 µg/m³ (Campinho)', count:'28 EST',
+      rows: [{n:'Campinho',v:'16,7',p:48,c:'#c08428'},{n:'Irajá',v:'13,3',p:39,c:'#149cc6'},{n:'Bangu',v:'12,1',p:35,c:'#149cc6'}]
     };
 
     /* Pousos por hora em SDU/GIG saíram do card: o ADS-B diz onde a aeronave está,
@@ -137,7 +138,7 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
     } : {
       quote1:'Agosto até agora:', quoteHi:'12 mm de chuva',
       quote2:'— 34% da média histórica do mês.',
-      sub: zn ? 'Zona Norte: 9 mm · 4º agosto mais seco desde 1997' : 'Terceiro agosto mais seco desde o início da série, em 1997.',
+      sub: 'Terceiro agosto mais seco desde o início da série, em 1997.',
       bars:[{h:64,c:'#1d7cab'},{h:88,c:'#1d7cab'},{h:52,c:'#1d7cab'},{h:76,c:'#1d7cab'},{h:44,c:'#1d7cab'},{h:92,c:'#1d7cab'},{h:58,c:'#1d7cab'},{h:70,c:'#1d7cab'},{h:40,c:'#1d7cab'},{h:18,c:'var(--live-tx)'}]
     };
 
@@ -191,7 +192,6 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       {h:'09:47',sev:SEV[1],txt:'28 de 28 estações de ar reportando',src:'OpenAQ'},
       {h:'09:10',sev:SEV[1],txt:'COR manteve Estágio 1 após a passagem da frente',src:'COR'}
     ];
-    if (zn) feed = feed.filter((f,i) => i % 3 !== 2);
     const feedAll = feed;
     if (s.onlyAbn) feed = feed.filter(f => f.sev.n >= 2);
 
@@ -323,15 +323,15 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
         tableTitle: '', sortBy: '', cols: [], rows: [],
         mapTitle: '', mapDots: [], mapNota: '',
         context: '', seal: '',
-        ausencia: crisis || zone
-          ? { titulo: 'Modo demonstração', texto: 'Os modos "dia de crise" e "por zona" são encenação do protótipo — só o painel de chuva tem roteiro. Volte ao dia calmo, sem recorte de zona, pra ver o dado real deste tema.' }
+        ausencia: crisis
+          ? { titulo: 'Modo demonstração', texto: 'O modo "dia de crise" é encenação do protótipo — só o painel de chuva tem roteiro. Volte ao dia calmo pra ver o dado real deste tema.' }
           : { titulo: 'Sem resposta da API', texto: 'Este dossiê é montado com dado ao vivo e a consulta não voltou. Não é a fonte que caiu: é o nosso servidor de leitura. A página de status mostra o estado de cada fonte.' },
       };
     }
     /* O roteiro de chuva só vale nos modos de demonstração. No dia calmo real quem
        manda é a API: sem ela, o dossiê declara ausência em vez de exibir as 33
        estações fabricadas do protótipo. */
-    if (s.route === 'chuva' && (crisis || zone)) {
+    if (s.route === 'chuva' && crisis) {
       const rainSeries = crisis
         ? [0,0,1,1,2,3,2,4,6,9,14,22,31,38,45,42,38,30,22,16,11,7,4,2]
         : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -384,22 +384,44 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
     }));
 
     const zoneNames = { norte:'Zona Norte', sul:'Zona Sul', oeste:'Zona Oeste', centro:'Centro' };
-    /* Seletor territorial desligado até o filtro existir de verdade.
-       Enquanto esteve ligado, escolher uma zona DESLIGAVA o overlay de dados
-       reais (`dadosReais.ts`: ativo = modo calmo && !zone) e o painel voltava
-       inteiro para o modo demonstração, sem avisar — e o próprio seletor
-       anunciava "Zona Norte · 9 EST · 1.184 VEÍC", números que ninguém mediu.
-       Volta quando `?zona=` filtrar de verdade nas rotas. */
-    const zonaDisponivel = false;
+    /* Seletor territorial de volta: `?zona=` filtra de verdade em chuva, ar,
+       eventos, climatologia e segurança. O que ele NÃO faz é recortar tudo —
+       frota, trânsito, previsão, mar e céu não têm recorte por zona, e por isso
+       cada cartão carrega o próprio carimbo (`recortes`, abaixo) em vez de o
+       cabeçalho prometer um corte que metade da tela não cumpre.
+
+       Sem `meta`: o protótipo anunciava "Zona Norte · 9 EST · 1.184 VEÍC",
+       números que ninguém mediu. A contagem real por zona existe (a API
+       devolve), mas o seletor abre antes de qualquer consulta — e número que
+       aparece antes de ser medido é chute com cara de dado.
+
+       Sem os dois bairros do protótipo (Tijuca, Jacarepaguá): eles filtravam
+       uma zona inteira fingindo recorte de bairro. Bairro é `?bairro_id=`, que
+       existe na API e ainda não tem desenho aqui. */
+    const zonaDisponivel = true;
     const zones = [
-      {k:null,label:'Cidade inteira',meta:'33 EST · 4.212 VEÍC'},
-      {k:'norte',label:'Zona Norte',meta:'9 EST · 1.184 VEÍC'},
-      {k:'sul',label:'Zona Sul',meta:'6 EST · 806 VEÍC'},
-      {k:'oeste',label:'Zona Oeste',meta:'11 EST · 1.402 VEÍC'},
-      {k:'centro',label:'Centro',meta:'4 EST · 620 VEÍC'},
-      {k:'norte',label:'Tijuca',meta:'BAIRRO · 2 EST'},
-      {k:'oeste',label:'Jacarepaguá',meta:'BAIRRO · 3 EST'}
-    ].map(z => ({ label:z.label, meta:z.meta, pick: () => defina({ zone:z.k, zonePicker:false }) }));
+      {k:null,label:'Cidade inteira'},
+      {k:'norte',label:'Zona Norte'},
+      {k:'sul',label:'Zona Sul'},
+      {k:'oeste',label:'Zona Oeste'},
+      {k:'centro',label:'Centro'},
+    ].map(z => ({ label:z.label, meta:null, pick: () => defina({ zone:z.k, zonePicker:false }) }));
+
+    /* Carimbo de recorte, cartão a cartão. Quem recorta mostra a zona; quem não
+       recorta segue medindo a cidade e diz por quê — o motivo é do dado, não da
+       implementação, então não é uma pendência que some depois. */
+    const RECORTA = ['chuva','ar','seguranca','queimadas','cidade','memoria'];
+    const NAO_RECORTA = {
+      mob: 'linha de ônibus cruza a cidade',
+      transito: 'corredor atravessa zonas',
+      previsao: 'a previsão vem de um ponto só',
+      mar: 'as boias ficam fora do município',
+      ceu: 'o tráfego aéreo não é por zona',
+    };
+    const recortes = !zone ? {} : Object.fromEntries(
+      RECORTA.map(k => [k, { texto: zoneNames[zone], zona: true, motivo: null }])
+      .concat(Object.entries(NAO_RECORTA).map(([k, motivo]) => [k, { texto: 'CIDADE INTEIRA', zona: false, motivo }]))
+    );
 
     const nav = (r) => ({ c: s.route === r ? 'var(--on-brand)' : 'var(--tx2)', b: s.route === r ? 'var(--brand)' : 'transparent' });
 
@@ -454,7 +476,7 @@ export function modeloBase(s: EstadoUi, acoes: Acoes): Modelo {
       isNerds: s.route === 'nerds',
       tickerLoop: tick.concat(tick), tickerState: s.paused ? 'paused' : 'running',
       pauseTicker: () => defina({ paused:true }), resumeTicker: () => defina({ paused:false }),
-      chuva, mob, transito, previsao, seguranca, ar, ceu, mar, memoria, lay, ramp:RAMP,
+      chuva, mob, transito, previsao, seguranca, ar, ceu, mar, memoria, lay, ramp:RAMP, recortes,
       cidadeVivaItens: [
         { quando:'SÁB 19:30', cor:'var(--live-tx)', titulo:'Flamengo × Vitória, Maracanã', sub:'esquema especial de trânsito' },
         { quando:'QUI 22H', cor:'var(--s2)', titulo:'Águas do Rio: manutenção programada em Irajá', sub:'até 5h' },

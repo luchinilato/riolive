@@ -2,6 +2,7 @@
    a fonte visual da verdade é docs/design/handoff/painel-rio.dc.html */
 import React from 'react'
 import type { Modelo } from '../modelo/tipos'
+import { Recorte } from '../componentes/Recorte'
 
 export function PainelCeu({ m }: { m: Modelo }) {
   const { ceu, lay, openCeu } = m
@@ -12,6 +13,7 @@ export function PainelCeu({ m }: { m: Modelo }) {
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span title={ceu.sev.d} style={{display: 'flex', alignItems: 'center', gap: '5px', padding: '1px 5px', borderRadius: '4px', border: `1px solid ${ceu.sev.c}`, color: `${ceu.sev.c}`, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px'}}>{ceu.sev.i} {ceu.sev.n}</span>
               <span style={{fontSize: '11px', fontWeight: '600', letterSpacing: '.1em', color: 'var(--tx2)', textTransform: 'uppercase', flex: '1 1 auto', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>Céu</span>
+              <Recorte marca={m.recortes?.ceu} />
               <span style={{flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--tx3)', whiteSpace: 'nowrap'}}>{ceu.count}</span>
               <span style={{flex: '0 0 auto', color: 'var(--tx3)', fontSize: '11px'}}>⤢</span>
             </div>
