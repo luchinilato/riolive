@@ -1,4 +1,9 @@
 # Segredos — chaves de API ficam SÓ no .env, nunca no repo
+# Chave de service account do GCP: cinto de segurança contra `git add -A`.
+# As fixtures em tests/ continuam versionadas — o padrão aqui é só de credencial.
+*service-account*.json
+gcp*.json
+credenciais*.json
 .env
 .env.*
 !.env.example

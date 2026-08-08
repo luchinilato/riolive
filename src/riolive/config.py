@@ -78,6 +78,11 @@ class Config(BaseSettings):
     # inteira num dia ruim. O feed do COR publica ~10 posts/dia.
     llm_max_itens_por_rodada: int = 25
 
+    # BigQuery do datalake `datario` (backfill histórico). A credencial em si é a
+    # service account apontada por GOOGLE_APPLICATION_CREDENTIALS, que a
+    # biblioteca do Google lê sozinha do ambiente.
+    gcp_projeto: str = ""
+
     @property
     def llm_configurado(self) -> bool:
         return bool(self.openrouter_api_key.get_secret_value())

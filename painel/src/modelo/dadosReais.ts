@@ -149,19 +149,29 @@ export function useDadosReais(ui: EstadoUi) {
     enabled: aberto('queimadas'), refetchInterval: 300_000, retry: 1,
   })
 
+  /* Climatologia muda uma vez por dia: 30 min de refetch é generoso. */
+  const climatologia = useQuery({
+    queryKey: ['chuva-climatologia'],
+    queryFn: api.climatologia,
+    enabled: ativo, refetchInterval: 1_800_000, retry: 1,
+  })
+
   const agenda = useQuery({
     queryKey: ['cidade-agenda', ui.period],
     queryFn: () => api.eventos(horas, 200),
     enabled: aberto('cidade'), refetchInterval: 600_000, retry: 1,
   })
 
-  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, mar, estacoesAr, focos, previsaoPontos, marPontos, serieAr, aeronaves, queimadas, agenda, ui, ativo }
+  return { agora, fontes, eventos, previsao, chuva1h, serieDossie, estacoesChuva, mobilidade, transitoCorredores, ispMensal, radarMapa, seguranca, mar, estacoesAr, focos, previsaoPontos, marPontos, serieAr, aeronaves, queimadas, agenda, climatologia, ui, ativo }
 }
 
 const hhmm = (iso: string) => {
   const d = new Date(iso)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
+
+/* Número com vírgula decimal, e sem casa quando é inteiro. */
+const nn = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ','))
 
 /* Janelas de 7 e 30 dias vêm em balde diário — hora não diz nada ali. */
 const ddmm = (iso: string) => {
@@ -745,6 +755,42 @@ export function aplicarDadosReais(m: Modelo, d: ReturnType<typeof useDadosReais>
       h: 8 + Math.round((i / (quadros.length - 1)) * 8),
       c: i === quadros.length - 1 ? 'var(--live-tx)' : 'var(--bd4)',
     }))
+  }
+
+  /* Memória da cidade: chuva do mês contra o MESMO recorte de dias nos anos
+     anteriores. O card antigo comparava uma semana de agosto com agostos
+     inteiros e anunciava "34% da média" todo dia 7 — conta certa, frase falsa. */
+  const clima = d.climatologia.data
+  if (clima?.serie?.length) {
+    const anos: any[] = clima.serie
+    const ultimos = anos.slice(-10)
+    const teto = Math.max(...ultimos.map((p) => p.mm), 1)
+    const bars = ultimos.map((p) => ({
+      h: Math.max(4, Math.round((p.mm / teto) * 100)),
+      c: p.ano === clima.atual?.ano ? 'var(--live-tx)' : '#1d7cab',
+    }))
+    const rede = clima.atual ? ` · média de ${clima.atual.estacoes} pluviômetros` : ''
+    const hist = clima.historico
+      ? `Média ${clima.historico.de}–${clima.historico.ate} no mesmo recorte: ${nn(clima.historico.media_mm)} mm`
+      : 'Sem histórico do mês na série'
+
+    saida.memoria = clima.ausencia || !clima.atual
+      ? {
+          quote1: `${clima.periodo}:`,
+          quoteHi: clima.atual ? `${nn(clima.atual.mm)} mm de chuva` : 'sem leitura',
+          quote2: '',
+          sub: `${clima.ausencia} ${hist}${rede}.`,
+          bars,
+        }
+      : {
+          quote1: `${clima.periodo}:`,
+          quoteHi: `${nn(clima.atual.mm)} mm de chuva`,
+          quote2: clima.percentual != null ? `— ${clima.percentual}% da média histórica do período.` : '',
+          sub: `${hist}${
+            clima.posicao ? ` · ${clima.posicao.rank}º ${clima.posicao.sentido} em ${clima.posicao.total} anos` : ''
+          }${rede}.`,
+          bars,
+        }
   }
 
   // mobileList é derivada dos painéis no modelo base — re-deriva com os valores reais
